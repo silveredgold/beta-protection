@@ -1,3 +1,5 @@
+import { loadPreferencesFromStorage, toRaw } from "./preferences";
+import { IPreferences } from "./preferences/types";
 import { WebSocketClient } from "./transport/webSocketClient";
 import { getExtensionVersion } from "./util";
 
@@ -41,9 +43,7 @@ export function processContextClick(info: chrome.contextMenus.OnClickData, tab: 
     }
 }
 
-chrome.runtime.onMessage
-
-export function processsMessage(message: any, sender: chrome.runtime.MessageSender, socketClient: WebSocketClient) {
+export async function processMessage(message: any, sender: chrome.runtime.MessageSender, socketClient: WebSocketClient) {
     let version = getExtensionVersion();
     if(message.msg === "getStatistics"){
         socketClient.send(JSON.stringify({
@@ -57,16 +57,19 @@ export function processsMessage(message: any, sender: chrome.runtime.MessageSend
             msg: "resetStatistics"
         }));
     }
-    if(message.msg === "censorRequest"){
+    if(message.msg === "censorRequest") {
         let img = String(message.imageURL);
         idUrlMap.set(message.id, img);
-        // if(pref === undefined || pref.length === 0){
-        //     loadPreferences();
-        // }
+        let preferences: IPreferences;
+        if (message.prefs !== undefined) {
+            preferences = message.prefs as IPreferences;
+        } else {
+            preferences = await loadPreferencesFromStorage();
+        }
         let requestType = "censorImage";
-        // if(pref["animate"] === "true"){
-        //     requestType = "redoCensor";
-        // }
+        if (preferences.autoAnimate) {
+            requestType = "redoCensor";
+        }
         socketClient.send(JSON.stringify({
             version: version,
             msg: requestType,
@@ -74,7 +77,7 @@ export function processsMessage(message: any, sender: chrome.runtime.MessageSend
             tabid: sender.tab!.id,
             id: message.id,
             priority: message.priority,
-            // preferences: pref,
+            preferences: toRaw(preferences),
             type: message.type,
             domain: message.domain
         }));

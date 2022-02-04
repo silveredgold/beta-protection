@@ -58,7 +58,8 @@ export type BodyCensorModes = {
     Belly: [CensorType, number],
     Ass: [CensorType, number],
     Cock: [CensorType, number],
-    Feet: [CensorType, number]
+    Feet: [CensorType, number],
+    Pussy: [CensorType, number]
 }
 
 export enum CensorType {

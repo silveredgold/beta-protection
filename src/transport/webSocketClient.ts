@@ -1,16 +1,27 @@
+import { createPreferencesFromBackend, getAvailablePlaceholders, loadPreferencesFromStorage } from "@/preferences";
+import { IPreferences, rawPreferences } from "@/preferences/types";
+
 export class WebSocketClient {
 
+    static create = async (host?: string): Promise<WebSocketClient> => {
+        if (!host) {
+            let configHost = await chrome.storage.local.get('backendHost');
+            if (configHost['backendHost']) {
+                host = configHost['backendHost'];
+            }
+        }
+        return new WebSocketClient(host);
+    }
     /**
      *
      */
-    constructor(host?: string) {
+    private constructor(host?: string) {
         this.webSocket = this.connectTo(host);
-
     }
 
     private webSocket?: WebSocket;
 
-    defaultHost = "ws://localhost:8090/ws"
+    defaultHost = "ws://mir:8090/ws"
 
     waitForConnection = (callback, interval) => {
         if (this.webSocket?.readyState === 1) {
@@ -40,7 +51,7 @@ export class WebSocketClient {
                 callback();
             }
         }, 100);
-      };
+    };
 
     private connectTo = (host?: string): WebSocket | undefined => {
         host ??= this.defaultHost;
@@ -55,6 +66,7 @@ export class WebSocketClient {
             webSocket.onmessage = (event) => {
                 let response = JSON.parse(event.data);
                 if (response.requestType === "censorImage") {
+                    console.log(`censored image response: ${response}`);
                     this.processCensoredImageResponse(response);
                 } else if (response.requestType === "detectPlaceholdersAndStickers") {
                     this.processPlaceholderAndStickerResponse(response);
@@ -64,6 +76,8 @@ export class WebSocketClient {
                         data: response["logs"]
                     });
                 } else if (response.requestType === "getUserPreferences") {
+                    console.log(response["preferences"]);
+                    this.processUserPreferences(response);
                     // setLoadedPreferences(response["preferences"]); //TODO
                 }
             };
@@ -85,25 +99,26 @@ export class WebSocketClient {
         }
     }
 
-    processCensoredImageResponse = (response) => {
-        chrome.storage.local.get(["selectedPlaceholders"], function (selectedCategoryList) {
-            let selected = selectedCategoryList["selectedPlaceholders"];
-            let url;
-            if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
-                url = response.url;
-                //console.log(response.url);
+    processCensoredImageResponse = async (response) => {
+        let placeholders = await getAvailablePlaceholders();
+        let url: string;
+        console.log(`parsing image response: ${JSON.stringify(response)}`);
+        if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
+            url = response.url;
+            //console.log(response.url);
+        } else {
+            if (placeholders.categories.indexOf("Discreet") > -1) {
+                url = chrome.runtime.getURL("images/discreeterror.png");
             } else {
-                if (selected.indexOf("Discreet") > -1) {
-                    url = chrome.runtime.getURL("images/discreeterror.png");
-                } else {
-                    url = chrome.runtime.getURL("images/error.gif");
-                }
+                url = chrome.runtime.getURL("images/error.gif");
             }
-            chrome.tabs.sendMessage(parseInt(response.tabid), {
-                msg: "setSrc", censorURL: url,
-                id: response.id, tabid: response.tabid, type: response.type
-            });
-        });
+        }
+        let body = {
+            msg: "setSrc", censorURL: url,
+            id: response.id, tabid: response.tabid, type: response.type
+        };
+
+        chrome.tabs.sendMessage(parseInt(response.tabid), body);
     }
 
     processPlaceholderAndStickerResponse = (response) => {
@@ -117,5 +132,26 @@ export class WebSocketClient {
             chrome.storage.local.set(obj);
 
         }
+    }
+
+    processUserPreferences = async (response): Promise<IPreferences> => {
+        let preferences = await loadPreferencesFromStorage();
+        if (parseInt(response.status) === 200) {
+            let rawPrefs = response["preferences"] as rawPreferences;
+            let backendPrefs = createPreferencesFromBackend(rawPrefs);
+
+            let mergedPrefs = {
+                ...preferences,
+                ...backendPrefs
+            };
+            console.log(mergedPrefs);
+            console.log('done!');
+            await chrome.storage.local.set({ 'preferences': mergedPrefs });
+            console.log('set in storage!');
+            let newPrefs = await loadPreferencesFromStorage();
+            console.log('new:', newPrefs);
+            return mergedPrefs;
+        }
+        return preferences;
     }
 }

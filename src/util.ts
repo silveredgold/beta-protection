@@ -9,3 +9,8 @@ export function getExtensionVersion(): string {
     }
     return _extensionVersion;
 }
+
+export function isValidUrl(url: string) {
+    const http = (url.includes("http://") || url.includes("https://") || url.includes("data:image/") || url.includes("file://"));
+    return http;
+}
