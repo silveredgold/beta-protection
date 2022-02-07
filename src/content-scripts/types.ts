@@ -15,3 +15,9 @@ export type CensoringContext = {
     purifier: Purifier
     // cssManager: CSSManager
 }
+
+export type ImageStyleElement = {
+    element: Element,
+    background: string,
+    imageUrl?: string
+};
