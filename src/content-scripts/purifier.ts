@@ -2,16 +2,31 @@ import { IPreferences } from "@/preferences/types";
 import { isValidUrl } from "@/util";
 import { CensoringState } from "./types";
 import { generateUUID, getRandom } from "./util";
+import { debounce } from "throttle-debounce";
 
 
 export class Purifier {
     private _currentState: CensoringState;
-    backlog: boolean = false;
+    
+    private _backlog : boolean = false;
+    public get backlog() : boolean {
+        return this._backlog;
+    }
+    public set backlog(v : boolean) {
+        this._backlog = v;
+        if (this._backlog) {
+            this.queueStart();
+        }
+    }
+
+    private queueStart = debounce(1000, () => {
+        console.log('debounce complete, running purifier');
+        this.start();
+    });
+    
     private _placeholders: string[];
     private _domain: any;
     private _ready: boolean;
-
-
     public get ready(): boolean {
         return this._ready;
     }
@@ -37,6 +52,14 @@ export class Purifier {
             location = (location as Location).hostname;
         }
         this._domain = location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
+    }
+
+    private getPlaceholderSrc = () => {
+        let placeholder = chrome.runtime.getURL('/images/loading.png');
+        if (this._placeholders.length && this._placeholders.length > 0) {
+            placeholder = chrome.runtime.getURL(getRandom(this._placeholders));
+        }
+        return placeholder;
     }
 
     start = () => {
@@ -65,10 +88,10 @@ export class Purifier {
                     el.src = url;
                 }
             }
-            if (el.tagName === "IMG" && isValidUrl(el.src)
-                && !el.classList.contains("purified") && !el.classList.contains("purifying")) {
-                    // console.log(`purifying ${el}`);
-                this.purifyImage(el);
+            if (el.tagName === "IMG" && isValidUrl(el.src)) {
+                if (this.isUnsafe(el)) {
+                    this.purifyImage(el);
+                }
             }
         });
     }
@@ -94,17 +117,20 @@ export class Purifier {
     }
 
     purifyLoadedImage = (imageURL: string, img: HTMLImageElement) => {
-        if (!img.classList.contains("purified") && !img.classList.contains("purifying") && this._ready) {
+        let elState = img.getAttribute('censor-state');
+        if (this.isUnsafe(img) && this._ready) {
             if (img.width * img.height > 15000 && img.width > 100 && img.height > 100 && !imageURL.includes(".svg")) {
                 let uniqueID = generateUUID();
-                img.classList.add(uniqueID);
+                // img.classList.add(uniqueID);
+                img.setAttribute('censor-id', uniqueID);
                 if (img.clientWidth > 0) {
                     img.width = img.clientWidth;
                 }
                 if (this._currentState && this._currentState.activeCensoring) {
-                    console.log(`adding purifying class!`)
-                    img.classList.add("purifying");
-                    let placeholder = chrome.runtime.getURL(getRandom(this._placeholders));
+                    console.log(`adding purifying class!`);
+                    img.setAttribute('censor-state', 'censoring');
+                    // img.classList.add("purifying");
+                    let placeholder = this.getPlaceholderSrc();
                     console.log(`got placeholder URL: ${placeholder}`);
                     let priority = img.getBoundingClientRect().top | 0;
 
@@ -113,7 +139,8 @@ export class Purifier {
                     placeHolderImage.onload = function () {
                         img.addEventListener('load', () => {
                             console.log(`adding purified!`);
-                            img.classList.add("purified");
+                            img.setAttribute('censor-state', 'censored');
+                            // img.classList.add("purified");
                         }, { once: true });
                         img.src = placeHolderImage.src;
                         chrome.runtime.sendMessage({
@@ -127,11 +154,13 @@ export class Purifier {
                     };
                     placeHolderImage.setAttribute('src', placeholder);
                 } else {
-                    img.classList.add("purified");
+                    img.setAttribute('censor-state', 'censored');
+                    // img.classList.add("purified");
                 }
             } else {
-                img.classList.add("excluded")
-                img.classList.add("purified");
+                img.setAttribute('censor-state', 'excluded');
+                // img.classList.add("excluded")
+                // img.classList.add("purified");
             }
         } else {
             this.backlog = true;
@@ -143,8 +172,11 @@ export class Purifier {
 
         let elementList = document.getElementsByTagName(tagName);
         for (let i = 0; i < elementList.length; i++) {
-            if (!elementList[i].classList.contains("purified")) {
-                elementList[i].outerHTML = "<video class=\"purified\" poster='" + chrome.runtime.getURL(placeholder) + "'>" +
+            let el = elementList[i];
+            let elState = el.getAttribute('censor-state');
+            if (this.isUnsafe(el)) {
+                console.log('found unsafe video element', el);
+                elementList[i].outerHTML = "<video censor-state=\"purified\" poster='" + chrome.runtime.getURL(placeholder) + "'>" +
                     "<source type=\"video/mp4\">" +
                     "</video>";
 
@@ -176,7 +208,8 @@ export class Purifier {
     }
 
     checkBackgroundStyle = (style, el: Element) => {
-        if (style !== "none" && !el.classList.contains("excludedBG") && !el.classList.contains("purifiedBG") && this._ready) {
+        // if (style !== "none" && !el.classList.contains("excludedBG") && !el.classList.contains("purifiedBG") && this._ready) {
+        if (style !== "none" && this.isUnsafe(el, "bg") && this._ready) {
             const srcChecker = /url\(\s*?['"]?\s*?(\S+?)\s*?["']?\s*?\)/i;
             let match = srcChecker.exec(style);
             if (match) {
@@ -188,28 +221,41 @@ export class Purifier {
                     image.addEventListener('on', () => {
                         if (image.width * image.height > 15000 && image.width > 100 && image.height > 100) {
                             let uniqueID = generateUUID();
-
+                            el.setAttribute('censor-id', uniqueID);
                             el.classList.add(uniqueID);
                             if (this._currentState && this._currentState.activeCensoring) {
+                                let placeholder = this.getPlaceholderSrc();
                                 try {
-                                    (el as HTMLElement).style.backgroundImage = 'url("' + chrome.runtime.getURL(getRandom(this._placeholders)) + '")';
+                                    (el as HTMLElement).style.backgroundImage = 'url("' + placeholder + '")';
                                 } catch { }
 
                                 this.purifyBackgroundImage(imageURL, uniqueID); // save background image url
                             }
-                            el.classList.add("purifiedBG");
+                            el.setAttribute('censor-style', 'censored');
+                            // el.classList.add("purifiedBG");
                         } else {
-                            el.classList.add("excludedBG");
-                            el.classList.add("purifiedBG");
+                            el.setAttribute('censor-style', 'excluded');
+                            // el.classList.add("excludedBG");
+                            // el.classList.add("purifiedBG");
                         }
                     }, { once: true });
                     image.src = imageURL;
                 }
             } else {
-                el.classList.add('excludedBG');
-                el.classList.add("purifiedBG");
+                el.setAttribute('censor-style', 'excluded');
+                // el.classList.add('excludedBG');
+                // el.classList.add("purifiedBG");
             }
         }
+    }
+
+    private isUnsafe = (el: Element, mode: "normal"|"bg" = "normal") => {
+        let elState = mode === "normal" ? el.getAttribute('censor-state') : el.getAttribute('censor-style');
+        return this.isUnsafeState(elState);
+    }
+
+    private isUnsafeState = (elState: string | null) => {
+        return elState !== 'censored' && elState !== 'censoring' && elState !== 'excluded';
     }
 
 }

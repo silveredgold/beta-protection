@@ -1,20 +1,139 @@
 <template>
-  <hello-world />
+  <n-config-provider :theme-overrides="themeOverrides" :theme="darkTheme">
+    <n-notification-provider>
+      <n-page-header
+        subtitle="For the full set of options, check the extension settings"
+        style="padding-bottom: 2rem;"
+      >
+        <template #title>Beta Protection</template>
+        <!-- <template #header>
+      <n-breadcrumb>
+        <n-breadcrumb-item>Podcast</n-breadcrumb-item>
+        <n-breadcrumb-item>Best Collection</n-breadcrumb-item>
+        <n-breadcrumb-item>Ultimate Best Collection</n-breadcrumb-item>
+        <n-breadcrumb-item>Anyway.FM</n-breadcrumb-item>
+      </n-breadcrumb>
+        </template>-->
+        <template #avatar>
+          <n-avatar :src="iconSrc" />
+        </template>
+        <template #extra>
+          <n-space>
+            <n-button size="small">
+              <n-icon size="30" :component="Settings" />
+            </n-button>
+          </n-space>
+        </template>
+        <template #footer>To change the censoring mode, use the popup from your extension toolbar!</template>
+      </n-page-header>
+      <connection-status :style="{marginBottom: '2em'}" />
+      <n-collapse>
+        <n-collapse-item title="Backend Host" name="backend-host">
+          <backend-host />
+          <template #header-extra>Set where your backend is running</template>
+        </n-collapse-item>
+        <n-collapse-item title="Censoring Options" name="censoring-options" v-if="prefs">
+          <censoring-preferences :preferences="prefs" />
+          <template #header-extra>Fine tune the censoring</template>
+        </n-collapse-item>
+        <n-collapse-item title="Video Options" name="video-options" v-if="prefs">
+          <video-options :preferences="prefs" />
+          <template #header-extra>Choose video behaviour</template>
+        </n-collapse-item>
+        <n-collapse-item title="Placeholders and Stickers" name="placeholder-options" v-if="prefs">
+          <placeholder-options :preferences="prefs" v-if="prefs" />
+          <sticker-options :preferences="prefs" v-if="prefs" />
+          <template #header-extra>Choose your placeholders and stickers</template>
+        </n-collapse-item>
+        <n-collapse-item title="Danger Zone" name="danger=zone">
+          <settings-reset />
+          <template #header-extra>Be careful in here!</template>
+        </n-collapse-item>
+      </n-collapse>
+    </n-notification-provider>
+    <n-global-style />
+  </n-config-provider>
 </template>
 
-<script>
-import HelloWorld from '@/components/HelloWorld.vue';
+<script setup lang="ts">
+import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NCard, NButton, NIcon, NAvatar, NPageHeader, NSpace, NCollapse, NCollapseItem, GlobalThemeOverrides } from "naive-ui";
+import { Settings } from "@vicons/ionicons5";
+import BackendHost from '../components/BackendHost.vue';
+import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
+import { debounce } from "throttle-debounce";
+import { defaultPrefs, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
+import { updateUserPrefs, userPrefs } from "./services";
+import CensoringPreferences from "../components/CensoringPreferences.vue";
+import VideoOptions from "../components/VideoOptions.vue";
+import PlaceholderOptions from "../components/PlaceholderOptions.vue";
+import StickerOptions from "../components/StickerOptions.vue";
+import SettingsReset from "../components/SettingsReset.vue";
+import ConnectionStatus from "../components/ConnectionStatus.vue";
+import { themeOverrides } from "../util";
 
-export default {
-  name: 'App',
-  components: { HelloWorld },
-};
+// let prefs = ref({} as IPreferences);
+
+const iconSrc = chrome.runtime.getURL('/images/icon.png');
+
+const getCurrentPrefs = async () => {
+  var storeResponse = await loadPreferencesFromStorage();
+  console.log(`options loaded prefs:`, storeResponse);
+  // prefs = reactive(storeResponse);
+  return storeResponse;
+}
+
+const updateFunc = debounce(1000, async (prefs) => {
+  console.log(`persisting prefs`, prefs);
+  console.log(`serialized prefs`, JSON.stringify(prefs));
+  await savePreferencesToStorage(prefs);
+})
+
+let store = reactive({
+  preferences: {} as IPreferences,
+  updatePreferences(prefs?: IPreferences) {
+    let targetPrefs = prefs?.mode ? prefs : this.preferences;
+    updateFunc(targetPrefs);
+    // var storeResponse = await chrome.storage.local.set({ 'preferences': targetPrefs });
+  }
+})
+
+let prefs = computed(() => store.preferences);
+
+watch(prefs, async (newMode, prevMode) => {
+    console.log('new mode', newMode);
+}, {deep: true});
+
+const updatePrefs = async (preferences?: IPreferences) => {
+  console.log(`queuing prefs save`);
+  store.updatePreferences(preferences);
+}
+
+onBeforeMount(async () => {
+  store.preferences = await getCurrentPrefs();
+});
+
+chrome.runtime.onMessage.addListener((request, sender, response) => {
+  if (request['msg'] === 'reloadPreferences') {
+    setTimeout(() => {
+      console.log('reloading preferences for options view');
+      getCurrentPrefs().then(prefs => {
+        store.preferences = prefs;
+      });
+    }, 1000);
+  }
+});
+
+// provide(userPrefs, prefs);
+provide(updateUserPrefs, updatePrefs);
+
+
 </script>
 
 <style>
 html {
-  width: 400px;
-  height: 400px;
+  width: 800px;
+  height: 800px;
+  padding: 1.5rem;
 }
 
 /* purgecss start ignore */

@@ -7,7 +7,7 @@ module.exports = {
   },
 
   extends: [
-    'plugin:vue/essential',
+    'plugin:vue/vue3-essential',
     // '@vue/airbnb',
   ],
 
@@ -22,7 +22,7 @@ module.exports = {
   },
 
   'extends': [
-    'plugin:vue/essential',
+    'plugin:vue/vue3-essential',
     '@vue/typescript'
   ]
 };

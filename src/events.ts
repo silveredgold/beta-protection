@@ -9,35 +9,30 @@ let idUrlMap = new Map();
 
 export function processContextClick(info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab|undefined, client: WebSocketClient) {
     let eVersion = getExtensionVersion();
+    console.log('prcessing context click event', info, tab);
     if (tab && info.menuItemId === REDO_CENSOR) {
         chrome.tabs.sendMessage(tab.id!, {msg: "getClickedEl"}, function(value) {
-            let classList = String(value.value).split(' ');
-            for(let i = 0; i < classList.length; i++){
-                if(/[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}/.exec(classList[i])) {
-                    let id = classList[i];
-                    let img;
+            if (value.id) {
+                let id = value.id;
+                let img;
                     if(idUrlMap.has(id)){
                         img = idUrlMap.get(id);
                     } else {
                         img = value.src;
                         idUrlMap.set(id, value.src);
                     }
-
-                    // if(pref === undefined || pref.length === 0){
-                    //     loadPreferences();
-                    // }
-                    client.sendObj({
-                        version: eVersion,
-                        msg: "redoCensor",
-                        url: img,
-                        tabid: tab.id,
-                        id: id,
-                        priority: 1,
-                        // preferences: pref,
-                        type: "normal"
+                    let preferences = loadPreferencesFromStorage().then(prefs => {
+                        client.sendObj({
+                            version: eVersion,
+                            msg: "redoCensor",
+                            url: img,
+                            tabid: tab.id,
+                            id: id,
+                            priority: 1,
+                            preferences: prefs,
+                            type: "normal"
+                        });
                     });
-                    break;
-                }
             }
         });
     }
@@ -45,6 +40,7 @@ export function processContextClick(info: chrome.contextMenus.OnClickData, tab: 
 
 export async function processMessage(message: any, sender: chrome.runtime.MessageSender, socketClient: WebSocketClient) {
     let version = getExtensionVersion();
+    console.log('background processing msg', message);
     if(message.msg === "getStatistics"){
         socketClient.send(JSON.stringify({
             version: version,
@@ -70,6 +66,9 @@ export async function processMessage(message: any, sender: chrome.runtime.Messag
         if (preferences.autoAnimate) {
             requestType = "redoCensor";
         }
+        let rawPrefs = toRaw(preferences);
+        /*console.log(`prefs as sent:`, preferences);
+        console.log(`raw prefs sent`, rawPrefs); */
         socketClient.send(JSON.stringify({
             version: version,
             msg: requestType,
@@ -77,7 +76,7 @@ export async function processMessage(message: any, sender: chrome.runtime.Messag
             tabid: sender.tab!.id,
             id: message.id,
             priority: message.priority,
-            preferences: toRaw(preferences),
+            preferences: rawPrefs,
             type: message.type,
             domain: message.domain
         }));

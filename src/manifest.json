@@ -13,7 +13,9 @@
   "permissions": [
     "activeTab",
     "contextMenus",
-    "storage"
+    "storage",
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "*://*/*",
@@ -41,15 +43,14 @@
     "browser_style": true
   },
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline'"
+    "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
   },
   "content_scripts": [
     {
       "run_at": "document_start",
 		"matches": ["<all_urls>"],
 		"all_frames": true,
-      "js": ["js/content-script.js"],
-      "css": ["css/content.css"]
+      "js": ["js/content-script.js"]
     }
   ]
 }

@@ -1,11 +1,15 @@
-import { createPreferencesFromBackend, getAvailablePlaceholders, loadPreferencesFromStorage } from "@/preferences";
+import { createPreferencesFromBackend, getAvailablePlaceholders, getEnabledPlaceholders, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
 import { IPreferences, rawPreferences } from "@/preferences/types";
+import { PlaceholderService } from "@/services/placeholder-service";
+import { StickerService } from "@/services/sticker-service";
 
 export class WebSocketClient {
 
     static create = async (host?: string): Promise<WebSocketClient> => {
+        console.log('creating new client!');
         if (!host) {
             let configHost = await chrome.storage.local.get('backendHost');
+            // console.log(`pulled host config: ${JSON.stringify(configHost)}`);
             if (configHost['backendHost']) {
                 host = configHost['backendHost'];
             }
@@ -21,16 +25,15 @@ export class WebSocketClient {
 
     private webSocket?: WebSocket;
 
-    defaultHost = "ws://mir:8090/ws"
+    defaultHost = "ws://localhost:8090/ws"
 
-    waitForConnection = (callback, interval) => {
+    waitForConnection = (callback: () => void, interval: number) => {
         if (this.webSocket?.readyState === 1) {
             callback();
         } else {
-            let that = this;
             // optional: implement backoff for interval here
-            setTimeout(function () {
-                that.waitForConnection(callback, interval);
+            setTimeout(() => {
+                this.waitForConnection(callback, interval);
             }, interval);
         }
     }
@@ -52,6 +55,13 @@ export class WebSocketClient {
             }
         }, 100);
     };
+
+    
+    
+    public get ready() : boolean {
+        return this.webSocket?.readyState === 1;
+    }
+    
 
     private connectTo = (host?: string): WebSocket | undefined => {
         host ??= this.defaultHost;
@@ -76,17 +86,18 @@ export class WebSocketClient {
                         data: response["logs"]
                     });
                 } else if (response.requestType === "getUserPreferences") {
-                    console.log(response["preferences"]);
                     this.processUserPreferences(response);
                     // setLoadedPreferences(response["preferences"]); //TODO
                 }
             };
 
             webSocket.onclose = (e) => {
-                console.log('Socket is closed. Reconnect will be attempted in 5 seconds.', e.reason);
-                setTimeout(() => {
-                    this.connectTo(host);
-                }, 5000);
+                if (e.code !== 4999) {
+                    console.log('Socket is closed. Reconnect will be attempted in 5 seconds.', e.reason);
+                    setTimeout(() => {
+                        this.connectTo(host);
+                    }, 5000);
+                }
             };
 
             webSocket.onerror = function (err) {
@@ -100,12 +111,11 @@ export class WebSocketClient {
     }
 
     processCensoredImageResponse = async (response) => {
-        let placeholders = await getAvailablePlaceholders();
+        let placeholders = await getEnabledPlaceholders();
         let url: string;
-        console.log(`parsing image response: ${JSON.stringify(response)}`);
+        console.log(`parsing image response`, response);
         if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
             url = response.url;
-            //console.log(response.url);
         } else {
             if (placeholders.categories.indexOf("Discreet") > -1) {
                 url = chrome.runtime.getURL("images/discreeterror.png");
@@ -123,13 +133,10 @@ export class WebSocketClient {
 
     processPlaceholderAndStickerResponse = (response) => {
         if (parseInt(response.status) === 200) {
-            let placeholderCategories = response["placeholders"];
-            let stickerCategories = response["stickers"];
-            let obj = {};
-            obj["placeholders"] = placeholderCategories;
-            obj["stickers"] = stickerCategories;
-            placeholderCategories.forEach(category => obj[category] = response[category]);
-            chrome.storage.local.set(obj);
+            console.log(`sticker response:`)
+            console.log(response);
+            PlaceholderService.loadAvailablePlaceholders(response)
+            StickerService.loadAvailableStickers(response);
 
         }
     }
@@ -138,20 +145,24 @@ export class WebSocketClient {
         let preferences = await loadPreferencesFromStorage();
         if (parseInt(response.status) === 200) {
             let rawPrefs = response["preferences"] as rawPreferences;
+            // console.log('raw prefs: ', rawPrefs);
             let backendPrefs = createPreferencesFromBackend(rawPrefs);
-
+            // console.log('backend prefs', backendPrefs);
+            // console.log('loaded prefs', preferences);
             let mergedPrefs = {
-                ...preferences,
-                ...backendPrefs
+                ...backendPrefs,
+                ...preferences
             };
-            console.log(mergedPrefs);
-            console.log('done!');
-            await chrome.storage.local.set({ 'preferences': mergedPrefs });
-            console.log('set in storage!');
+            // console.log('merged prefs', mergedPrefs);
+            await savePreferencesToStorage(mergedPrefs, true);
             let newPrefs = await loadPreferencesFromStorage();
-            console.log('new:', newPrefs);
+            // console.log('new prefs as stored:', newPrefs);
             return mergedPrefs;
         }
         return preferences;
+    }
+
+    close = () => {
+        this.webSocket?.close(4999);
     }
 }

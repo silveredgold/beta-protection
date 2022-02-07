@@ -15,7 +15,8 @@
     "noImplicitAny": false,
     "baseUrl": ".",
     "types": [
-      "webpack-env"
+      "webpack-env",
+      "naive-ui/volar"
     ],
     "paths": {
       "@/*": [
