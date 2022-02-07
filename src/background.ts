@@ -10,12 +10,14 @@ let currentClient: WebSocketClient | null;
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Hello from the background');
-
+  console.log('reload listener running!');
   if (request.msg == "reloadSocket") {
     currentClient = null;
-    init();
+    initExtension();
   };
+});
+
+chrome.runtime.onMessage.addListener((request, sender) => {
   if (request.msg === "injectCSS") {
     let tabId = sender.tab?.id;
     console.log(`got injectCSS for ${tabId}`);
@@ -26,22 +28,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
   }
 });
-
-async function injectCSS(css: CSSManager) {
-  await css.addCSS();
-  await css.addVideo();
-}
-
-function init() {
-  getClient().then(client => {
-    client.sendObj({version: '0.5.9', msg: "getUserPreferences"});
-    client.sendObj({
-      version: '0.5.9',
-       msg: "detectPlaceholdersAndStickers"
-    });
-    chrome.runtime.sendMessage({msg: 'reloadPreferences'});
-  });
-}
 
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('Configuring NG settings!');
@@ -54,16 +40,11 @@ chrome.runtime.onInstalled.addListener((details) => {
     const dateTime = time + ' ' + date;
     chrome.storage.local.set({ 'installationDate': dateTime });
   }
-  init();
+  initExtension();
   chrome.contextMenus.create({
     id: REDO_CENSOR,
     title: "(Re)censor image / animate GIF",
     contexts: ["image"],
-    // onclick: (info, tab) => {
-    //   getClient().then(client => {
-    //     processContextClick(info, tab, client);
-    //   });
-    // }, 
   }, () => {
     console.log('context menu created', chrome.runtime.lastError);
   });
@@ -78,16 +59,8 @@ chrome.runtime.onStartup.addListener(() => {
   }, () => {
     console.log('context menu created', chrome.runtime.lastError);
   });
-  init();
+  initExtension();
 });
-
-async function getClient() {
-  if (currentClient?.ready) {
-    return currentClient;
-  } else {
-    return await WebSocketClient.create();
-  }
-}
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   console.log('got onclick event!');
@@ -95,6 +68,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     processContextClick(info, tab, client))
   return true;
 });
+
 chrome.runtime.onMessage.addListener((msg, sender) => {
   getClient().then(client =>
     processMessage(msg, sender, client))
@@ -107,26 +81,47 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
     cancelRequestsForId(id, client);
   });
 });
+
+chrome.tabs.onUpdated.addListener((id, change, tab) => {
+  if (change.status === 'complete' && tab.id) {
+    //caught a page load!
+    console.debug('page load detected, notifying content script!');
+    chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged'})
+    // chrome.runtime.sendMessage({msg: 'pageChanged'})
+  }
+});
+
 chrome.tabs.onRemoved.addListener((id, removeInfo) => {
+  console.log('tab removed');
   getClient().then(client => {
     cancelRequestsForId(id, client);
   });
 });
 
-// function setupContextMenuOptions() {
-//   chrome.contextMenus.removeAll(function() {
-//       chrome.contextMenus.create({
-//           id: REDO_CENSOR,
-//           title: "(Re)censor image / animate GIF",
-//           contexts: ["image"]
-//       });
-//   });
-// }
-// setupContextMenuOptions();
 
 
+/** UTILITY FUNCTIONS BELOW THIS, USED BY EVENTS ABOVE */
 
+async function injectCSS(css: CSSManager) {
+  await css.addCSS();
+  await css.addVideo();
+}
 
-// const manifestData = chrome.runtime.getManifest();
-// const version = manifestData.version;
+function initExtension() {
+  getClient().then(client => {
+    client.sendObj({version: '0.5.9', msg: "getUserPreferences"});
+    client.sendObj({
+      version: '0.5.9',
+       msg: "detectPlaceholdersAndStickers"
+    });
+    chrome.runtime.sendMessage({msg: 'reloadPreferences'});
+  });
+}
 
+async function getClient() {
+  if (currentClient?.ready) {
+    return currentClient;
+  } else {
+    return await WebSocketClient.create();
+  }
+}

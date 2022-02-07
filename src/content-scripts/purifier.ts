@@ -95,7 +95,7 @@ export class Purifier {
         }
     }
 
-    start = () => {
+    run = () => {
         this.queueStart();
     }
 
@@ -168,6 +168,7 @@ export class Purifier {
             if (img.width * img.height > 15000 && img.width > 100 && img.height > 100 && !imageURL.includes(".svg")) {
                 const uniqueID = generateUUID();
                 img.setAttribute('censor-id', uniqueID);
+                img.setAttribute('censor-src', imageURL);
                 if (img.clientWidth > 0) {
                     img.width = img.clientWidth;
                 }

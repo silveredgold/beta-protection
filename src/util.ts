@@ -27,3 +27,20 @@ export function toTitleCase(str: string) {
 
 
 export const themeOverrides: GlobalThemeOverrides = { common: { fontWeightStrong: '600' }, Result: {lineHeight: '1.1', titleFontSizeSmall: '24', iconSizeSmall: '48px'} };
+
+export function isSafe(url: string, safeList: number[]) {
+  let chrome = url && url.includes("chrome-extension://");
+  let inList = safeList.includes(hashCode(url));
+  return chrome || inList;
+}
+
+export function hashCode(str: string) {
+  let hash = 0, i, chr;
+  if (str.length === 0) return hash;
+  for (i = 0; i < str.length; i++) {
+      chr   = str.charCodeAt(i);
+      hash  = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}

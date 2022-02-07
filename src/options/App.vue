@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme-overrides="themeOverrides" :theme="darkTheme">
+  <n-config-provider :theme-overrides="themeOverrides" :theme="theme">
     <n-notification-provider>
       <n-page-header
         subtitle="For the full set of options, check the extension settings"
@@ -45,6 +45,10 @@
           <sticker-options :preferences="prefs" v-if="prefs" />
           <template #header-extra>Choose your placeholders and stickers</template>
         </n-collapse-item>
+        <n-collapse-item title="Domain Lists" name="domain-options" v-if="prefs">
+          <domain-list-options :preferences="prefs" v-if="prefs" />
+          <template #header-extra>Edit your allowed and forced sites</template>
+        </n-collapse-item>
         <n-collapse-item title="Danger Zone" name="danger=zone">
           <settings-reset />
           <template #header-extra>Be careful in here!</template>
@@ -56,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NCard, NButton, NIcon, NAvatar, NPageHeader, NSpace, NCollapse, NCollapseItem, GlobalThemeOverrides } from "naive-ui";
+import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NCard, NButton, NIcon, NAvatar, NPageHeader, NSpace, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme } from "naive-ui";
 import { Settings } from "@vicons/ionicons5";
 import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
@@ -69,7 +73,11 @@ import PlaceholderOptions from "../components/PlaceholderOptions.vue";
 import StickerOptions from "../components/StickerOptions.vue";
 import SettingsReset from "../components/SettingsReset.vue";
 import ConnectionStatus from "../components/ConnectionStatus.vue";
+import DomainListOptions from "../components/DomainListOptions.vue";
 import { themeOverrides } from "../util";
+
+const osTheme = useOsTheme()
+const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
 // let prefs = ref({} as IPreferences);
 

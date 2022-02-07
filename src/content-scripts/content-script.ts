@@ -6,7 +6,8 @@ import { CSSManager } from "./cssManager";
 import { Purifier } from "./purifier";
 import { runSubliminal } from "./subliminal";
 import { CensoringState, CensoringContext } from "./types";
-import { hashCode, isSafe, readDirectories } from "./util";
+import { hashCode, isSafe } from "@/util";
+import { PageObserver } from "./observer";
 
 // console.log('Hello from the content-script');
 
@@ -16,7 +17,7 @@ import { hashCode, isSafe, readDirectories } from "./util";
 let instanceConfigured: boolean = false;
 let lastClickElement: HTMLElement|undefined|null;
 let safeList: number[] = [];
-let windowLocation = window.location.href;
+// let windowLocation = window.location.href;
 
 // getState => prepareDOM => prepareEvents => page setup
 
@@ -34,14 +35,14 @@ const getCensoringState = async (): Promise<CensoringState> => {
 		console.log(`content script found preferences: ${prefs.mode}`)
 		let whitelist = prefs.allowList?.length ? prefs.allowList : [];
 		let blacklist = prefs.forceList?.length ? prefs.forceList : [];
-		console.log(`whitelist`, whitelist);
-		console.log(`blacklist:`, blacklist);
-		let siteAllowed = whitelist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => wle == website);
+		console.log(`domain matching`, whitelist, blacklist, website);
+		// console.log(`blacklist:`, blacklist);
+		let siteAllowed = whitelist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => website.includes(wle));
 		if (siteAllowed || mode == OperationMode.Disabled) {
 			console.log(`running in disabled mode`);
 			return {activeCensoring: false}
 		} else if (mode == OperationMode.OnDemand) {
-			let siteForced = blacklist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => wle == website);
+			let siteForced = blacklist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => website.includes(wle));
 			console.log(`running in on demand: ${siteForced}`);
 			return {activeCensoring: siteForced};
 		} else {
@@ -70,121 +71,48 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	return context;
 }
 
-const getLocalPlaceholder = async () => {
-	let dirent = await getDirectory();
-	let subDirPaths = await readDirectories(dirent);
-	console.log('read subdirs', subDirPaths);
-}
-
-const getDirectory = () => {
-	return new Promise<FileSystemDirectoryEntry>(resolve => {
-		chrome.runtime.getPackageDirectoryEntry(dirent => resolve(dirent));
-	});
-}
-
 const injectStyles = async (context: CensoringContext): Promise<CensoringContext> => {
 	console.log(`state: ${context.state.activeCensoring}`);
 	if(context.state.activeCensoring){
 		console.log("Beta Protection - Censoring Enabled!");
-
 		chrome.runtime.sendMessage({msg: 'injectCSS', preferences: context.preferences});
-
-		// I don't know what this was supposed to be doing tbh
-		// headEl.append('<style class="safetyCSS">' +
-		// 	'img { visibility: hidden !important; }' +
-		// 	'img:not(.purified) { visibility: hidden !important; }' +
-		// 	'img.purified { visibility: visible !important; }' +
-		// 	'img.purifying { max-width: 100%; object-fit: contain !important; }'+
-		// 	':not(.purifiedBG) { background-size: 0 !important; }' +
-		// 	'video:not(.purified) {	visibility: hidden !important; }'+
-		// 	'video.purified{ min-height: 250px; max-height: 100% !important; max-width: 100% !important; }'+
-		// 	':not(.purifiedBG) { background-size: 0 !important; } </style>');
 	} else {
 		console.log("Beta Protection - Not censoring current page.");
-		/*headEl.append('<style class="safetyCSS">' +
-			'video {\n' +
-			'filter: blur(0px) !important;\n' +
-			'}\n' +
-			'img:not(.purified) {\n' +
-			'    visibility: visible !important;\n' +
-			'}\n' +
-			'\n' +
-			'video:not(.purified) {\n' +
-			'    visibility: visible !important;\n' +
-			'}\n</style>'
-		); */
 	}    
 	return context;
 }
 
 const prepareEvents = async (context: CensoringContext, runImmediately: boolean = false): Promise<void> => {
-	
+
 	let observer = buildObserver(context.purifier);
 	// Observe for mutations after page load has completed.
-	if (runImmediately) {
-	if(document.readyState !== 'loading'){
-		pageSetup(observer, context.purifier, context);
-	} else {
-		window.addEventListener('DOMContentLoaded', (event) => {
+	if (runImmediately && observer !== undefined) {
+		if (document.readyState !== 'loading') {
 			pageSetup(observer, context.purifier, context);
-		});
+		} else {
+			window.addEventListener('DOMContentLoaded', (event) => {
+				pageSetup(observer!, context.purifier, context);
+			});
+		}
 	}
-}
 }
 
 const buildObserver = (purifier: Purifier) => {
-	let observer;
-	if (window.MutationObserver) {
-		//yay, setup callback for mutations
-		observer = new MutationObserver((mutations) => {
-			purifier.start()
-
-			// Loop that checks for images being replaced after they've been purified, to ensure they are
-			// processed again if needed.
-			mutations.forEach(mutation => {
-				if (mutation.type === "attributes" && mutation.attributeName === "src") {
-					let target = mutation.target as Element;
-					let safe = isSafe(mutation.target["src"], safeList);
-					console.log(`mutation running, checking for safe! ${safe}`, mutation.target["src"]);
-					if(safe){
-						// Do nothing since it's safe.
-					} else {
-						target.setAttribute('censor-state', 'unsafe')
-						// target.classList.remove("purified");
-						// target.classList.remove("purifiedBG");
-						purifier.backlog = true;
-					}
-				}
-			});
-		});
-	}
+	const observer = PageObserver.create(purifier, safeList);
 	return observer;
 }
 
-function pageSetup(observer: MutationObserver, purifier: Purifier, context: CensoringContext) {
-	setInterval(function () {
-		if (windowLocation !== window.location.href) {
-			windowLocation = window.location.href;
-			// purifier.ready = false;
-			// activeCensoring = true;
-			runCensoring(false);
-		}
-		if (purifier.backlog && purifier.ready) {
-			purifier.backlog = false;
-			purifier.start()
-		}
-	}, 200);
+function pageSetup(observer: PageObserver, purifier: Purifier, context: CensoringContext) {
 
 	if (context.preferences!.subliminal?.enabled ?? false) {
 		runSubliminal(context.preferences!.subliminal);
 	}
-
-	purifier.start();
-	observer.observe(document.body, {childList: true, subtree: true, attributes: true, attributeOldValue : true});
-
-	setTimeout(function () {
-		purifier.backlog = true;
-	}, 2000);
+	// what if I didn't run this until the background script sent its event?
+	// I guess images would be visible while loading?
+	// do a run on loading, then start the observer on completed?
+	//prepareEvents is the one that watches for the DOM status
+	purifier.run();
+	observer.start(document.body);
 }
 
 // Activate censoring on this page.
@@ -199,7 +127,8 @@ const configureListeners = () => {
 		console.log(`content-script onMessage listener!`);
 		if(request.msg === "getClickedEl" && lastClickElement) {
 			lastClickElement.classList.add("redoRequest");
-			let respValue = {src: lastClickElement["src"], id: lastClickElement.getAttribute('censor-id')};
+			let origSrc = lastClickElement.getAttribute('censor-src');
+			let respValue = {src: lastClickElement.getAttribute("src"), id: lastClickElement.getAttribute('censor-id'), origSrc};
 			console.log('sending getClickedEl response', respValue)
 			sendResponse(respValue);
 		}
@@ -226,6 +155,13 @@ const configureListeners = () => {
 			}
 		}
 	});
+
+	chrome.runtime.onMessage.addListener((req, sender) => {
+		if (req.msg === 'pageChanged') {
+			console.log('notified of page change, re-running!');
+			runCensoring(false);
+		}
+	})
 }
 
 
@@ -260,7 +196,7 @@ const testStorage = async () => {
 
 // getLocalPlaceholder();
 
-testStorage();
+// testStorage();
 
 loadPlaceholders().then(() => {
 	configureListeners();

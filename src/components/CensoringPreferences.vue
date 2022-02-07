@@ -115,110 +115,6 @@
                 </div>
             </n-tab-pane>
             </template>
-            <!-- <n-tab-pane name="exposed" tab="Exposed">
-                <div v-if="prefs && prefs.exposed">
-                    <n-form :model="prefs.exposed" label-placement="left" :label-width="120">
-                        <template v-for="(value, name) in prefs.exposed" v-bind:key="name">
-                            <n-form-item
-                                :label="name"
-                                :path="name"
-                                v-if="(prefs.exposed[name] as any).length"
-                            >
-                                <n-input-group class="censor-input-group">
-                                    <n-select
-                                        v-model:value="prefs.exposed[name][0]"
-                                        :options="rawCensorTypes"
-                                        :style="{ width: '25%' }"
-                                    />
-                                    <n-slider
-                                        :min="1"
-                                        :max="22"
-                                        v-model:value="prefs.exposed[name][1]"
-                                        :marks="sliderMarks"
-                                        :step="1"
-                                        :style="{ width: '50%' }"
-                                    />
-                                </n-input-group>
-                            </n-form-item>
-                        </template>
-                        <template v-for="(value, name) in prefs.exposed" v-bind:key="name">
-                            <n-form-item
-                                :label="name"
-                                :path="name"
-                                v-if="(prefs.exposed[name] as any).method"
-                            >
-                                <n-input-group class="censor-input-group">
-                                    <n-select
-                                        v-model:value="(prefs.exposed[name] as { method: CensorType, level: number }).method"
-                                        :options="rawCensorTypes"
-                                        :style="{ width: '25%' }"
-                                    />
-                                    <n-slider
-                                        :min="1"
-                                        :max="22"
-                                        v-model:value="(prefs.exposed[name] as { method: CensorType, level: number }).level"
-                                        :marks="sliderMarks"
-                                        :step="1"
-                                        :style="{ width: '50%' }"
-                                    />
-                                </n-input-group>
-                            </n-form-item>
-                        </template>
-                    </n-form>
-                </div>
-            </n-tab-pane> -->
-            <!-- <n-tab-pane name="covered" tab="Covered">
-                <div v-if="prefs && prefs.exposed">
-                    <n-form :model="prefs.exposed" label-placement="left" :label-width="120">
-                        <template v-for="(value, name) in prefs.exposed" v-bind:key="name">
-                            <n-form-item
-                                :label="name"
-                                :path="name"
-                                v-if="(prefs.exposed[name] as any).length"
-                            >
-                                <n-input-group class="censor-input-group">
-                                    <n-select
-                                        v-model:value="prefs.exposed[name][0]"
-                                        :options="rawCensorTypes"
-                                        :style="{ width: '25%' }"
-                                    />
-                                    <n-slider
-                                        :min="1"
-                                        :max="22"
-                                        v-model:value="prefs.exposed[name][1]"
-                                        :marks="sliderMarks"
-                                        :step="1"
-                                        :style="{ width: '50%' }"
-                                    />
-                                </n-input-group>
-                            </n-form-item>
-                        </template>
-                        <template v-for="(value, name) in prefs.exposed" v-bind:key="name">
-                            <n-form-item
-                                :label="name"
-                                :path="name"
-                                v-if="(prefs.exposed[name] as any).method"
-                            >
-                                <n-input-group class="censor-input-group">
-                                    <n-select
-                                        v-model:value="(prefs.exposed[name] as { method: CensorType, level: number }).method"
-                                        :options="rawCensorTypes"
-                                        :style="{ width: '25%' }"
-                                    />
-                                    <n-slider
-                                        :min="1"
-                                        :max="22"
-                                        v-model:value="(prefs.exposed[name] as { method: CensorType, level: number }).level"
-                                        :marks="sliderMarks"
-                                        :step="1"
-                                        :style="{ width: '50%' }"
-                                    />
-                                </n-input-group>
-                            </n-form-item>
-                        </template>
-                    </n-form>
-                </div>
-            </n-tab-pane> -->
         </n-tabs>
         <template #footer>
             You can individually adjust each body part using the sliders and dropdowns above.
@@ -255,21 +151,7 @@ const rawCensorTypes = [{
 watch(prefs, async (newMode, prevMode) => {
     console.log(`prefs watch: ${prevMode}->${newMode}`);
     updatePrefs!();
-    // if (prevMode && (prevMode?.mode ?? "") !== "") {
-    // await updatePrefs(prefs.value);
-    // const n = notif.create({
-    //       content: 'Saved!',
-    //       duration: 2500,
-    //       closable: true
-    //     });
-    // }
 }, {deep: true});
-
-// return {
-//     host,
-//     getCurrentHost,
-//     saveHost
-// }
 
 </script>
 <style>
