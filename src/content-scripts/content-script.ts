@@ -8,6 +8,7 @@ import { runSubliminal } from "./subliminal";
 import { CensoringState, CensoringContext } from "./types";
 import { hashCode, isSafe } from "@/util";
 import { PageObserver } from "./observer";
+import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
 
 // console.log('Hello from the content-script');
 
@@ -58,7 +59,11 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	let preferences = confPrefs['preferences'] as IPreferences;
 	// let tab = await chrome.tabs.getCurrent();
 	// let placeholders = await getAvailablePlaceholders();
-	let placeholders = await getEnabledPlaceholders(preferences);
+	let newProm = new Promise(resolve => {
+		chrome.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event}, resp => resolve(resp));
+	})
+	let placeholders: any = await newProm;
+	console.debug('got placeholder response maybe?', placeholders)
 	//TODO; not how that works
 	preferences!.enabledPlaceholders = placeholders.categories;
 	let purifier = new Purifier(state, preferences!.videoCensorMode, window.location, placeholders.allImages);

@@ -1,4 +1,4 @@
-import { isSafe } from "@/util";
+import { isNodeSafe, isSafe } from "@/util";
 import { Purifier } from "./purifier";
 
 
@@ -40,8 +40,9 @@ export class PageObserver {
         mutations.forEach(mutation => {
             if (mutation.type === "attributes" && mutation.attributeName === "src") {
                 let target = mutation.target as Element;
-                let safe = isSafe(mutation.target["src"], this._hashList);
-                console.log(`mutation running, checking for safe! ${safe}`, mutation.target["src"]);
+                // let safe = isSafe(mutation.target["src"], this._hashList);
+                let safe = isNodeSafe(mutation.target, this._hashList);
+                console.debug(`mutation running, checking for safe! ${safe}`, mutation.target);
                 if (safe) {
                     // Do nothing since it's safe.
                 } else {

@@ -2,6 +2,8 @@ import { isValidUrl } from "@/util";
 import { CensoringState, ImageStyleElement } from "./types";
 import { generateUUID, getRandom } from "./util";
 import { debounce } from "throttle-debounce";
+import { LocalPlaceholder } from "@/placeholders";
+import { PlaceholderService } from "@/services/placeholder-service";
 
 
 export class Purifier {
@@ -24,7 +26,7 @@ export class Purifier {
         this._start();
     });
     
-    private _placeholders: string[];
+    private _placeholders: LocalPlaceholder[];
     private _domain: any;
     private _ready: boolean;
     public get ready(): boolean {
@@ -48,7 +50,7 @@ export class Purifier {
     /**
      *
      */
-    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: string[], lastRun?: number) {
+    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], lastRun?: number) {
         // Only update once in a while.
         this._lastRun = lastRun ?? new Date().getTime();
         this._currentState = state;
@@ -65,7 +67,15 @@ export class Purifier {
     private getPlaceholderSrc = () => {
         let placeholder = chrome.runtime.getURL('/images/loading.png');
         if (this._placeholders.length && this._placeholders.length > 0) {
-            placeholder = chrome.runtime.getURL(getRandom(this._placeholders));
+            try {
+            let random = getRandom(this._placeholders);
+            console.debug('selecting candidate placeholder', random, random.data?.size ?? -1);
+            
+            let src = PlaceholderService.toSrc(random);
+            placeholder = src ? src : placeholder;
+            } catch {
+                console.warn('failed to get placeholder!');
+            }
         }
         return placeholder;
     }

@@ -1,7 +1,7 @@
 /// <reference types="chrome"/>
 
 import { WebSocketClient } from "./transport/webSocketClient";
-import { cancelRequestsForId, processContextClick, processMessage, REDO_CENSOR } from "./events";
+import { cancelRequestsForId, processContextClick, processMessage, CMENU_REDO_CENSOR } from "./events";
 import { getExtensionVersion } from "./util";
 import { CSSManager } from "./content-scripts/cssManager";
 import { IPreferences } from "./preferences";
@@ -42,7 +42,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
   initExtension();
   chrome.contextMenus.create({
-    id: REDO_CENSOR,
+    id: CMENU_REDO_CENSOR,
     title: "(Re)censor image / animate GIF",
     contexts: ["image"],
   }, () => {
@@ -53,7 +53,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.runtime.onStartup.addListener(() => {
   //TODO: we need to do a settings sync here;
   chrome.contextMenus.create({
-    id: REDO_CENSOR,
+    id: CMENU_REDO_CENSOR,
     title: "(Re)censor image / animate GIF",
     contexts: ["image"]
   }, () => {
@@ -69,9 +69,15 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   return true;
 });
 
-chrome.runtime.onMessage.addListener((msg, sender) => {
-  getClient().then(client =>
-    processMessage(msg, sender, client))
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  getClient().then(client => {
+    let version = getExtensionVersion();
+    const ctx = {
+      socketClient: client,
+      version
+    }
+    processMessage(msg, sender, sendResponse, ctx)
+  });
   return true;
 });
 

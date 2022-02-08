@@ -33,7 +33,17 @@ const getCurrentMode = async () => {
 
 const updateMode = async () => {
     console.log(`saving new mode ${mode.value}`);
+    let newMode = mode.value as OperationMode;
     prefs.mode = mode.value;
+    let modeText = newMode == OperationMode.Disabled
+        ? '❌'
+        : newMode == OperationMode.Enabled
+            ? '✅'
+            : '💡';
+    try {
+        chrome.action.setBadgeText({ text: modeText });
+        chrome.action.setBadgeBackgroundColor({color: 'silver'});
+    } catch {}
     await savePreferencesToStorage(prefs);
 }
 

@@ -22,9 +22,10 @@
     "<all_urls>"
   ],
   "icons": {
-    "16": "icons/16.png",
-    "48": "icons/48.png",
-    "128": "icons/128.png"
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "background": {
     "service_worker": "background.js",
@@ -34,13 +35,15 @@
     "default_popup": "popup.html",
     "default_title": "__MSG_extName__",
     "default_icon": {
-      "19": "icons/19.png",
-      "38": "icons/38.png"
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
     }
   },
   "options_ui": {
     "page": "options.html",
-    "browser_style": true
+    "browser_style": true,
+    "open_in_tab": true
   },
   "content_security_policy": {
     "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"

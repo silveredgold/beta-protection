@@ -3,34 +3,9 @@
   <n-notification-provider>
     <n-card size="small">
     <n-page-header subtitle="For the full set of options, check the extension settings" >
-    <!-- <n-grid :cols="5">
-      <n-gi>
-        <n-statistic label="Episodes" value="125" />
-      </n-gi>
-      <n-gi>
-        <n-statistic label="Guests" value="22" />
-      </n-gi>
-      <n-gi>
-        <n-statistic label="Apologies" value="36" />
-      </n-gi>
-      <n-gi>
-        <n-statistic label="Topics" value="83" />
-      </n-gi>
-      <n-gi>
-        <n-statistic label="Reference Links" value="2,346" />
-      </n-gi>
-    </n-grid> -->
     <template #title>
         Beta Protection
     </template>
-    <!-- <template #header>
-      <n-breadcrumb>
-        <n-breadcrumb-item>Podcast</n-breadcrumb-item>
-        <n-breadcrumb-item>Best Collection</n-breadcrumb-item>
-        <n-breadcrumb-item>Ultimate Best Collection</n-breadcrumb-item>
-        <n-breadcrumb-item>Anyway.FM</n-breadcrumb-item>
-      </n-breadcrumb>
-    </template> -->
     <template #avatar>
       <n-avatar :src="iconSrc" />
     </template>
@@ -68,7 +43,11 @@ import { themeOverrides } from "../util";
 
 const iconSrc = chrome.runtime.getURL('/images/icon.png');
 const openSettings = () => {
-  chrome.runtime.openOptionsPage();
+  if (chrome.runtime.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+  } else {
+    window.open(chrome.runtime.getURL('options.html'));
+  }
 }
 
 // loading

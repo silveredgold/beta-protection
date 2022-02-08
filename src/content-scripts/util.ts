@@ -1,7 +1,7 @@
 import { IPreferences } from "@/preferences/types";
 import { CensoringContext } from "./types";
 
-export function getRandom(src: string[]): string {
+export function getRandom<Type>(src: Type[]): Type {
     return src[Math.floor(Math.random()*src.length)]
 }
 

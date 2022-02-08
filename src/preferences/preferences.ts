@@ -55,7 +55,8 @@ export const defaultPrefs: IPreferences = {
         duration: 200
     },
     allowList: [],
-    forceList: []
+    forceList: [],
+    errorMode: 'normal'
 }
 
 export function createPreferencesFromBackend(raw: rawPreferences): IPreferences {

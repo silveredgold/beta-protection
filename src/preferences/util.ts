@@ -1,3 +1,4 @@
+import { LocalPlaceholder } from "@/placeholders";
 import { PlaceholderService } from "@/services/placeholder-service";
 import { StickerService } from "@/services/sticker-service";
 import { IPreferences, loadPreferencesFromStorage } from ".";
@@ -6,9 +7,10 @@ export async function getAvailableStickers() {
     let cats = await StickerService.getAvailable();
 }
 
-export async function getAvailablePlaceholders(): Promise<{categories: string[], allImages: string[]}> {
+export async function getAvailablePlaceholders(): Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
     let placeholderCategories = await PlaceholderService.getCategories();
-    let allPlaceholders = await PlaceholderService.getAssetPaths(placeholderCategories);
+    let allPlaceholders = await PlaceholderService.getLocalPlaceholders(placeholderCategories);
+    // let allPlaceholders = await PlaceholderService.getBackendAssetPaths(placeholderCategories);
     if (placeholderCategories && allPlaceholders) {
         return {allImages: allPlaceholders, categories: placeholderCategories};
     }
@@ -30,18 +32,24 @@ export async function getAvailablePlaceholders(): Promise<{categories: string[],
     return {allImages: [], categories: []}
 }
 
-export async function getEnabledPlaceholders(prefs?: IPreferences): Promise<{categories: string[], allImages: string[]}> {
+export async function getEnabledPlaceholders(prefs?: IPreferences): Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
+    let enabledCategories = await getEnabledPlaceholderCategories(prefs);
+    // console.log('getting assets for enabled categories', enabledCategories);
+    let enabledPlaceholders = await PlaceholderService.getLocalPlaceholders(enabledCategories);
+    console.debug('returning results', enabledCategories, enabledPlaceholders);
+    // console.log('got enabled assets', enabledPlaceholders);
+    return {
+        allImages: enabledPlaceholders,
+        categories: enabledCategories
+    };
+}
+
+export async function getEnabledPlaceholderCategories(prefs?: IPreferences) {
     let placeholderCategories = await PlaceholderService.getCategories();
     // let allPlaceholders = await PlaceholderService.getAssetPaths();
     if (!prefs?.enabledPlaceholders) {
         prefs = await loadPreferencesFromStorage();
     }
     let enabledCategories = placeholderCategories.filter(cat => (prefs!.enabledPlaceholders ?? []).includes(cat));
-    // console.log('getting assets for enabled categories', enabledCategories);
-    let enabledPlaceholders = await PlaceholderService.getAssetPaths(enabledCategories);
-    // console.log('got enabled assets', enabledPlaceholders);
-    return {
-        allImages: enabledPlaceholders,
-        categories: enabledCategories
-    };
+    return enabledCategories;
 }

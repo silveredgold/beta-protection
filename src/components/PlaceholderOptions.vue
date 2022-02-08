@@ -2,10 +2,9 @@
 <n-card title="Placeholder Preferences" size="small">
         <!-- <template #header-extra>Backend Host</template> -->
         <div>
+            <n-thing title="No placeholders loaded" description="Load placeholders into the store to choose what categories to use here." v-if="!placeholders || placeholders.length == 0" />
              <n-list bordered v-if="placeholders">
                  <n-checkbox-group v-model:value="enabled">
-                <!-- <template #header> hhh </template>
-                <template #footer> fff </template> -->
                     <n-list-item v-for="category in placeholders" v-bind:key="category">
                     <template #prefix>
                         <n-checkbox :value="category" />
@@ -27,6 +26,7 @@ import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxG
 import { loadPreferencesFromStorage, IPreferences, OperationMode, getAvailablePlaceholders } from '../preferences';
 import { updateUserPrefs } from '../options/services';
 import { PlaceholderService } from '@/services/placeholder-service';
+import { LocalPlaceholder } from '@/placeholders';
 
 const props = defineProps<{
     preferences: Ref<IPreferences>
@@ -36,7 +36,7 @@ const notif = useNotification();
 let { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
-const availablePlaceholders: Ref<{categories: string[], allImages: string[]}> = ref({allImages: [], categories: []});
+const availablePlaceholders: Ref<{categories: string[], allImages: LocalPlaceholder[]}> = ref({allImages: [], categories: []});
 
 const placeholders = computed(() => availablePlaceholders?.value?.categories?.length ? availablePlaceholders?.value?.categories : []);
 
@@ -51,7 +51,10 @@ const enabled = computed({
 
 const getCount = (category: string): number => {
     let currentCount = 0;
-    let matchingAssets = availablePlaceholders.value.allImages.filter(img => img.startsWith("images/placeholders/" + category));
+    let matchingItems = (availablePlaceholders?.value?.allImages ?? []);
+    let matchingAssets = matchingItems.filter(img => {
+        return img?.category === category
+    });
     if (matchingAssets && matchingAssets.length > 0) {
         // console.log('matching assets', matchingAssets);
         currentCount = matchingAssets.length;
@@ -71,8 +74,20 @@ onBeforeMount(() => {
 
 const loadPlaceholders = async () => {
     let holders = await getAvailablePlaceholders();
+    console.log('got placeholder DB', holders);
     return holders;
 }
+
+chrome.runtime.onMessage.addListener((request, sender, response) => {
+  if (request['msg'] === 'reloadPlaceholders') {
+    setTimeout(() => {
+      console.log('reloading placeholders for options view');
+      loadPlaceholders().then(ph => {
+        availablePlaceholders.value = ph;
+        });
+    }, 1000);
+  }
+});
 
 
 </script>

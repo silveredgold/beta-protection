@@ -19,7 +19,7 @@
                             <n-input-group>
                                 <n-input-group-label>Match</n-input-group-label>
                                 <n-input :style="{ maxWidth: '50%' }" v-model:value="newMatch" />
-                                <n-button type="primary" @click="addForced">Add New</n-button>
+                                <n-button type="primary" @click="addAllow">Add New</n-button>
                             </n-input-group>
                         </template>
                     </n-list>
