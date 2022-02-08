@@ -1,105 +1,64 @@
-import { loadPreferencesFromStorage, toRaw } from "./preferences";
-import { IPreferences } from "./preferences/types";
+import { MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED } from "./messaging/placeholders";
+import { idUrlMap, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS } from "./messaging/util";
+import { loadPreferencesFromStorage } from "./preferences";
 import { WebSocketClient } from "./transport/webSocketClient";
 import { getExtensionVersion } from "./util";
 
-export const REDO_CENSOR = "BSNG_REDO_CENSOR";
+export const CMENU_REDO_CENSOR = "BSNG_REDO_CENSOR";
 
-let idUrlMap = new Map();
+
+
+const knownMessages = [MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS];
 
 export function processContextClick(info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab|undefined, client: WebSocketClient) {
     let eVersion = getExtensionVersion();
-    if (tab && info.menuItemId === REDO_CENSOR) {
+    console.log('prcessing context click event', info, tab);
+    if (tab && info.menuItemId === CMENU_REDO_CENSOR) {
         chrome.tabs.sendMessage(tab.id!, {msg: "getClickedEl"}, function(value) {
-            let classList = String(value.value).split(' ');
-            for(let i = 0; i < classList.length; i++){
-                if(/[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}/.exec(classList[i])) {
-                    let id = classList[i];
-                    let img;
+            if (value.id) {
+                let id = value.id;
+                let img: string;
                     if(idUrlMap.has(id)){
                         img = idUrlMap.get(id);
                     } else {
                         img = value.src;
                         idUrlMap.set(id, value.src);
                     }
-
-                    // if(pref === undefined || pref.length === 0){
-                    //     loadPreferences();
-                    // }
-                    client.sendObj({
-                        version: eVersion,
-                        msg: "redoCensor",
-                        url: img,
-                        tabid: tab.id,
-                        id: id,
-                        priority: 1,
-                        // preferences: pref,
-                        type: "normal"
+                    loadPreferencesFromStorage().then(prefs => {
+                        client.sendObj({
+                            version: eVersion,
+                            msg: "redoCensor",
+                            url: img,
+                            tabid: tab.id,
+                            id: id,
+                            priority: 1,
+                            preferences: prefs,
+                            type: "normal"
+                        });
                     });
-                    break;
-                }
             }
         });
     }
 }
 
-export async function processMessage(message: any, sender: chrome.runtime.MessageSender, socketClient: WebSocketClient) {
-    let version = getExtensionVersion();
-    if(message.msg === "getStatistics"){
-        socketClient.send(JSON.stringify({
-            version: version,
-            msg: "getStatistics"
-        }));
-    }
-    if(message.msg === "resetStatistics"){
-        socketClient.send(JSON.stringify({
-            version: version,
-            msg: "resetStatistics"
-        }));
-    }
-    if(message.msg === "censorRequest") {
-        let img = String(message.imageURL);
-        idUrlMap.set(message.id, img);
-        let preferences: IPreferences;
-        if (message.prefs !== undefined) {
-            preferences = message.prefs as IPreferences;
-        } else {
-            preferences = await loadPreferencesFromStorage();
+export type MessageContext = {
+    socketClient: WebSocketClient,
+    version: string;
+};
+
+export async function processMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void, ctx: MessageContext) {
+    console.log('background processing msg', message);
+    for (const msg of knownMessages) {
+        if (message.msg === msg.event) {
+            let result = await msg.handler(message, sender, sendResponse, ctx);
+            sendResponse?.(result);
         }
-        let requestType = "censorImage";
-        if (preferences.autoAnimate) {
-            requestType = "redoCensor";
-        }
-        socketClient.send(JSON.stringify({
-            version: version,
-            msg: requestType,
-            url: img,
-            tabid: sender.tab!.id,
-            id: message.id,
-            priority: message.priority,
-            preferences: toRaw(preferences),
-            type: message.type,
-            domain: message.domain
-        }));
     }
+    console.warn('did not find a known message handler, unknown runtime message', message, sender);
 }
 
 export function onTabChange(tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab, socketClient: WebSocketClient) {
     if (changeInfo.url) {
-        // chrome.storage.local.get("logs", function(list) {
-        //     let logs = list["logs"];
-        //     if(logs === undefined){
-        //         logs = [];
-        //     }
-        //     logs.push(changeInfo.url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase());
-        //     if(logs.length > 50) {
-        //         logs.shift();
-        //     }
-        //     let obj = {}
-        //     obj["logs"] = logs;
-        //     chrome.storage.local.set(obj);
-        // });
-        //TODO: what are these logs for?
 
         cancelRequestsForId(tabId, socketClient);
     }
@@ -112,3 +71,4 @@ export function cancelRequestsForId(tabId: number, socketClient: WebSocketClient
         tabid: tabId
     });
 }
+

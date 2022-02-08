@@ -1,23 +1,47 @@
-import { IPreferences } from "@/preferences/types";
 import { isValidUrl } from "@/util";
-import { CensoringState } from "./types";
+import { CensoringState, ImageStyleElement } from "./types";
 import { generateUUID, getRandom } from "./util";
+import { debounce } from "throttle-debounce";
+import { LocalPlaceholder } from "@/placeholders";
+import { PlaceholderService } from "@/services/placeholder-service";
 
 
 export class Purifier {
     private _currentState: CensoringState;
-    backlog: boolean = false;
-    private _placeholders: string[];
+    
+    private _backlog : boolean = false;
+    public get backlog() : boolean {
+        return this._backlog;
+    }
+    public set backlog(v : boolean) {
+        this._backlog = v;
+        if (this._backlog) {
+            this.queueStart();
+        }
+    }
+
+    private queueStart = debounce(1000, () => {
+        console.log('debounce complete, running purifier');
+        this._backlog = false;
+        this._start();
+    });
+    
+    private _placeholders: LocalPlaceholder[];
     private _domain: any;
     private _ready: boolean;
-
-
     public get ready(): boolean {
         return this._ready;
     }
     public set ready(v : boolean) {
         this._ready = v;
     }
+
+    
+    private _urlTransformers : ((url: string) => string)[] = [];
+    public get urlTransformers() : ((url: string) => string)[] {
+        return this._urlTransformers;
+    }
+    
     
 
 
@@ -26,7 +50,7 @@ export class Purifier {
     /**
      *
      */
-    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: string[], lastRun?: number) {
+    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], lastRun?: number) {
         // Only update once in a while.
         this._lastRun = lastRun ?? new Date().getTime();
         this._currentState = state;
@@ -37,179 +61,222 @@ export class Purifier {
             location = (location as Location).hostname;
         }
         this._domain = location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
+        this._urlTransformers.push(srcUrl => srcUrl.replace(".gifv", ".gif"))
     }
 
-    start = () => {
-        let time = new Date().getTime();
-        let elements = document.body.getElementsByTagName("img");
-        let bgElements = document.body.getElementsByTagName("*");
-        if ((time - this._lastRun) > 500 && this._ready) {
-            this._lastRun = time;
-            this.discoverImages([...elements]);
-            this.discoverBackgroundImages([...bgElements]);
-            if (this._currentState.activeCensoring && this._videoMode == "Block") {
-                this.purifyiVideo("video-element", "images/video.gif");
-                this.purifyiVideo("video", "images/video.gif");
+    private getPlaceholderSrc = () => {
+        let placeholder = chrome.runtime.getURL('/images/loading.png');
+        if (this._placeholders.length && this._placeholders.length > 0) {
+            try {
+            let random = getRandom(this._placeholders);
+            console.debug('selecting candidate placeholder', random, random.data?.size ?? -1);
+            
+            let src = PlaceholderService.toSrc(random);
+            placeholder = src ? src : placeholder;
+            } catch {
+                console.warn('failed to get placeholder!');
             }
-        } else {
-            this.backlog = true;
+        }
+        return placeholder;
+    }
+
+    private getVideoPlaceholderSrc = (): {poster: string, video: string} => {
+        const placeholder = chrome.runtime.getURL("images/video.gif");
+        const video = chrome.runtime.getURL("image/video.mp4");
+        return {poster: placeholder, video};
+    }
+
+    private _start = () => {
+        const elements = document.body.getElementsByTagName("img");
+        const bgElements = document.body.getElementsByTagName("*");
+        //images first
+        let targetEls = this.discoverImages([...elements]);
+        for (const el of targetEls) {
+            this.censorImage(el)
+        }
+
+        const targetBacks = this.discoverStyleImages([...bgElements]);
+        for (const target of targetBacks) {
+            this.censorStyleImage(target);
+        }
+        if (this._currentState.activeCensoring && this._videoMode == "Block") {
+            const videoElements = this.discoverVideos(['video', 'video-element']);
+            this.disableVideos(videoElements);
         }
     }
 
-    discoverImages = (elements: HTMLImageElement[]) => {
+    run = () => {
+        this.queueStart();
+    }
+
+    private discoverStyleImages = (elements: Element[]) => {
+        const backgroundEls: ImageStyleElement[] = elements.map(el => {
+            const style = window.getComputedStyle(el, null);
+            const background = style.getPropertyValue("background")
+            return {element: el, background};
+        }).filter(bg => !!bg.background);
+        const matchingEls = backgroundEls.map(bg => {
+            if (bg.background) {
+                const srcChecker = /url\(\s*?['"]?\s*?(\S+?)\s*?["']?\s*?\)/i;
+                let match = srcChecker.exec(bg.background);
+                if (match) {
+                    bg.imageUrl = match[1]
+                }
+            }
+            return bg;
+        });
+        return matchingEls;
+    }
+
+    private discoverImages = (elements: HTMLImageElement[]): HTMLImageElement[] => {
+        const targetEls: HTMLImageElement[] = [];
         elements.forEach(el => {
             if (el.tagName === "IMG" && el.srcset.length > 0) {
-                let url = el.currentSrc;
+                const url = el.currentSrc;
                 if (url !== "" && isValidUrl(url)) {
                     el.srcset = "";
                     el.src = url;
                 }
             }
-            if (el.tagName === "IMG" && isValidUrl(el.src)
-                && !el.classList.contains("purified") && !el.classList.contains("purifying")) {
-                    // console.log(`purifying ${el}`);
-                this.purifyImage(el);
+            if (el.tagName === "IMG" && isValidUrl(el.src)) {
+                if (this.isUnsafe(el)) {
+                    targetEls.push(el);
+                    // this.purifyImage(el);
+                }
             }
         });
+        return targetEls;
     }
 
-    purifyImage = (img: HTMLImageElement) => {
+    private censorImage = (img: HTMLImageElement) => {
         if (img.complete && img.naturalWidth > 0) {
-            this.parseLoadedImageURL(img);
+            const url = this.normalizeSrcUrl(img);
+            this.censorLoadedImage(url, img);
         } else {
             this.backlog = true;
         }
     }
 
-    // Stage three. Some URL's need to be adapted for the censoring to work.
-    // Tumblr images especially need a proper whacking (updated the backend it's more robust now!).
-    parseLoadedImageURL = (img: HTMLImageElement) => {
-        //$(img).attr('width', img.width);
-        let imageURL = img.getAttribute('src')!;
-        if (imageURL) {
-            imageURL = imageURL.replace(".gifv", ".gif");
-        }
-        console.log(`parsed ${imageURL}!`);
-        this.purifyLoadedImage(imageURL, img);
+    // backend seems to take almost anything these days
+    // this is more of an extension point.
+    private normalizeSrcUrl = (img: HTMLImageElement) => {
+        const imageURL = img.getAttribute('src')!;
+        return this.normalizeUrl(imageURL);
     }
 
-    purifyLoadedImage = (imageURL: string, img: HTMLImageElement) => {
-        if (!img.classList.contains("purified") && !img.classList.contains("purifying") && this._ready) {
+    private normalizeUrl = (srcUrl: string) => {
+        if (srcUrl) {
+            for (const func of this._urlTransformers) {
+                srcUrl = func(srcUrl) ?? srcUrl;
+            }
+        }
+        return srcUrl;
+    }
+
+    private censorLoadedImage = (imageURL: string, img: HTMLImageElement) => {
+        if (this.isUnsafe(img) && this._ready) {
             if (img.width * img.height > 15000 && img.width > 100 && img.height > 100 && !imageURL.includes(".svg")) {
-                let uniqueID = generateUUID();
-                img.classList.add(uniqueID);
+                const uniqueID = generateUUID();
+                img.setAttribute('censor-id', uniqueID);
+                img.setAttribute('censor-src', imageURL);
                 if (img.clientWidth > 0) {
                     img.width = img.clientWidth;
                 }
                 if (this._currentState && this._currentState.activeCensoring) {
-                    console.log(`adding purifying class!`)
-                    img.classList.add("purifying");
-                    let placeholder = chrome.runtime.getURL(getRandom(this._placeholders));
+                    img.setAttribute('censor-state', 'censoring');
+                    const placeholder = this.getPlaceholderSrc();
                     console.log(`got placeholder URL: ${placeholder}`);
-                    let priority = img.getBoundingClientRect().top | 0;
-
-                    let placeHolderImage = new Image();
-                    let domain = this._domain;
-                    placeHolderImage.onload = function () {
+                    const priority = img.getBoundingClientRect().top | 0;
+                    const placeHolderImage = new Image();
+                    placeHolderImage.onload = () => {
                         img.addEventListener('load', () => {
-                            console.log(`adding purified!`);
-                            img.classList.add("purified");
+                            img.setAttribute('censor-state', 'censored');
                         }, { once: true });
                         img.src = placeHolderImage.src;
-                        chrome.runtime.sendMessage({
-                            msg: 'censorRequest',
-                            imageURL: imageURL,
-                            id: uniqueID,
-                            priority: priority,
-                            type: "normal",
-                            domain: domain
-                        });
+                        this.sendCensorRequest(imageURL, uniqueID, "normal", priority);
                     };
                     placeHolderImage.setAttribute('src', placeholder);
                 } else {
-                    img.classList.add("purified");
+                    img.setAttribute('censor-state', 'censored');
                 }
             } else {
-                img.classList.add("excluded")
-                img.classList.add("purified");
+                img.setAttribute('censor-state', 'excluded');
             }
         } else {
             this.backlog = true;
         }
-
     }
 
-    purifyiVideo = (tagName: string, placeholder: string) => {
-
-        let elementList = document.getElementsByTagName(tagName);
-        for (let i = 0; i < elementList.length; i++) {
-            if (!elementList[i].classList.contains("purified")) {
-                elementList[i].outerHTML = "<video class=\"purified\" poster='" + chrome.runtime.getURL(placeholder) + "'>" +
-                    "<source type=\"video/mp4\">" +
-                    "</video>";
-
-                elementList[i].setAttribute('src', chrome.runtime.getURL("images/video.mp4"))
-            }
-        }
-    }
-
-    // Stage one, iterate over all DOM elements to find (BG) images that need to be censored.
-    discoverBackgroundImages = (elements: Element[]) => {
-        elements.forEach(el => {
-            let style = window.getComputedStyle(el, null).getPropertyValue("background");
-            this.checkBackgroundStyle(style, el);
-        });
-    }
-
-    // Stage two, background images. Send it to the background for censoring.
-    purifyBackgroundImage = (imageURL, uniqueID) => {
-        imageURL = imageURL.replace(".gifv", ".gif");
-        console.log(`sending request for ${imageURL}`);
+    private sendCensorRequest = (imageUrl: string, id: string, type: "BG"|"normal", priority?: number) => {
         chrome.runtime.sendMessage({
             msg: 'censorRequest',
-            imageURL: imageURL,
-            id: uniqueID,
-            priority: 1,
-            type: "BG",
+            imageURL: imageUrl,
+            id: id,
+            priority: priority ?? 1,
+            type: type,
             domain: this._domain
         });
     }
 
-    checkBackgroundStyle = (style, el: Element) => {
-        if (style !== "none" && !el.classList.contains("excludedBG") && !el.classList.contains("purifiedBG") && this._ready) {
-            const srcChecker = /url\(\s*?['"]?\s*?(\S+?)\s*?["']?\s*?\)/i;
-            let match = srcChecker.exec(style);
-            if (match) {
-                let imageURL = match[1];
-                if (isValidUrl(imageURL) && !imageURL.includes(".svg")) {
-                    let image = new Image();
+    private censorStyleImage = (img: ImageStyleElement) => {
+        if (img.imageUrl) {
+            const imageURL = this.normalizeUrl(img.imageUrl);
+            if (isValidUrl(imageURL) && !imageURL.includes(".svg")) {
+                let image = new Image();
 
-                    // just in case it is not already loaded
-                    image.addEventListener('on', () => {
-                        if (image.width * image.height > 15000 && image.width > 100 && image.height > 100) {
-                            let uniqueID = generateUUID();
-
-                            el.classList.add(uniqueID);
-                            if (this._currentState && this._currentState.activeCensoring) {
-                                try {
-                                    (el as HTMLElement).style.backgroundImage = 'url("' + chrome.runtime.getURL(getRandom(this._placeholders)) + '")';
-                                } catch { }
-
-                                this.purifyBackgroundImage(imageURL, uniqueID); // save background image url
-                            }
-                            el.classList.add("purifiedBG");
-                        } else {
-                            el.classList.add("excludedBG");
-                            el.classList.add("purifiedBG");
+                // just in case it is not already loaded
+                image.addEventListener('on', () => {
+                    if (image.width * image.height > 15000 && image.width > 100 && image.height > 100) {
+                        const uniqueID = generateUUID();
+                        img.element.setAttribute('censor-id', uniqueID);
+                        if (this._currentState && this._currentState.activeCensoring) {
+                            let placeholder = this.getPlaceholderSrc();
+                            try {
+                                (img.element as HTMLElement).style.backgroundImage = 'url("' + placeholder + '")';
+                            } catch { }
+                            this.sendCensorRequest(imageURL, uniqueID, "BG", 1);
                         }
-                    }, { once: true });
-                    image.src = imageURL;
+                        img.element.setAttribute('censor-style', 'censored');
+                    } else {
+                        img.element.setAttribute('censor-style', 'excluded');
+                        img.element.setAttribute('censor-exclusion', 'size');
+                    }
+                }, { once: true });
+                image.src = imageURL;
+            }
+        } else {
+            img.element.setAttribute('censor-style', 'unmatched_url');
+            img.element.setAttribute('censor-exclusion', 'size');
+        }
+    }
+
+    private discoverVideos = (tagNames: string[]) => {
+        const allEls = tagNames.map(tn => document.getElementsByTagName(tn)).flatMap(a => [...a]);
+        return allEls;
+    }
+
+    private disableVideos = (elements: Element[]) => {
+        for (const videoEl of elements) {
+            if (this.isUnsafe(videoEl)) {
+                const videoPl = this.getVideoPlaceholderSrc();
+                videoEl.outerHTML = `<video censor-state="censored" poster='${videoPl.poster}'>` +
+                    `<source type="video/mp4">` +
+                    `</video>`;
+                const srcEl = videoEl.getElementsByTagName('source');
+                if (srcEl && srcEl.length == 1) {
+                    srcEl[0].setAttribute('src', videoPl.video);
                 }
-            } else {
-                el.classList.add('excludedBG');
-                el.classList.add("purifiedBG");
             }
         }
+    }
+
+    private isUnsafe = (el: Element, mode: "normal"|"bg" = "normal") => {
+        const elState = mode === "normal" ? el.getAttribute('censor-state') : el.getAttribute('censor-style');
+        return this.isUnsafeState(elState);
+    }
+
+    private isUnsafeState = (elState: string | null) => {
+        return elState !== 'censored' && elState !== 'censoring' && elState !== 'excluded';
     }
 
 }

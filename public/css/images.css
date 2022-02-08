@@ -1,0 +1,28 @@
+/* img:not(.purified) {
+    visibility: hidden !important;
+} */
+
+img:not([censor-state="censored"]) {
+    visibility: hidden !important;
+}
+
+img[censor-state="censored"], img[censor-state="excluded"] {
+    visibility: visible !important;
+}
+
+img[censor-state="censoring"] {
+    max-width: 100%;
+    object-fit: contain !important;
+}
+
+/* img.purified {
+    visibility: visible !important;
+
+} */
+
+/* img.purifying {
+    max-width: 100%;
+    object-fit: contain !important;
+} */
+
+/* :not(.purifiedBG) { background-size: 0 !important; } */

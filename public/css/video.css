@@ -1,0 +1,5 @@
+video[censor-state='censored'] {
+    min-height: 250px;
+    max-height: 100% !important;
+    max-width: 100% !important;
+}

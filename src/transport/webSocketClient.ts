@@ -1,11 +1,15 @@
-import { createPreferencesFromBackend, getAvailablePlaceholders, loadPreferencesFromStorage } from "@/preferences";
+import { createPreferencesFromBackend, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
 import { IPreferences, rawPreferences } from "@/preferences/types";
+import { PlaceholderService } from "@/services/placeholder-service";
+import { StickerService } from "@/services/sticker-service";
 
 export class WebSocketClient {
 
     static create = async (host?: string): Promise<WebSocketClient> => {
+        console.log('creating new client!');
         if (!host) {
             let configHost = await chrome.storage.local.get('backendHost');
+            // console.log(`pulled host config: ${JSON.stringify(configHost)}`);
             if (configHost['backendHost']) {
                 host = configHost['backendHost'];
             }
@@ -19,74 +23,84 @@ export class WebSocketClient {
         this.webSocket = this.connectTo(host);
     }
 
+    private messageQueue: any[] = [];
+
     private webSocket?: WebSocket;
 
-    defaultHost = "ws://mir:8090/ws"
+    defaultHost = "ws://localhost:8090/ws"
 
-    waitForConnection = (callback, interval) => {
-        if (this.webSocket?.readyState === 1) {
-            callback();
-        } else {
-            let that = this;
-            // optional: implement backoff for interval here
-            setTimeout(function () {
-                that.waitForConnection(callback, interval);
-            }, interval);
-        }
+    // Make the function wait until the connection is made...
+    // thanks https://stackoverflow.com/questions/13546424/how-to-wait-for-a-websockets-readystate-to-change
+    waitForConnection = (callback: () => void, interval: number = 100) =>{
+        setTimeout(
+            () => {
+                if (this.webSocket?.readyState === 1) {
+                    // console.log("Connection is made")
+                    if (callback != null){
+                        callback();
+                    }
+                } else {
+                    console.debug("Socket waiting for connection...")
+                    this.waitForConnection(callback);
+                }
+
+            }, interval); // wait 5 milisecond for the connection...
     }
 
-    sendObj = (message: object, callback?: any) => {
-        this.waitForConnection(() => {
-            this.webSocket?.send(JSON.stringify(message));
-            if (typeof callback !== 'undefined') {
-                callback();
-            }
-        }, 100);
-    };
+    sendObj = (message: object, callback?: () => any|void) => {
+        this.send(JSON.stringify(message), callback);
+    }
 
     send = (message: string, callback?: any) => {
-        this.waitForConnection(() => {
-            this.webSocket?.send(message);
+        if (this.webSocket?.readyState !== 1) {
+            this.messageQueue.push(message)
+          } else {
+            this.webSocket?.send(message)
             if (typeof callback !== 'undefined') {
                 callback();
             }
-        }, 100);
+          }
+        // this.waitForConnection(() => {
+        //     this.webSocket?.send(JSON.stringify(message));
+        //     if (typeof callback !== 'undefined') {
+        //         callback();
+        //     }
+        // }, 100);
     };
+
+    // send = (message: string, callback?: any) => {
+    //     this.waitForConnection(() => {
+    //         this.webSocket?.send(message);
+    //         if (typeof callback !== 'undefined') {
+    //             callback();
+    //         }
+    //     }, 100);
+    // };
+
+    
+    
+    public get ready() : boolean {
+        return this.webSocket?.readyState === 1;
+    }
+    
 
     private connectTo = (host?: string): WebSocket | undefined => {
         host ??= this.defaultHost;
         try {
             const webSocket = new WebSocket(host);
-            /* Hi! Do you see an error on the line above? That's most likely because you're
-             * not running the backend .exe, or because the extension cannot reach it.
-             * Maybe your firewall is blocking it? You always need to run the backend .exe
-             * whenever you use the extension, because that part does the censoring!
-             */
-            webSocket.onopen = function () { };
+            // webSocket.onopen = function () { };
             webSocket.onmessage = (event) => {
                 let response = JSON.parse(event.data);
-                if (response.requestType === "censorImage") {
-                    console.log(`censored image response: ${response}`);
-                    this.processCensoredImageResponse(response);
-                } else if (response.requestType === "detectPlaceholdersAndStickers") {
-                    this.processPlaceholderAndStickerResponse(response);
-                } else if (response.requestType === "getStatistics") {
-                    chrome.runtime.sendMessage({
-                        msg: 'statisticsInfo',
-                        data: response["logs"]
-                    });
-                } else if (response.requestType === "getUserPreferences") {
-                    console.log(response["preferences"]);
-                    this.processUserPreferences(response);
-                    // setLoadedPreferences(response["preferences"]); //TODO
-                }
+                this.processServerMessage(response);
             };
-
+            //this should really be replaced with Sockette
             webSocket.onclose = (e) => {
-                console.log('Socket is closed. Reconnect will be attempted in 5 seconds.', e.reason);
-                setTimeout(() => {
-                    this.connectTo(host);
-                }, 5000);
+                if (e.code !== 4999) {
+                    console.log('Socket is closed. Reconnect will be attempted in 5 seconds.', e.reason);
+                    setTimeout(() => {
+                        this.connectTo(host);
+                    }, 5000);
+                }
             };
 
             webSocket.onerror = function (err) {
@@ -99,19 +113,35 @@ export class WebSocketClient {
         }
     }
 
+    public get messageHandlers() : {[key: string]: (response: any) => void} {
+        return {
+            'censorImage': (response) => this.processCensoredImageResponse(response),
+            'detectPlaceholdersAndStickers': this.processPlaceholderAndStickerResponse,
+            'getUserPreferences': this.processUserPreferences
+        }
+    }
+    
+
+    processServerMessage = (response: any) => {
+        console.debug(`server response received`, response);
+        let handler = this.messageHandlers[response['requestType']];
+        if (handler !== undefined) {
+            handler(response);
+        } else {
+            console.log('received unmatched server message!', response);
+        }
+    }
+
     processCensoredImageResponse = async (response) => {
-        let placeholders = await getAvailablePlaceholders();
+        let prefs = await loadPreferencesFromStorage();
         let url: string;
-        console.log(`parsing image response: ${JSON.stringify(response)}`);
+        console.log(`parsing image response`, response);
         if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
             url = response.url;
-            //console.log(response.url);
         } else {
-            if (placeholders.categories.indexOf("Discreet") > -1) {
-                url = chrome.runtime.getURL("images/discreeterror.png");
-            } else {
-                url = chrome.runtime.getURL("images/error.gif");
-            }
+            url = prefs.errorMode === 'subtle'
+                ? chrome.runtime.getURL("images/discreeterror.png")
+                : chrome.runtime.getURL("images/error.gif");
         }
         let body = {
             msg: "setSrc", censorURL: url,
@@ -123,35 +153,41 @@ export class WebSocketClient {
 
     processPlaceholderAndStickerResponse = (response) => {
         if (parseInt(response.status) === 200) {
-            let placeholderCategories = response["placeholders"];
-            let stickerCategories = response["stickers"];
-            let obj = {};
-            obj["placeholders"] = placeholderCategories;
-            obj["stickers"] = stickerCategories;
-            placeholderCategories.forEach(category => obj[category] = response[category]);
-            chrome.storage.local.set(obj);
+            console.log(`sticker response:`, response)
+            //TODO: we don't actually need to do this anymore, we don't use the backend placeholders anywhere
+            PlaceholderService.loadBackendPlaceholders(response)
+            StickerService.loadAvailableStickers(response);
 
         }
     }
 
     processUserPreferences = async (response): Promise<IPreferences> => {
+        const log = (...data: any[]) => {
+            // console.debug(...data);
+            //this is just here to make debugging things easier
+        }
+        console.log()
         let preferences = await loadPreferencesFromStorage();
         if (parseInt(response.status) === 200) {
             let rawPrefs = response["preferences"] as rawPreferences;
+            log('raw prefs', rawPrefs);
             let backendPrefs = createPreferencesFromBackend(rawPrefs);
-
+            log('backend prefs', backendPrefs);
+            log('loaded prefs', preferences);
             let mergedPrefs = {
-                ...preferences,
-                ...backendPrefs
+                ...backendPrefs,
+                ...preferences
             };
-            console.log(mergedPrefs);
-            console.log('done!');
-            await chrome.storage.local.set({ 'preferences': mergedPrefs });
-            console.log('set in storage!');
+            log('merged prefs', mergedPrefs);
+            await savePreferencesToStorage(mergedPrefs, true);
             let newPrefs = await loadPreferencesFromStorage();
-            console.log('new:', newPrefs);
+            log('new prefs as stored:', newPrefs);
             return mergedPrefs;
         }
         return preferences;
+    }
+
+    close = () => {
+        this.webSocket?.close(4999);
     }
 }

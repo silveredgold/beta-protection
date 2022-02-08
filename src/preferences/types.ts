@@ -4,8 +4,8 @@ export interface IPreferences {
     covered: BodyCensorModes;
     otherCensoring: {
         femaleEyes: CensorType;
-        femaleFace: [CensorType, number],
-        maleFace: [CensorType, number]
+        femaleFace: {method: CensorType, level: number},
+        maleFace: {method: CensorType, level: number}
     }
     videoCensorLevel: number;
     videoCensorMode: "Block"|"Blur"|"Allow";
@@ -18,6 +18,7 @@ export interface IPreferences {
     subliminal: SubliminalOptions;
     allowList: string[];
     forceList: string[];
+    errorMode: "subtle"|"normal";
 }
 
 
@@ -33,33 +34,16 @@ export type SubliminalOptions = {
     duration: number;
 }
 
-export type RawCensorModes = {
-    femaleEyes: CensorType,
-    femaleFace: [CensorType, number],
-    maleFace: [CensorType, number],
-    coveredPits: [CensorType, number],
-    exposedPits: [CensorType, number],
-    coveredBreasts: [CensorType, number],
-    exposedBreasts: [CensorType, number],
-    coveredBelly: [CensorType, number],
-    exposedBelly: [CensorType, number],
-    coveredAss: [CensorType, number],
-    exposedAss: [CensorType, number],
-    coveredCock: [CensorType, number],
-    exposedCock: [CensorType, number],
-    coveredFeet: [CensorType, number]
-    exposedFeet: [CensorType, number],
-
-}
+type CensorMode = {method: CensorType, level: number};
 
 export type BodyCensorModes = {
-    Pits: [CensorType, number],
-    Breasts: [CensorType, number],
-    Belly: [CensorType, number],
-    Ass: [CensorType, number],
-    Cock: [CensorType, number],
-    Feet: [CensorType, number],
-    Pussy: [CensorType, number]
+    Pits: {method: CensorType, level: number},
+    Breasts: CensorMode,
+    Belly: CensorMode,
+    Ass: CensorMode,
+    Cock: CensorMode,
+    Feet: CensorMode,
+    Pussy: CensorMode
 }
 
 export enum CensorType {

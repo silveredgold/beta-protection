@@ -1,17 +1,32 @@
 /// <reference types="chrome"/>
 
-import { webSocket } from "./transport/websocket";
 import { WebSocketClient } from "./transport/webSocketClient";
-import { cancelRequestsForId, processContextClick, processMessage, REDO_CENSOR } from "./events";
+import { cancelRequestsForId, processContextClick, processMessage, CMENU_REDO_CENSOR } from "./events";
 import { getExtensionVersion } from "./util";
+import { CSSManager } from "./content-scripts/cssManager";
+import { IPreferences } from "./preferences";
+
+let currentClient: WebSocketClient | null;
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Hello from the background');
+  console.log('reload listener running!');
+  if (request.msg == "reloadSocket") {
+    currentClient = null;
+    initExtension();
+  };
+});
 
-  // chrome.scripting.executeScript({
-  //   file: 'content-script.js',
-  // });
+chrome.runtime.onMessage.addListener((request, sender) => {
+  if (request.msg === "injectCSS") {
+    let tabId = sender.tab?.id;
+    console.log(`got injectCSS for ${tabId}`);
+    if (tabId) {
+      let prefs = request.preferences as IPreferences;
+      let css = new CSSManager(tabId, prefs);
+      injectCSS(css);
+    }
+  }
 });
 
 chrome.runtime.onInstalled.addListener((details) => {
@@ -25,75 +40,94 @@ chrome.runtime.onInstalled.addListener((details) => {
     const dateTime = time + ' ' + date;
     chrome.storage.local.set({ 'installationDate': dateTime });
   }
-  getClient().then(client => {
-    client.sendObj({version: '0.5.9', msg: "getUserPreferences"});
-  });
-  getClient().then(client => {
-    client.sendObj({
-      version: '0.5.9',
-       msg: "detectPlaceholdersAndStickers"
-    });
+  initExtension();
+  chrome.contextMenus.create({
+    id: CMENU_REDO_CENSOR,
+    title: "(Re)censor image / animate GIF",
+    contexts: ["image"],
+  }, () => {
+    console.log('context menu created', chrome.runtime.lastError);
   });
 });
 
 chrome.runtime.onStartup.addListener(() => {
   //TODO: we need to do a settings sync here;
   chrome.contextMenus.create({
-    id: REDO_CENSOR,
+    id: CMENU_REDO_CENSOR,
     title: "(Re)censor image / animate GIF",
     contexts: ["image"]
+  }, () => {
+    console.log('context menu created', chrome.runtime.lastError);
   });
-  getClient().then(client => {
-    client.sendObj({
-      version: '0.5.9',
-       msg: "detectPlaceholdersAndStickers"
-    });
-  });
-  
-    
-  
+  initExtension();
 });
 
-async function getClient() {
-  return await WebSocketClient.create();
-}
-
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  console.log('got onclick event!');
   getClient().then(client =>
     processContextClick(info, tab, client))
   return true;
 });
-chrome.runtime.onMessage.addListener((msg, sender) => {
-  getClient().then(client =>
-    processMessage(msg, sender, client))
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  getClient().then(client => {
+    let version = getExtensionVersion();
+    const ctx = {
+      socketClient: client,
+      version
+    }
+    processMessage(msg, sender, sendResponse, ctx)
+  });
   return true;
 });
 
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
+  console.log('tab updated', change, tab);
   getClient().then(client => {
     cancelRequestsForId(id, client);
   });
 });
+
+chrome.tabs.onUpdated.addListener((id, change, tab) => {
+  if (change.status === 'complete' && tab.id) {
+    //caught a page load!
+    console.debug('page load detected, notifying content script!');
+    chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged'})
+    // chrome.runtime.sendMessage({msg: 'pageChanged'})
+  }
+});
+
 chrome.tabs.onRemoved.addListener((id, removeInfo) => {
+  console.log('tab removed');
   getClient().then(client => {
     cancelRequestsForId(id, client);
   });
 });
 
-// function setupContextMenuOptions() {
-//   chrome.contextMenus.removeAll(function() {
-//       chrome.contextMenus.create({
-//           id: REDO_CENSOR,
-//           title: "(Re)censor image / animate GIF",
-//           contexts: ["image"]
-//       });
-//   });
-// }
-// setupContextMenuOptions();
 
 
+/** UTILITY FUNCTIONS BELOW THIS, USED BY EVENTS ABOVE */
 
+async function injectCSS(css: CSSManager) {
+  await css.addCSS();
+  await css.addVideo();
+}
 
-// const manifestData = chrome.runtime.getManifest();
-// const version = manifestData.version;
+function initExtension() {
+  getClient().then(client => {
+    client.sendObj({version: '0.5.9', msg: "getUserPreferences"});
+    client.sendObj({
+      version: '0.5.9',
+       msg: "detectPlaceholdersAndStickers"
+    });
+    chrome.runtime.sendMessage({msg: 'reloadPreferences'});
+  });
+}
 
+async function getClient() {
+  if (currentClient?.ready) {
+    return currentClient;
+  } else {
+    return await WebSocketClient.create();
+  }
+}
