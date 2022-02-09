@@ -52,7 +52,7 @@ const props = defineProps<{
 }>();
 
 const notif = useNotification();
-let { preferences } = toRefs(props);
+const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 
@@ -63,7 +63,6 @@ const categoryName = ref('');
 
 
 const importData = computed((): TreeOption[] => {
-    let tree: {};
     return newFiles.value.map(nfv => {
         return {
             label: nfv.name,
@@ -83,9 +82,9 @@ const uniqueCategories = computed(() => [...new Set(newFiles.value.map(f => f.na
 
 const openDir = async () => {
     const fs = new FileSystemClient();
-    let result = await fs.getDirectoriesandFiles((file) => file.type.startsWith("image/"));
+    const result = await fs.getDirectoriesandFiles((file) => file.type.startsWith("image/"));
     console.log('loaded files', result);
-    let results = Object.keys(result).map(k => {
+    const results = Object.keys(result).map(k => {
         return {
             name: k,
             files: result[k]
@@ -123,17 +122,6 @@ const cancelImport = () => {
 watch(prefs, async (newMode, prevMode) => {
     updatePrefs!();
 }, { deep: true });
-
-onBeforeMount(() => {
-    // loadPlaceholders().then(ph => {
-    //     placeholders.value = ph;
-    // })
-})
-
-const loadPlaceholders = async () => {
-    let holders = await PlaceholderService.getLocalPlaceholders();
-    return holders;
-}
 
 
 </script>

@@ -20,7 +20,6 @@ import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
 import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage } from '../preferences';
 
-let firstLoaded = ref(false);
 const notif = useNotification();
 const mode: Ref<OperationMode> = ref("" as OperationMode);
 let prefs = reactive(null as IPreferences);
@@ -28,14 +27,12 @@ const getCurrentMode = async () => {
     var storeResponse = await loadPreferencesFromStorage();
     prefs = storeResponse;
     mode.value = storeResponse.mode;
-    firstLoaded.value = true;
 }
 
 const updateMode = async () => {
     console.log(`saving new mode ${mode.value}`);
-    let newMode = mode.value as OperationMode;
     prefs.mode = mode.value;
-    let modeText = newMode == OperationMode.Disabled
+    const modeText = (mode.value as OperationMode) == OperationMode.Disabled
         ? '❌'
         : newMode == OperationMode.Enabled
             ? '✅'

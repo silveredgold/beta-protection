@@ -69,11 +69,15 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
 export const MSG_INJECT_CSS: RuntimeEvent<void> = {
     event: 'injectCSS',
     handler: async (request, sender, ctx) => {
+        console.debug('CSS injection request', sender)
         let tabId = sender.tab?.id;
         // console.debug(`got injectCSS for ${tabId}`);
         if (tabId) {
-          let prefs = request.preferences as IPreferences;
+          let prefs = (request.preferences as IPreferences) ?? await loadPreferencesFromStorage();
           let css = new CSSManager(tabId, prefs);
+          console.debug(`injecting CSS to ${tabId}`, prefs);
+        //   await css.removeCSS();
+        //   await css.removeVideo();
           await css.addCSS();
           await css.addVideo();
         }

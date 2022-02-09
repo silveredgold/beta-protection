@@ -1,21 +1,18 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "homepage_url": "http://localhost:8080/",
-  "description": "A Vue Browser Extension",
-  "web_accessible_resources": [
-    {
-      "resources" : ["images/*","*.js", "*.jpg","*.JPG","*.png", "*.gif", "*.mp4",  "*.txt"],
-      "matches": ["<all_urls>"]
-    }
-  ],
+  "homepage_url": "https://github.com/silveredgold/beta-protection/",
+  "description": "A Chrome extension companion to the Beta Safety app, censoring NSFW images as you view them.",
+  "web_accessible_resources": [{
+    "resources": ["images/*", "*.js", "*.json", "*.jpg", "*.png", "*.gif", "*.mp4"],
+    "matches": ["<all_urls>"]
+  }],
   "default_locale": "en",
   "permissions": [
     "activeTab",
     "contextMenus",
     "storage",
-    "scripting",
-    "tabs"
+    "scripting"
   ],
   "host_permissions": [
     "*://*/*",
@@ -48,12 +45,10 @@
   "content_security_policy": {
     "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
   },
-  "content_scripts": [
-    {
-      "run_at": "document_start",
-		"matches": ["<all_urls>"],
-		"all_frames": false,
-      "js": ["js/content-script.js"]
-    }
-  ]
+  "content_scripts": [{
+    "run_at": "document_start",
+    "matches": ["<all_urls>"],
+    "all_frames": false,
+    "js": ["js/content-script.js"]
+  }]
 }

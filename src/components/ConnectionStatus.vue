@@ -19,13 +19,13 @@ import { NCard, NButton, NResult } from "naive-ui";
 import { debounce } from "throttle-debounce";
 import { WebSocketClient } from '@/transport/webSocketClient';
 
-let response = ref<{ status?: number }>({});
-let connected = ref(false);
+const response = ref<{ status?: number }>({});
+const connected = ref(false);
 const validResponse = computed(() => response?.value?.status === 200);
 const buildSocket = async () => {
-    let configHost = await chrome.storage.local.get('backendHost');
+    const configHost = await chrome.storage.local.get('backendHost');
     // console.log(`pulled host config: ${JSON.stringify(configHost)}`);
-    let host = configHost['backendHost'];
+    const host = configHost['backendHost'];
     try {
         const webSocket = new WebSocket(host);
         webSocket.onopen = () => {

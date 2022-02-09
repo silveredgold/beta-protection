@@ -3,6 +3,7 @@ import { IPreferences, rawPreferences } from "@/preferences/types";
 import { PlaceholderService } from "@/services/placeholder-service";
 import { StickerService } from "@/services/sticker-service";
 import Sockette from "sockette";
+import { RuntimePortManager } from "./runtimePort";
 
 export class WebSocketClient {
 
@@ -18,6 +19,8 @@ export class WebSocketClient {
         }
         return new WebSocketClient(host);
     }
+    private _ports: { [tabId: number]: chrome.runtime.Port | undefined; } = {};
+    private _portManager?: RuntimePortManager;
     /**
      *
      */
@@ -53,6 +56,15 @@ export class WebSocketClient {
         this.send(JSON.stringify(message), callback);
     }
 
+    usePorts = (ports: {[tabId: number]: chrome.runtime.Port|undefined}) => {
+        // this._ports = ports;
+    }
+
+    usePortManager = (mgr: RuntimePortManager): WebSocketClient => {
+        this._portManager = mgr;
+        return this;
+    }
+
     send = (message: string, callback?: any) => {
         // if (this.webSocket?.readyState !== 1) {
             if (false) {
@@ -72,6 +84,23 @@ export class WebSocketClient {
     };
 
 
+
+    private sendRuntimeMessage = (requestId: string, tabId: string, obj: object) => {
+        if (requestId && this._portManager) {
+            this._portManager.sendMessage(obj, requestId, tabId.toString());
+        }
+        if (tabId) {
+            let port = this._ports[tabId];
+            if (port) {
+                port.postMessage(obj);
+            } else {
+                chrome.tabs.sendMessage(parseInt(tabId), obj);
+            }
+        } else {
+            chrome.runtime.sendMessage(obj)
+            // throw new Error("Cannot deliver message without tab ID!");
+        }
+    }
     
     
     public get ready() : boolean {
@@ -167,8 +196,8 @@ export class WebSocketClient {
             msg: "setSrc", censorURL: url,
             id: response.id, tabid: response.tabid, type: response.type
         };
-
-        chrome.tabs.sendMessage(parseInt(response.tabid), body);
+        this.sendRuntimeMessage(response.ide, response.tabid, body)
+        
     }
 
     processPlaceholderAndStickerResponse = (response) => {
