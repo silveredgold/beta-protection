@@ -1,9 +1,12 @@
 import { SubliminalOptions } from "@/preferences/types";
 
-
-
 export function runSubliminal(opts: SubliminalOptions) {
-    document.getElementsByTagName('body')[0].append('<div id="subliminal"></div>');
+    console.log('sub: running subliminal', opts)
+    chrome.runtime.sendMessage({msg: 'injectCSS:subliminal'});
+    const msgNode = document.createElement("DIV");
+    msgNode.id = 'subliminal';
+    document.body.appendChild(msgNode);
+    console.log('sub: CSS injected, preparing events');
 
     const messages: string[] = [
         "I am a virgin loser.",
@@ -51,12 +54,16 @@ export function runSubliminal(opts: SubliminalOptions) {
     const subliminalDelay = opts.delay;
     const subliminalDuration = opts.duration;
 
-    return setInterval(function () {
+    console.log
+
+    return setInterval(() => {
+        console.log('sub: running interval');
         const seed = Math.floor(Math.random() * messages.length);
         const subEl = document.getElementById("subliminal");
         if (subEl) {
             subEl.innerText = messages[seed];
             setTimeout(() => {
+                console.log('sub: running timeout');
                 const subEl = document.getElementById("subliminal");
                 if (subEl) {
                     subEl.innerText = "";

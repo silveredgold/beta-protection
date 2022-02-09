@@ -120,9 +120,9 @@ const prepareEvents = async (context: CensoringContext, runImmediately: boolean 
 		context.observer = observer;
 	}
 	// Observe for mutations after page load has completed.
-	if ((context.preferences!.subliminal?.enabled ?? false) && context.state.activeCensoring) {
-		runSubliminal(context.preferences!.subliminal);
-	}
+	// if ((context.preferences!.subliminal?.enabled ?? false) && context.state.activeCensoring) {
+	// 	runSubliminal(context.preferences!.subliminal);
+	// }
 	// what if I didn't run this until the background script sent its event?
 	// I guess images would be visible while loading?
 	// do a run on loading, then start the observer on completed?
@@ -234,6 +234,11 @@ const handlePageEvent = (req: any, sender?: chrome.runtime.MessageSender) => {
 		if (currentContext?.observer && currentContext.state.activeCensoring) {
 			console.log('evt: found available observer, starting!');
 			currentContext.observer.forceStart(document.body);
+		}
+		if ((currentContext?.preferences.subliminal?.enabled ?? false) && currentContext?.state.activeCensoring) {
+			//this should really be happening as a runtime message from the background script
+			// just inject it from there on page load, but that needs a refactor first.
+			runSubliminal(currentContext.preferences!.subliminal);
 		}
 		// if (currentContext?.port) {
 		// 	console.warn('running port disconnect from pageChanged!');

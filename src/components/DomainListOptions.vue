@@ -6,8 +6,8 @@
                 <div v-if="prefs">
                     <n-list bordered>
                         <template #header>
-                            These sites will
-                            <strong>not</strong> be censored, regardless of mod!
+                            These sites will <strong>not</strong> be censored, regardless of mode!<br />
+                            A site only needs to <em>partially</em> match any of the values below to be allowed.
                         </template>
                         <n-list-item v-for="match in allowed" v-bind:key="match">
                             {{ match }}
@@ -28,9 +28,10 @@
             <n-tab-pane name="force-list" tab="Forced">
                 <div v-if="prefs">
                     <n-list bordered>
-                        <template
-                            #header
-                        >These sites will be automatically censored, even in On Demand mode.</template>
+                        <template #header >
+                            These sites will be automatically censored, even in On Demand mode.<br />
+                            A site only needs to <em>partially</em> match any of the values below to be censored.
+                        </template>
                         <n-list-item v-for="match in forced" v-bind:key="match">
                             {{ match }}
                             <template #suffix>

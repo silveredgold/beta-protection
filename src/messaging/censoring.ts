@@ -57,4 +57,20 @@ export const MSG_INJECT_CSS: RuntimeEvent<void> = {
     }
 }
 
+export const MSG_INJECT_SUBLIMINAL_CSS: RuntimeEvent<void> = {
+    event: 'injectCSS:subliminal',
+    handler: async (request, sender, ctx) => {
+        console.debug('subliminal CSS injection request', sender)
+        const tabId = sender.tab?.id;
+        // console.debug(`got injectCSS for ${tabId}`);
+        if (tabId) {
+          const prefs = (request.preferences as IPreferences) ?? await loadPreferencesFromStorage();
+          const css = new CSSManager(tabId, prefs);
+          console.debug(`injecting CSS to ${tabId}`, prefs);
+          await css.removeSubliminal();
+          await css.addSubliminal();
+        }
+    }
+}
+
 const pendingMessages: {id: string, task: Deferred}[] = [];

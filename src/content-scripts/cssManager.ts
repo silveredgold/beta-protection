@@ -44,7 +44,20 @@ export class CSSManager {
         await (chrome.scripting as any).removeCSS(this.active);
     }
 
-    
+    addSubliminal = async () => {
+        await chrome.scripting.insertCSS(this.subliminal)
+    }
+
+    removeSubliminal = async () => {
+        await (chrome.scripting as any).removeCSS(this.subliminal)
+    }
+
+    public get subliminal() : chrome.scripting.CSSInjection {
+        return {
+            target: this._target,
+            files: ["css/subliminal.css"]
+        };
+    }
     
     public get active() : chrome.scripting.CSSInjection {
         return {

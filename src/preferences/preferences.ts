@@ -50,8 +50,8 @@ export const defaultPrefs: IPreferences = {
     enabledStickers: ["Loser"],
     subliminal: {
         enabled: false,
-        delay: 5000,
-        duration: 200
+        delay: 4000,
+        duration: 250
     },
     allowList: [],
     forceList: [],

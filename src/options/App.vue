@@ -27,30 +27,47 @@
           <template #header-extra>Set where your backend is running</template>
         </n-collapse-item>
         <n-collapse-item title="Censoring Options" name="censoring-options" v-if="prefs">
-          <censoring-preferences :preferences="prefs" />
-          <error-options :preferences="prefs" />
+          <censoring-preferences :preferences="prefs" class="control-group" />
+          <error-options :preferences="prefs" class="control-group" />
           <template #header-extra>Fine tune the censoring</template>
         </n-collapse-item>
         <n-collapse-item title="Video Options" name="video-options" v-if="prefs">
-          <video-options :preferences="prefs" />
+          <video-options :preferences="prefs" class="control-group" />
           <template #header-extra>Choose video behaviour</template>
         </n-collapse-item>
         <n-collapse-item title="Placeholders and Stickers" name="placeholder-options" v-if="prefs">
-          <placeholder-options :preferences="prefs" v-if="prefs" />
-          <sticker-options :preferences="prefs" v-if="prefs" />
+          <n-alert title="About Placeholders" type="default" closable>
+            <template #icon>
+              <n-icon>
+                <n-icon :component="InformationCircle" />
+              </n-icon>
+            </template>
+            While censoring takes place, images will be replaced by a placeholder image randomly selected from the images in any enabled categories. Here is where you choose which categories you want to see images from.
+          </n-alert>
+          <placeholder-options :preferences="prefs" v-if="prefs" class="control-group" />
+          <sticker-options :preferences="prefs" v-if="prefs" class="control-group" />
           <template #header-extra>Choose your placeholders and stickers</template>
         </n-collapse-item>
         <n-collapse-item title="Placeholder Store" name="placeholder-store" v-if="prefs">
-          <placeholder-upload :preferences="prefs" />
-          <beta-safety-import :preferences="pref" />
+          <n-alert title="About Placeholders" type="default" closable>
+            <template #icon>
+              <n-icon>
+                <n-icon :component="InformationCircle" />
+              </n-icon>
+            </template>
+            While censoring takes place, images will be replaced by a placeholder image randomly selected from the images in any enabled categories. Here is where you add additional placeholders.
+          </n-alert>
+          <placeholder-upload :preferences="prefs" class="control-group" />
+          <beta-safety-import :preferences="prefs" class="control-group" />
           <template #header-extra>Add new placeholders</template>
         </n-collapse-item>
         <n-collapse-item title="Domain Lists" name="domain-options" v-if="prefs">
-          <domain-list-options :preferences="prefs" v-if="prefs" />
+          <domain-list-options :preferences="prefs" v-if="prefs" class="control-group" />
           <template #header-extra>Edit your allowed and forced sites</template>
         </n-collapse-item>
         <n-collapse-item title="Danger Zone" name="danger=zone">
-          <settings-reset />
+          <subliminal-options :preferences="prefs" v-if="prefs.subliminal" class="control-group" />
+          <settings-reset class="control-group" />
           <template #header-extra>Be careful in here!</template>
         </n-collapse-item>
       </n-collapse>
@@ -60,8 +77,8 @@
 </template>
 
 <script setup lang="ts">
-import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NCard, NButton, NIcon, NAvatar, NPageHeader, NSpace, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme, NPopover } from "naive-ui";
-import { InformationCircleOutline } from "@vicons/ionicons5";
+import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme, NPopover, NAlert } from "naive-ui";
+import { InformationCircleOutline, InformationCircle } from "@vicons/ionicons5";
 import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
@@ -77,6 +94,7 @@ import ConnectionStatus from "../components/ConnectionStatus.vue";
 import DomainListOptions from "../components/DomainListOptions.vue";
 import { getExtensionVersion, themeOverrides } from "../util";
 import ErrorOptions from "@/components/ErrorOptions.vue";
+import SubliminalOptions from "@/components/SubliminalOptions.vue";
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
@@ -154,6 +172,11 @@ html {
   margin-right:auto;
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
+}
+
+.control-group {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 

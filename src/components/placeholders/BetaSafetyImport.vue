@@ -33,7 +33,8 @@
         </n-card>
         <template #footer>
             <!-- <p>{{mode}}</p> -->
-            While censoring takes place, images will be replaced by a placeholder randomly selected from the above categories.
+            Make sure you select the <code>placeholders</code> directory from your unpacked Beta Safety installation. We will then import all the
+            available placeholders from Beta Safety to your browser so Beta Protection can use them.
         </template>
     </n-card>
 </template>
