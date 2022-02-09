@@ -47,11 +47,14 @@ import { PlaceholderService } from '@/services/placeholder-service';
 import { LocalPlaceholder } from '@/services/db-client';
 import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
 import { humanFileSize } from "@/util";
+import {ActionEvents} from '@/components/events'
+import mitt from 'mitt';
 
 const props = defineProps<{
     preferences: Ref<IPreferences>
 }>();
 
+const emitter = mitt<ActionEvents>();
 const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
@@ -105,7 +108,7 @@ const importCurrent = async () => {
         duration: 4000,
         closable: true
     });
-    chrome.runtime.sendMessage({ msg: 'reloadPlaceholders' });
+    emitter.emit('reload', 'placeholders');
     categoryName.value = '';
     newFiles.value = [];
     // loadPlaceholders().then(ph => {

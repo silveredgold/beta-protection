@@ -4,7 +4,6 @@ import { WebSocketClient } from "./transport/webSocketClient";
 import { cancelRequestsForId, processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
 import { getExtensionVersion } from "./util";
 import { CSSManager } from "./content-scripts/cssManager";
-import { IPreferences } from "./preferences";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID } from "@/util";
 export const portManager: RuntimePortManager = new RuntimePortManager();
@@ -112,6 +111,13 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
   });
 });
 
+chrome.tabs.onUpdated.addListener(async (id, change, tab) => {
+  if (change.status === 'complete' && tab.id) {
+    // let svc = new SubliminalService();
+    // svc.injectSubliminalScript(tab);
+  }
+});
+
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
   const sendMsg = (tabId: number, msg: object) => {
     chrome.tabs.sendMessage(tabId, msg);
@@ -120,6 +126,7 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
     //caught a page load!
     // console.debug('page load detected, notifying content script!');
     sendMsg(tab.id, {msg: 'pageChanged:complete'});
+
     // chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged'})
     // chrome.runtime.sendMessage({msg: 'pageChanged'})
   } else if (change.status === 'loading' && tab.id) {

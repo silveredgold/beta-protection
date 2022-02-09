@@ -1,5 +1,6 @@
 import { LocalPlaceholder } from "@/placeholders";
 import { DBSchema, IDBPDatabase, openDB } from "idb"
+import { SubliminalMessage } from "./subliminal-service";
 
 
 export class DbClient {
@@ -9,6 +10,10 @@ export class DbClient {
         const db = await openDB<AssetsStore>('bp-assets', 1, {
             upgrade: (db, oldVersion, newVersion, tx) => {
                 const store = db.createObjectStore('placeholders', {
+                    keyPath: 'id',
+                    autoIncrement: true
+                });
+                const subStore = db.createObjectStore('subMessages', {
                     keyPath: 'id',
                     autoIncrement: true
                 });
@@ -42,6 +47,32 @@ export class DbClient {
         ]);
     }
 
+    addMessages = async (msgs: SubliminalMessage[]) => {
+        const tx = this._db.transaction('subMessages', 'readwrite');
+        const txProms = msgs.map(pl => {
+            tx.store.add(pl)
+        });
+        await Promise.all([
+            ...txProms,
+            tx.done,
+        ]);
+    }
+
+    purgeMessages = async () => {
+        // const tx = this._db.transaction('subMessages', 'readwrite');
+        const msgs = await this._db.getAll('subMessages');
+        for (const msg of msgs) {
+            await this._db.delete('subMessages', msg.id!);
+        }
+        // const txProms = msgs.map(pl => {
+        //     tx.store.delete(pl.id!);
+        // });
+        // await Promise.all([
+        //     ...txProms,
+        //     tx.done
+        // ]);
+    }
+
     removePlaceholder = async (placeholder: LocalPlaceholder) => {
         await this._db.delete('placeholders', placeholder.id!);
     }
@@ -55,6 +86,11 @@ export class DbClient {
             return results;
         }
     }
+
+    getSubliminalMessages = async () => {
+        const results = await this._db.getAll('subMessages');
+        return results;
+    }
 }
 
 interface AssetsStore extends DBSchema {
@@ -62,5 +98,9 @@ interface AssetsStore extends DBSchema {
         value: LocalPlaceholder
         key: number;
         indexes: {'category': string}
+    },
+    'subMessages': {
+        value: SubliminalMessage,
+        key: number
     }
 }

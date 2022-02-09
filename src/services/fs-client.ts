@@ -77,11 +77,22 @@ export class FileSystemClient {
 
     
     
-    public get imageTypes() : FilePickerAcceptType[] {
-        return [{description: 'Images',
-        accept: {
-          'image/*': ['.png', '.jpeg', '.jpg', '.jfif']
-        }}];
+    public get imageTypes(): FilePickerAcceptType[] {
+        return [{
+            description: 'Images',
+            accept: {
+                'image/*': ['.png', '.jpeg', '.jpg', '.jfif']
+            }
+        }];
+    }
+
+    public get textFiles(): FilePickerAcceptType[] {
+        return [{
+            description: 'Text Files',
+            accept: {
+                'text/plain': ['.txt']
+            }
+        }];
     }
     
 }

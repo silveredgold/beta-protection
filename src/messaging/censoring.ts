@@ -1,5 +1,6 @@
 import { CSSManager } from "@/content-scripts/cssManager";
 import { IPreferences, loadPreferencesFromStorage, toRaw } from "@/preferences";
+import { SubliminalService } from "@/services/subliminal-service";
 import { Deferred, RuntimeEvent } from "./util";
 
 export const idUrlMap = new Map();
@@ -53,6 +54,16 @@ export const MSG_INJECT_CSS: RuntimeEvent<void> = {
         //   await css.removeVideo();
           await css.addCSS();
           await css.addVideo();
+        }
+    }
+}
+
+export const MSG_INJECT_SUBLIMINAL : RuntimeEvent<void> = {
+    event: 'runSubliminal',
+    handler: async (request, sender, ctx) => {
+        if (sender?.tab?.id) {
+            let svc = new SubliminalService();
+            svc.injectSubliminalScript(sender!.tab)
         }
     }
 }

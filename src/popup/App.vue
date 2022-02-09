@@ -63,18 +63,20 @@ const getCurrentPrefs = async () => {
 const updateFunc = debounce(1000, async (prefs) => {
   console.log(`persisting prefs`, prefs);
   await savePreferencesToStorage(prefs);
-  const n = notif?.create({
-          content: 'Saved!',
-          duration: 2500,
-          closable: true
-        });
+  return true;
+  // const n = notif?.create({
+  //         content: 'Saved!',
+  //         duration: 2500,
+  //         closable: true
+  //       });
 });
 
 const store = reactive({
   preferences: {} as IPreferences,
-  updatePreferences(prefs?: IPreferences) {
+  async updatePreferences(prefs?: IPreferences) {
     const targetPrefs = prefs?.mode ? prefs : this.preferences;
-    updateFunc(targetPrefs);
+    const result = await updateFunc(targetPrefs);
+    return result;
     // var storeResponse = await chrome.storage.local.set({ 'preferences': targetPrefs });
   }
 })
@@ -86,12 +88,11 @@ watch(prefs, async (newMode, prevMode) => {
     console.log('new mode', newMode);
 }, {deep: true});
 
-
-// services
-const updatePrefs = async (preferences?: IPreferences) => {
-  console.log(`queuing prefs save`);
-  store.updatePreferences(preferences);
+const updatePrefs = async (preferences: IPreferences | undefined) => {
+  const result = await store.updatePreferences(preferences);
+  return result;
 }
+
 provide(updateUserPrefs, updatePrefs);
 
 

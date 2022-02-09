@@ -1,4 +1,5 @@
 import { GlobalThemeOverrides } from "naive-ui";
+import { IPreferences, OperationMode } from "./preferences";
 
 
 let _extensionVersion: string;
@@ -110,4 +111,29 @@ export function generateUUID() { // Public Domain/MIT
       }
       return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
   });
+}
+
+export const shouldCensor = (prefs: IPreferences, url: string): boolean => {
+  if (prefs?.mode) {
+		// let prefs = confPrefs["preferences"] as IPreferences;
+		const mode = prefs.mode;
+		const whitelist = prefs.allowList?.length ? prefs.allowList : [];
+		const blacklist = prefs.forceList?.length ? prefs.forceList : [];
+		dbg(`domain matching`, whitelist, blacklist, url);
+		const siteAllowed = whitelist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => url.includes(wle));
+		if (siteAllowed || mode == OperationMode.Disabled) {
+			return false;
+		} else if (mode == OperationMode.OnDemand) {
+			const siteForced = blacklist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => url.includes(wle));
+			return siteForced;
+		} else {
+			return true;
+		}
+	} else {
+		return false;
+	}
+}
+
+const dbg = (...data: any[]) => {
+	console.debug(...data);
 }

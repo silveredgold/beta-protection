@@ -163,6 +163,7 @@ export class WebSocketClient {
         if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
             url = response.url;
         } else {
+            console.log(`error image response`, response);
             url = prefs.errorMode === 'subtle'
                 ? chrome.runtime.getURL("images/error_simple.png")
                 : chrome.runtime.getURL("images/error_normal.jpg");

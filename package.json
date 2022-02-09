@@ -15,6 +15,7 @@
     "axios": "^0.20.0",
     "core-js": "^3.6.5",
     "idb": "^7.0.0",
+    "mitt": "^3.0.0",
     "postcss": "^7",
     "sockette": "^2.0.6",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.17",

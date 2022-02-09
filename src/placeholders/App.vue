@@ -41,7 +41,7 @@ import { defaultPrefs, IPreferences, loadPreferencesFromStorage, savePreferences
 import { updateUserPrefs, userPrefs } from "./services";
 import CensoringPreferences from "../components/CensoringPreferences.vue";
 import VideoOptions from "../components/VideoOptions.vue";
-import PlaceholderOptions from "../components/PlaceholderOptions.vue";
+import PlaceholderOptions from "../components/placeholders/PlaceholderOptions.vue";
 import StickerOptions from "../components/StickerOptions.vue";
 import SettingsReset from "../components/SettingsReset.vue";
 import ConnectionStatus from "../components/ConnectionStatus.vue";

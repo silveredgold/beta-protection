@@ -38,9 +38,7 @@
         <n-collapse-item title="Placeholders and Stickers" name="placeholder-options" v-if="prefs">
           <n-alert title="About Placeholders" type="default" closable>
             <template #icon>
-              <n-icon>
-                <n-icon :component="InformationCircle" />
-              </n-icon>
+              <n-icon :component="InformationCircle" />
             </template>
             While censoring takes place, images will be replaced by a placeholder image randomly selected from the images in any enabled categories. Here is where you choose which categories you want to see images from.
           </n-alert>
@@ -51,9 +49,7 @@
         <n-collapse-item title="Placeholder Store" name="placeholder-store" v-if="prefs">
           <n-alert title="About Placeholders" type="default" closable>
             <template #icon>
-              <n-icon>
-                <n-icon :component="InformationCircle" />
-              </n-icon>
+              <n-icon :component="InformationCircle" />
             </template>
             While censoring takes place, images will be replaced by a placeholder image randomly selected from the images in any enabled categories. Here is where you add additional placeholders.
           </n-alert>
@@ -86,7 +82,7 @@ import { defaultPrefs, IPreferences, loadPreferencesFromStorage, savePreferences
 import { updateUserPrefs, userPrefs } from "./services";
 import CensoringPreferences from "../components/CensoringPreferences.vue";
 import VideoOptions from "../components/VideoOptions.vue";
-import PlaceholderOptions from "../components/PlaceholderOptions.vue";
+import PlaceholderOptions from "../components/placeholders/PlaceholderOptions.vue";
 import {PlaceholderUpload, BetaSafetyImport} from "../components/placeholders";
 import StickerOptions from "../components/StickerOptions.vue";
 import SettingsReset from "../components/SettingsReset.vue";

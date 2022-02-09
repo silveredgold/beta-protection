@@ -58,7 +58,7 @@
         </n-card>
         <template #footer>
             <!-- <p>{{mode}}</p> -->
-            While censoring takes place, images will be replaced by a placeholder randomly selected from the above categories.
+            Beta Protection stores the placeholders in your browser's storage, so you can move/delete the imported files afterwards.
         </template>
     </n-card>
 </template>
@@ -71,11 +71,14 @@ import { PlaceholderService } from '@/services/placeholder-service';
 import { LocalPlaceholder } from '@/services/db-client';
 import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
 import { humanFileSize } from "@/util";
+import {ActionEvents} from '@/components/events'
+import mitt from 'mitt';
 
 const props = defineProps<{
     preferences: Ref<IPreferences>
 }>();
 
+const emitter = mitt<ActionEvents>();
 const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
@@ -142,7 +145,7 @@ const importCurrent = async () => {
     });
     categoryName.value = '';
     newFiles.value = [];
-    chrome.runtime.sendMessage({ msg: 'reloadPlaceholders' });
+    emitter.emit('reload', 'placeholders');
     loadPlaceholders().then(ph => {
         placeholders.value = ph;
     });

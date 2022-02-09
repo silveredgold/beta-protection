@@ -1,11 +1,11 @@
 import { getAvailablePlaceholders, getEnabledPlaceholders, loadPreferencesFromStorage } from "@/preferences";
 import { IPreferences, OperationMode } from "@/preferences/types";
 import { Purifier } from "./purifier";
-import { runSubliminal } from "./subliminal";
 import { CensoringState, CensoringContext } from "./types";
-import { hashCode } from "@/util";
+import { hashCode, shouldCensor } from "@/util";
 import { PageObserver } from "./observer";
 import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
+import { MSG_INJECT_SUBLIMINAL } from "@/messaging";
 
 let lastClickElement: HTMLElement|undefined|null;
 const safeList: number[] = [];
@@ -20,28 +20,9 @@ const getCensoringState = async (): Promise<CensoringState> => {
 	
 	const prefs = await loadPreferencesFromStorage();
 	const currentSite = window.location.href.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
-	if (prefs?.mode) {
-		// let prefs = confPrefs["preferences"] as IPreferences;
-		const mode = prefs.mode;
-		dbg(`content script found preferences: ${prefs.mode}`)
-		const whitelist = prefs.allowList?.length ? prefs.allowList : [];
-		const blacklist = prefs.forceList?.length ? prefs.forceList : [];
-		dbg(`domain matching`, whitelist, blacklist, currentSite);
-		// console.log(`blacklist:`, blacklist);
-		const siteAllowed = whitelist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => currentSite.includes(wle));
-		if (siteAllowed || mode == OperationMode.Disabled) {
-			dbg(`running in disabled mode`);
-			return {activeCensoring: false}
-		} else if (mode == OperationMode.OnDemand) {
-			const siteForced = blacklist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => currentSite.includes(wle));
-			dbg(`running in on demand: ${siteForced}`);
-			return {activeCensoring: siteForced};
-		} else {
-			return {activeCensoring: true};
-		}
-	} else {
-		return {activeCensoring: false};
-	}
+	const censorEnabled = shouldCensor(prefs, currentSite);
+	dbg('censoring state', censorEnabled);
+	return {activeCensoring: censorEnabled};
 }
 
 const buildPort = () => {
@@ -238,7 +219,9 @@ const handlePageEvent = (req: any, sender?: chrome.runtime.MessageSender) => {
 		if ((currentContext?.preferences.subliminal?.enabled ?? false) && currentContext?.state.activeCensoring) {
 			//this should really be happening as a runtime message from the background script
 			// just inject it from there on page load, but that needs a refactor first.
-			runSubliminal(currentContext.preferences!.subliminal);
+			// that actually requires a lot of info on the background side.
+			// this method ties it to the page censoring process, for better *and* worse
+			chrome.runtime.sendMessage({msg: MSG_INJECT_SUBLIMINAL.event});
 		}
 		// if (currentContext?.port) {
 		// 	console.warn('running port disconnect from pageChanged!');

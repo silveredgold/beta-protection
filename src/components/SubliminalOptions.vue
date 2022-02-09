@@ -31,18 +31,32 @@
             </n-space>
         </template>
         <template #action>
-            <n-space item-style="display: flex;" vertical align="end" v-if="loaded">
-                <div>Only enable if you're ready for it!</div>
-                <n-checkbox v-model:checked="prefs.subliminal.enabled">Enable Subliminal Messaging</n-checkbox>
+            <n-space item-style="display: flex;" justify="space-between" v-if="loaded">
+                <n-space vertical>
+                    {{messageCount}} messages loaded.
+                    <n-tooltip trigger="hover">
+                        <template #trigger>
+                            <n-button @click="openMessageFile">Import custom messages...</n-button>
+                        </template>
+                        Import a text file with one message per line to use as custom messages.
+                    </n-tooltip>
+                </n-space>
+                <n-space vertical>
+                    <div>Only enable if you're ready for it!</div>
+                    <n-checkbox size="large" v-model:checked="prefs.subliminal.enabled">Enable Subliminal Messaging</n-checkbox>
+                </n-space>
             </n-space>
         </template>
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject } from 'vue';
-import { NCard, NThing, NSpace, NCheckbox, useNotification, NInputGroup, NInputGroupLabel, NInputNumber } from "naive-ui";
+import { ComponentOptions, defineComponent, Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
+import { NCard, NThing, NSpace, NCheckbox, useNotification, NInputGroup, NInputGroupLabel, NInputNumber, NButton, NTooltip } from "naive-ui";
 import { loadPreferencesFromStorage, IPreferences, OperationMode } from '../preferences';
 import { updateUserPrefs } from '../options/services';
+import { SubliminalMessage, SubliminalService } from '@/services/subliminal-service';
+import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
+
 interface Props {
     preferences: IPreferences,
     compact?: boolean
@@ -57,14 +71,51 @@ const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
+const messages: Ref<string[]> = ref([]);
 
 const loaded = computed(() => preferences.value !== {});
+const messageCount = computed(() => messages.value.length);
+
+const svc = new SubliminalService();
 
 watch(prefs, async (newMode, prevMode) => {
     updatePrefs();
 }, { deep: true });
 
+onBeforeMount(() => {
+    loadMessages().then(msgs => {
+        messages.value = msgs;
+    });
+});
 
+const loadMessages = async () => {
+    const msgs = await svc.getMessages();
+    return [...new Set(msgs)];
+}
+
+const openMessageFile = async () => {
+    const file = await openFile();
+    const contents = await file.file.text();
+    console.log('got contents', contents);
+    const records = SubliminalService.loadFromText(contents);
+    console.log('got records', records);
+    await svc.loadMessages(records);
+    const msgs = await loadMessages();
+    console.log('got messages', msgs);
+    messages.value = msgs;
+    const n = notif?.create({
+          content: `Imported ${msgs.length} messages`,
+          duration: 2500,
+          closable: true
+        });
+}
+
+const openFile = async () => {
+    const fs = new FileSystemClient();
+    const result = await fs.getFile(fs.textFiles);
+    console.log('loaded files', result);
+    return result;
+}
 
 
 </script>
