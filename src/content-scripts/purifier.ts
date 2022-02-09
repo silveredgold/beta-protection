@@ -1,6 +1,6 @@
-import { isValidUrl } from "@/util";
+import { hashCode, isValidUrl } from "@/util";
 import { CensoringState, ImageStyleElement } from "./types";
-import { generateUUID, getRandom } from "./util";
+import { generateUUID, getRandom } from "@/util";
 import { debounce } from "throttle-debounce";
 import { LocalPlaceholder } from "@/placeholders";
 import { PlaceholderService } from "@/services/placeholder-service";
@@ -12,6 +12,7 @@ export class Purifier {
     private _backlog : boolean = false;
     private _port: chrome.runtime.Port | undefined;
     private _portFaulted: boolean = false;
+    private _safeList: number[];
     public get backlog() : boolean {
         return this._backlog;
     }
@@ -48,7 +49,7 @@ export class Purifier {
     /**
      *
      */
-    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], port?: chrome.runtime.Port) {
+    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], safeList: number[]) {
         // Only update once in a while.
         this._currentState = state;
         this._placeholders = placeholders;
@@ -57,10 +58,20 @@ export class Purifier {
         if (typeof location !== 'string') {
             location = (location as Location).hostname;
         }
-        this._domain = location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
+        // this._domain = location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
+        this._domain = "unknown.com";
         this._urlTransformers.push(srcUrl => srcUrl.replace(".gifv", ".gif"))
-        this._port = port;
+        this._safeList = safeList;
     }
+
+    
+    public get port() : chrome.runtime.Port | undefined {
+        return this._port;
+    }
+    public set port(v : chrome.runtime.Port|undefined) {
+        this._port = v;
+    }
+    
 
     private getPlaceholderSrc = () => {
         let placeholder = chrome.runtime.getURL('/images/loading.png');
@@ -114,9 +125,10 @@ export class Purifier {
             return {element: el, background};
         }).filter(bg => !!bg.background);
         const matchingEls = backgroundEls.map(bg => {
-            if (bg.background) {
-                const srcChecker = /url\(\s*?['"]?\s*?(\S+?)\s*?["']?\s*?\)/i;
-                let match = srcChecker.exec(bg.background);
+            if (bg.background) { // should this be background-image?
+                //thanks https://stackoverflow.com/a/34166861
+                const urlMatch = /[:,\s]\s*url\s*\(\s*(?:'(\S*?)'|"(\S*?)"|((?:\\\s|\\\)|\\\"|\\\'|\S)*?))\s*\)/gi
+                let match = urlMatch.exec(bg.background);
                 if (match) {
                     bg.imageUrl = match[1]
                 }
@@ -216,38 +228,33 @@ export class Purifier {
     }
 
     private sendCensorRequest = (imageUrl: string, id: string, type: "BG"|"normal", priority?: number) => {
-        if (this._port && !this._portFaulted) {
-            console.debug('using existing port for runtime message');
+        const msg = {
+            msg: 'censorRequest',
+            imageURL: imageUrl,
+            id: id,
+            priority: priority ?? 1,
+            type: type,
+            domain: this._domain
+        };
+        let port = chrome.runtime.connect({name: id});
+        if (port) {
+            // console.log('got named port!')
+            port.onMessage.addListener((msg, port) => {
+                handleCensorResult(msg, this._safeList, port);
+            });
+            // console.debug('sending request on named port!');
+            port.postMessage(msg);
+        } else if (this._port && !this._portFaulted) {
+            // console.debug('using existing port for runtime message');
             try {
-                this._port.postMessage({
-                    msg: 'censorRequest',
-                    imageURL: imageUrl,
-                    id: id,
-                    priority: priority ?? 1,
-                    type: type,
-                    domain: this._domain
-                });
+                this._port.postMessage(msg);
             } catch {
                 this._portFaulted = true;
-                chrome.runtime.sendMessage({
-                    msg: 'censorRequest',
-                    imageURL: imageUrl,
-                    id: id,
-                    priority: priority ?? 1,
-                    type: type,
-                    domain: this._domain
-                });
+                chrome.runtime.sendMessage(msg);
             }
         } else {
-            console.debug('using runtime for message');
-            chrome.runtime.sendMessage({
-                msg: 'censorRequest',
-                imageURL: imageUrl,
-                id: id,
-                priority: priority ?? 1,
-                type: type,
-                domain: this._domain
-            });
+            // console.debug('using runtime for message');
+            chrome.runtime.sendMessage(msg);
         }
         // this.messageQueue.push(id);
     }
@@ -326,4 +333,37 @@ export class Purifier {
             el.setAttribute('censor-exclusion', existing ? `${existing} ${reason}` : reason);
         }
     }
+}
+
+
+const handleCensorResult = (request: any, safeList: number[], port: chrome.runtime.Port) => {
+    if(request.msg === "setSrc" && request.type === "normal") {
+		// console.debug(`got normal setSrc message! ${request.id}`)
+		// if (currentContext?.purifier.messageQueue.includes(request.id)) {
+		// 	let idx = currentContext.purifier.messageQueue.indexOf(request.id);
+		// 	currentContext.purifier.messageQueue.splice(idx, 1);
+		// }
+		let requestElement = document.querySelector(`[censor-id="${request.id}"]`)
+		if(requestElement){
+			// console.log(`finalizing purify for ${requestElement}`)
+			requestElement.setAttribute('src', request.censorURL);
+			requestElement.setAttribute('censor-state', 'censored');
+			requestElement.toggleAttribute('censor-placeholder', false);
+			safeList.push(hashCode(request.censorURL));
+		}
+        port.disconnect();
+	} else if(request.msg === "setSrc" && request.type === "BG") {
+		console.log(`got background setSrc message! ${request.id}`)
+		let requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
+		if(requestElement) {
+			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
+			// console.log(`finalizing BG purify for ${requestElement}`)
+			requestElement.setAttribute('censor-style', 'censored');
+			requestElement.toggleAttribute('censor-placeholder', false);
+			//TODO: should this remove the CSS classes?
+			safeList.push(hashCode(request.censorURL));
+            port.disconnect();
+		}
+	}
+
 }

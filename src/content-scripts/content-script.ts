@@ -1,15 +1,11 @@
 import { getAvailablePlaceholders, getEnabledPlaceholders, loadPreferencesFromStorage } from "@/preferences";
 import { IPreferences, OperationMode } from "@/preferences/types";
-import { PlaceholderService } from "@/services/placeholder-service";
-import { WebSocketClient } from "@/transport/webSocketClient";
-import { CSSManager } from "./cssManager";
 import { Purifier } from "./purifier";
 import { runSubliminal } from "./subliminal";
 import { CensoringState, CensoringContext } from "./types";
 import { hashCode, isSafe } from "@/util";
 import { PageObserver } from "./observer";
 import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
-import { generateUUID } from "./util";
 
 let lastClickElement: HTMLElement|undefined|null;
 let safeList: number[] = [];
@@ -87,7 +83,8 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	// 	handlePageEvent(msg, port.sender);
 	// });
 	let port = buildPort();
-	let purifier = new Purifier(state, preferences!.videoCensorMode, window.location, placeholders.allImages, port);
+	let purifier = new Purifier(state, preferences!.videoCensorMode, window.location, placeholders.allImages, safeList);
+	purifier.port = port;
 	let context: CensoringContext = {
 		state,
 		preferences,
@@ -159,7 +156,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 			let origSrc = lastClickElement.getAttribute('censor-src') ?? lastClickElement.getAttribute('src');
 			let domain = window.location.hostname.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()
 			let respValue = {src: lastClickElement.getAttribute("src"), id, origSrc, domain};
-			console.debug('sending getClickedEl response', respValue)
+			dbg('sending getClickedEl response', respValue)
 			sendResponse?.(respValue);
 		} else {
 			console.debug('running purifier on single element');
@@ -183,7 +180,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 			safeList.push(hashCode(request.censorURL));
 		}
 	} else if(request.msg === "setSrc" && request.type === "BG") {
-		console.log(`got background setSrc message! ${request.id}`)
+		dbg(`got background setSrc message! ${request.id}`)
 		let requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
 		if(requestElement) {
 			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
@@ -194,7 +191,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 			safeList.push(hashCode(request.censorURL));
 		}
 	} else if (request.msg === "recheckPage") {
-		console.log('rechecking page');
+		dbg('rechecking page');
 		let censored = document.querySelectorAll(`img[censor-placeholder]`);
 		for (const placeholder of censored) {
 			placeholder.removeAttribute('censor-state');
@@ -226,7 +223,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 }
 
 const configureListeners = () => {
-	console.log('wiring up page event listeners');
+	console.log('evt: wiring up page event listeners');
 	chrome.runtime.onMessage.addListener((req, sender) => {
 		handlePageEvent(req, sender);
 	});
@@ -270,17 +267,27 @@ const handlePageEvent = (req: any, sender?: chrome.runtime.MessageSender) => {
 		}
 		
 	} else if (req.msg === 'pageChanged:loading') {
-		console.log('evt: notified of page loading!');
+		dbg('evt: notified of page loading!');
 		// if (currentContext) {
 		// 	currentContext.observer?.stop();
 		// }
 		// runCensoring(true);
 		if (req.url) {
 			// this is a page change!
-			console.log('Page navigation caught!');
-			runCensoringAsync(false).then(ctx => {
-				currentContext = ctx;
-			});
+			dbg('Page navigation caught!', req.url, window.location.href);
+			if (currentContext?.purifier) {
+				dbg('evt: re-running purifier from page nav');
+				currentContext.purifier.run();
+			} else {
+				// console.log('evt: would be re-running censoring from page nav');
+				// while runCensoring is triggered from the main loop, this is not needed
+				// the content script gets re-inited after a page nav
+				// which kicks off the main loop again
+				// runCensoringAsync(false).then(ctx => {
+				// 	currentContext = ctx;
+				// });
+			}
+			
 		} else {
 			// this is a new load!
 		}

@@ -3,6 +3,7 @@ import { IPreferences, rawPreferences } from "@/preferences/types";
 import { PlaceholderService } from "@/services/placeholder-service";
 import { StickerService } from "@/services/sticker-service";
 import Sockette from "sockette";
+import { RuntimePortManager } from "./runtimePort";
 
 export class WebSocketClient {
 
@@ -19,6 +20,7 @@ export class WebSocketClient {
         return new WebSocketClient(host);
     }
     private _ports: { [tabId: number]: chrome.runtime.Port | undefined; } = {};
+    private _portManager?: RuntimePortManager;
     /**
      *
      */
@@ -55,7 +57,12 @@ export class WebSocketClient {
     }
 
     usePorts = (ports: {[tabId: number]: chrome.runtime.Port|undefined}) => {
-        this._ports = ports;
+        // this._ports = ports;
+    }
+
+    usePortManager = (mgr: RuntimePortManager): WebSocketClient => {
+        this._portManager = mgr;
+        return this;
     }
 
     send = (message: string, callback?: any) => {
@@ -76,13 +83,18 @@ export class WebSocketClient {
           }
     };
 
-    private sendRuntimeMessage = (tabId: number, obj: object) => {
+
+
+    private sendRuntimeMessage = (requestId: string, tabId: string, obj: object) => {
+        if (requestId && this._portManager) {
+            this._portManager.sendMessage(obj, requestId, tabId.toString());
+        }
         if (tabId) {
             let port = this._ports[tabId];
             if (port) {
                 port.postMessage(obj);
             } else {
-                chrome.tabs.sendMessage(tabId, obj);
+                chrome.tabs.sendMessage(parseInt(tabId), obj);
             }
         } else {
             chrome.runtime.sendMessage(obj)
@@ -184,7 +196,7 @@ export class WebSocketClient {
             msg: "setSrc", censorURL: url,
             id: response.id, tabid: response.tabid, type: response.type
         };
-        this.sendRuntimeMessage(parseInt(response.tabid), body)
+        this.sendRuntimeMessage(response.ide, response.tabid, body)
         
     }
 

@@ -5,38 +5,48 @@ import { cancelRequestsForId, processContextClick, processMessage, CMENU_REDO_CE
 import { getExtensionVersion } from "./util";
 import { CSSManager } from "./content-scripts/cssManager";
 import { IPreferences } from "./preferences";
-
-export const currentPorts: {[tabId: number]: chrome.runtime.Port|undefined} = {};
+import { RuntimePortManager } from "./transport/runtimePort";
+import { generateUUID } from "@/util";
+export const portManager: RuntimePortManager = new RuntimePortManager();
 
 let currentClient: WebSocketClient | null;
 
+const dbg = (...data: any[]) => {
+  // console.debug(...data);
+}
+
 chrome.runtime.onConnect.addListener((port) => {
-  if (port?.sender?.tab?.id) {
+  const portMsgListener = (msg: any, port: chrome.runtime.Port) => {
+    let request = msg;
+    if (request.msg == 'heartBeat') {
+      port.postMessage({msg: 'heartBeatAlive'});
+    } else {
+      dbg('got port message', port.sender?.tab?.id, request)
+      const factory = async () => {
+        let client = await getClient();
+        let version = getExtensionVersion();
+        return {
+          socketClient: client,
+          version
+        }
+      };
+      processMessage(request, port.sender!, undefined, factory);
+      return true;
+    }
+  };
+  if (port.name && port.sender?.tab?.id) {
+    dbg('resource-specific runtime port opened!', port.name, port.sender.tab.id);
+    portManager.addNamedPort(port, port.sender.tab.id.toString());
+    port.onMessage.addListener(portMsgListener);
+  }
+  else if (port?.sender?.tab?.id) {
     //got a valid port from a tab
     let id = port.sender.tab.id;
-    console.log('tab runtime port opened', id);
+    dbg('tab runtime port opened', id);
     port.onDisconnect.addListener(() => {
-      currentPorts[id] = undefined;
+      console.log('anonymous tab runtime port disconnected', port.sender?.tab?.id);
     });
-    port.onMessage.addListener((msg, port) => {
-      let request = msg;
-      if (request.msg == 'heartBeat') {
-        port.postMessage({msg: 'heartBeatAlive'});
-      } else {
-        console.debug('got port message', port.sender?.tab?.id, request)
-        const factory = async () => {
-          let client = await getClient();
-          let version = getExtensionVersion();
-          return {
-            socketClient: client,
-            version
-          }
-        };
-        processMessage(request, port.sender!, undefined, factory);
-        return true;
-      }
-    });
-    currentPorts[id] = port;
+    port.onMessage.addListener(portMsgListener);
   }
 });
 
@@ -44,12 +54,20 @@ chrome.runtime.onInstalled.addListener((details) => {
   console.log('Configuring BP settings!');
 
   if (details.reason === "install") {
-    //I don't know why we do do this, but the original does so here we are
-    const today = new Date();
-    const date = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
-    const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    const dateTime = time + ' ' + date;
-    chrome.storage.local.set({ 'installationDate': dateTime });
+    //to any adventurous code spelunkers:
+    // this probably looks kinda fucked
+    // in reality, there's plans I have for this extension that rely
+    // on anonymously identifying installs.
+    // this is the easiest way to do so reliably.
+    // using this method also means that simply reinstalling
+    // the extension will scramble the ID
+    const id = generateUUID();
+    chrome.storage.local.get({'installationId': ''}).then(result => {
+      if (!result['installationId']) {
+        console.log('No installation ID found, creating new one!');
+        chrome.storage.local.set({'installationId': id});
+      }
+    })
   }
   initExtension();
   initContextMenus();
@@ -62,14 +80,14 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  console.log('got onclick event!');
+  dbg('got onclick event!');
   getClient().then(client =>
     processContextClick(info, tab, client))
   return true;
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  console.debug('background script handling runtime message', msg);
+  dbg('background script handling runtime message', msg);
   if (msg.msg == "reloadSocket") {
     currentClient = null;
     initExtension();
@@ -88,7 +106,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
-  console.log('tab updated: would be cancelling requests', change, tab);
+  dbg('tab updated: cancelling requests', change, tab);
   getClient().then(client => {
     cancelRequestsForId(id, client);
   });
@@ -96,15 +114,8 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
 
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
   const sendMsg = (tabId: number, msg: object) => {
-    // let port = currentPorts[tabId];
-    // if (port) {
-    //   // port.postMessage(msg)
-      chrome.tabs.sendMessage(tabId, msg);
-    // } else {
-    //   chrome.tabs.sendMessage(tabId, msg);
-    // }
+    chrome.tabs.sendMessage(tabId, msg);
   }
-  console.log('onUpdated event', change);
   if (change.status === 'complete' && tab.id) {
     //caught a page load!
     // console.debug('page load detected, notifying content script!');
@@ -120,7 +131,7 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
 chrome.tabs.onRemoved.addListener((id, removeInfo) => {
   console.log('tab removed');
   getClient().then(client => {
-    currentPorts[id] = undefined;
+    portManager.closeForSrc(id.toString());
     cancelRequestsForId(id, client);
   });
 });
@@ -169,6 +180,7 @@ async function getClient() {
     return currentClient;
   } else {
     currentClient = await WebSocketClient.create();
+    currentClient.usePortManager(portManager);
     return currentClient;
   }
 }
