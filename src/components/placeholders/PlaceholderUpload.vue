@@ -119,7 +119,7 @@ const enabled = computed({
 
 const openDir = async () => {
     const fs = new FileSystemClient();
-    const  result = await fs.getFiles((file) => file.type.startsWith("image/"));
+    const result = await fs.getFiles((file) => file.type.startsWith("image/"));
     console.log('loaded files', result);
     newFiles.value = result.files;
     categoryName.value = result.dir;
@@ -128,7 +128,7 @@ const openDir = async () => {
 
 const openFile = async () => {
     const fs = new FileSystemClient();
-    let result = await fs.getFile(fs.imageTypes)
+    const result = await fs.getFile(fs.imageTypes);
     console.log('loaded files', result);
     newFiles.value = [result];
 }
@@ -166,7 +166,7 @@ onBeforeMount(() => {
 })
 
 const loadPlaceholders = async () => {
-    let holders = await PlaceholderService.getLocalPlaceholders();
+    const holders = await PlaceholderService.getLocalPlaceholders();
     return holders;
 }
 

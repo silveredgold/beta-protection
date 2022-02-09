@@ -1,8 +1,7 @@
 import { MessageContext } from "@/events";
 import { LocalPlaceholder } from "@/placeholders";
 import { getAvailablePlaceholders, getEnabledPlaceholders } from "@/preferences";
-import { serializeBlob } from "@/services/placeholder-service";
-import { WebSocketClient } from "@/transport/webSocketClient";
+import { RuntimeEvent } from ".";
 
 
 const MSG_PLH_AVAILABLE = 'getAvailablePlaceholders';
@@ -23,14 +22,10 @@ export const MSG_PLACEHOLDERS_ENABLED: RuntimeEvent<{categories: string[], allIm
 //     handler: (message: any, sender: chrome.runtime.MessageSender, sendResponse: (resp: any) => void, ctx: MessageContext) => Promise<any> 
 // }
 
-export type RuntimeEvent<Type> = {
-    event: string;
-    handler: (message: any, sender: chrome.runtime.MessageSender, ctx: MessageContext) => Promise<Type> 
-}
 
 export async function processAvailableMessage(message: any, sender: chrome.runtime.MessageSender, ctx: MessageContext) : Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
     if (message['msg'] == MSG_PLH_AVAILABLE) {
-        let res = await getAvailablePlaceholders();
+        const res = await getAvailablePlaceholders();
         return res;
     }
     throw new Error("Unrecognized message!");
@@ -38,7 +33,7 @@ export async function processAvailableMessage(message: any, sender: chrome.runti
 
 export async function processEnabledMessage(message: any, sender: chrome.runtime.MessageSender, ctx: MessageContext) : Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
     if (message['msg'] == MSG_PLH_ENABLED) {
-        let res = await getEnabledPlaceholders();
+        const res = await getEnabledPlaceholders();
         for (const placeholder of res.allImages) {
             if (placeholder.data) {
                 const fileUrl = await readFileUrlAsync(placeholder.data);
@@ -56,7 +51,7 @@ export async function processEnabledMessage(message: any, sender: chrome.runtime
 
 function readFileUrlAsync(file: Blob): Promise<string|ArrayBuffer|null> {
     return new Promise((resolve, reject) => {
-      let reader = new FileReader();
+      const reader = new FileReader();
   
       reader.onload = () => {
         resolve(reader.result);

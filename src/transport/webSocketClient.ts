@@ -8,10 +8,9 @@ import { RuntimePortManager } from "./runtimePort";
 export class WebSocketClient {
 
     static create = async (host?: string): Promise<WebSocketClient> => {
-        // console.log('creating new client!');
         console.trace('creating new socket client!');
         if (!host) {
-            let configHost = await chrome.storage.local.get('backendHost');
+            const configHost = await chrome.storage.local.get('backendHost');
             // console.log(`pulled host config: ${JSON.stringify(configHost)}`);
             if (configHost['backendHost']) {
                 host = configHost['backendHost'];
@@ -34,30 +33,12 @@ export class WebSocketClient {
 
     defaultHost = "ws://localhost:8090/ws"
 
-    // Make the function wait until the connection is made...
-    // thanks https://stackoverflow.com/questions/13546424/how-to-wait-for-a-websockets-readystate-to-change
-    // waitForConnection = (callback: () => void, interval: number = 100) =>{
-    //     setTimeout(
-    //         () => {
-    //             if (this.webSocket?.readyState === 1) {
-    //                 // console.log("Connection is made")
-    //                 if (callback != null){
-    //                     callback();
-    //                 }
-    //             } else {
-    //                 console.debug("Socket waiting for connection...")
-    //                 this.waitForConnection(callback);
-    //             }
-
-    //         }, interval); // wait 5 milisecond for the connection...
-    // }
-
     sendObj = (message: object, callback?: () => any|void) => {
         this.send(JSON.stringify(message), callback);
     }
 
     usePorts = (ports: {[tabId: number]: chrome.runtime.Port|undefined}) => {
-        // this._ports = ports;
+        this._ports = ports;
     }
 
     usePortManager = (mgr: RuntimePortManager): WebSocketClient => {
@@ -66,21 +47,17 @@ export class WebSocketClient {
     }
 
     send = (message: string, callback?: any) => {
-        // if (this.webSocket?.readyState !== 1) {
-            if (false) {
-            console.log('socket not ready, queueing message!');
-            this.messageQueue.push(message)
-          } else {
-              try {
-                this.webSocket?.send(message)
-                if (typeof callback !== 'undefined') {
-                    callback();
-                }
-              } catch {
-                  this.messageQueue.push(message);
-              }
-            
-          }
+        //sockette means the socket is never not ready
+        // that doesn't mean it can't error out though
+
+        try {
+            this.webSocket?.send(message)
+            if (typeof callback !== 'undefined') {
+                callback();
+            }
+        } catch {
+            this.messageQueue.push(message);
+        }
     };
 
 
@@ -90,7 +67,7 @@ export class WebSocketClient {
             this._portManager.sendMessage(obj, requestId, tabId.toString());
         }
         if (tabId) {
-            let port = this._ports[tabId];
+            const port = this._ports[tabId];
             if (port) {
                 port.postMessage(obj);
             } else {
@@ -118,7 +95,7 @@ export class WebSocketClient {
                 }
              };
              const onMessage = (event) => {
-                let response = JSON.parse(event.data);
+                const response = JSON.parse(event.data);
                 this.processServerMessage(response);
             };
             const onClose = (e) => {
@@ -155,7 +132,7 @@ export class WebSocketClient {
             // webSocket.onerror = onError;
             return webSocket;
         } catch (e: any) {
-            console.log("Websocket is complaining; server is likely rebooting or offline. - " + e.toString());
+            console.warn("Failed to connect to WebSocket! Cannot connect to the target endpoint.",  e.toString(), e);
         }
     }
 
@@ -170,7 +147,7 @@ export class WebSocketClient {
 
     processServerMessage = (response: any) => {
         console.debug(`server response received`, response);
-        let handler = this.messageHandlers[response['requestType']];
+        const handler = this.messageHandlers[response['requestType']];
         if (handler !== undefined) {
             console.log('running handler for server message', response.requestType, response);
             handler(response);
@@ -180,9 +157,9 @@ export class WebSocketClient {
     }
 
     processCensoredImageResponse = async (response) => {
-        let prefs = await loadPreferencesFromStorage();
+        const prefs = await loadPreferencesFromStorage();
         let url: string;
-        console.log(`parsing image response`, response);
+        // console.log(`parsing image response`, response);
         if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
             url = response.url;
         } else {
@@ -192,7 +169,7 @@ export class WebSocketClient {
             // we don't have an NSFW error screen yet
             // ignore that, we do now
         }
-        let body = {
+        const body = {
             msg: "setSrc", censorURL: url,
             id: response.id, tabid: response.tabid, type: response.type
         };
@@ -206,7 +183,6 @@ export class WebSocketClient {
             //TODO: we don't actually need to do this anymore, we don't use the backend placeholders anywhere
             PlaceholderService.loadBackendPlaceholders(response)
             StickerService.loadAvailableStickers(response);
-
         }
     }
 
@@ -215,21 +191,20 @@ export class WebSocketClient {
             // console.debug(...data);
             //this is just here to make debugging things easier
         }
-        console.log()
-        let preferences = await loadPreferencesFromStorage();
+        const preferences = await loadPreferencesFromStorage();
         if (parseInt(response.status) === 200) {
-            let rawPrefs = response["preferences"] as rawPreferences;
+            const rawPrefs = response["preferences"] as rawPreferences;
             log('raw prefs', rawPrefs);
-            let backendPrefs = createPreferencesFromBackend(rawPrefs);
+            const backendPrefs = createPreferencesFromBackend(rawPrefs);
             log('backend prefs', backendPrefs);
             log('loaded prefs', preferences);
-            let mergedPrefs = {
+            const mergedPrefs = {
                 ...backendPrefs,
                 ...preferences
             };
             log('merged prefs', mergedPrefs);
             await savePreferencesToStorage(mergedPrefs, true);
-            let newPrefs = await loadPreferencesFromStorage();
+            const newPrefs = await loadPreferencesFromStorage();
             log('new prefs as stored:', newPrefs);
             return mergedPrefs;
         }

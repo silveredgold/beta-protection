@@ -27,13 +27,13 @@ export class DbClient {
     }
 
     addPlaceholder = async (placeholder: LocalPlaceholder) => {
-        let res = await this._db.put('placeholders', placeholder);
+        const res = await this._db.put('placeholders', placeholder);
         return res;
     }
 
     addPlaceholders = async (placeholders: LocalPlaceholder[]) => {
         const tx = this._db.transaction('placeholders', 'readwrite');
-        let txProms = placeholders.map(pl => {
+        const txProms = placeholders.map(pl => {
             tx.store.add(pl)
         });
         await Promise.all([
@@ -48,20 +48,10 @@ export class DbClient {
 
     getLocalPlaceholders = async (category?: string) => {
         if (category) {
-            let results = await this._db.getAllFromIndex('placeholders', 'category', category);
+            const results = await this._db.getAllFromIndex('placeholders', 'category', category);
             return results;
         } else {
-            let results = await this._db.getAll('placeholders');
-            return results;
-        }
-    }
-
-    private getLocalPlaceholdersFor = async (category?: string[]) => {
-        if (category) {
-            let results = await this._db.getAllFromIndex('placeholders', 'category');
-            return results;
-        } else {
-            let results = await this._db.getAll('placeholders');
+            const results = await this._db.getAll('placeholders');
             return results;
         }
     }

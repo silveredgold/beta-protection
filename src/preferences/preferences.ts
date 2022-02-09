@@ -5,18 +5,17 @@ import clone from "just-clone";
 
 export async function loadPreferencesFromStorage(): Promise<IPreferences> {
     // let result = await chrome.storage.local.get({'preferences': defaultPrefs}) as IPreferences;
-    let result = await chrome.storage.local.get('preferences') as IPreferences;
+    const result = await chrome.storage.local.get('preferences') as IPreferences;
     return result['preferences'];
 }
 
 export async function savePreferencesToStorage(prefs: IPreferences, skipClone: boolean = false): Promise<void> {
-    let clonedPrefs = skipClone ? prefs : clone(prefs);
+    const clonedPrefs = skipClone ? prefs : clone(prefs);
     await chrome.storage.local.set({ 'preferences': clonedPrefs });
 }
 
 
 export const defaultPrefs: IPreferences = {
-    
     exposed: {
         Pits: {method: CensorType.Nothing, level: 1.0},
         Breasts: {method: CensorType.Caption, level: 5},

@@ -100,16 +100,16 @@ const updateFunc = debounce(1000, async (prefs) => {
   await savePreferencesToStorage(prefs);
 })
 
-let store = reactive({
+const store = reactive({
   preferences: {} as IPreferences,
   updatePreferences(prefs?: IPreferences) {
-    let targetPrefs = prefs?.mode ? prefs : this.preferences;
+    const targetPrefs = prefs?.mode ? prefs : this.preferences;
     updateFunc(targetPrefs);
     // var storeResponse = await chrome.storage.local.set({ 'preferences': targetPrefs });
   }
 })
 
-let prefs = computed(() => store.preferences);
+const prefs = computed(() => store.preferences);
 
 watch(prefs, async (newMode, prevMode) => {
     console.log('new mode', newMode);
@@ -156,10 +156,11 @@ html {
   margin-bottom: 1.5rem;
 }
 
+
 /* purgecss start ignore */
-@tailwind base;
-@tailwind components;
+/* @tailwind base;
+@tailwind components; */
 /* purgecss end ignore */
 
-@tailwind utilities;
+/* @tailwind utilities; */
 </style>

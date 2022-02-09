@@ -1,5 +1,4 @@
-import { MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED } from "./messaging/placeholders";
-import { idUrlMap, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATISTICS, MSG_STATUS } from "./messaging/util";
+import { MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATISTICS, MSG_STATUS, MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED } from "./messaging";
 import { loadPreferencesFromStorage, toRaw } from "./preferences";
 import { WebSocketClient } from "./transport/webSocketClient";
 import { getExtensionVersion } from "./util";

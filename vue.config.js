@@ -1,3 +1,5 @@
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
 module.exports = {
   pages: {
     popup: {
@@ -38,5 +40,8 @@ module.exports = {
   },
   configureWebpack: {
     devtool: 'source-map',
+    plugins: [
+      // new BundleAnalyzerPlugin()
+    ]
   },
 };

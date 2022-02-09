@@ -10,7 +10,7 @@ export class FileSystemClient {
 
     getFile = async (types: FilePickerAcceptType[]): Promise<LoadedFileHandle> => {
         const [fileHandle] = await window.showOpenFilePicker({types});
-        let file = await fileHandle.getFile();
+        const file = await fileHandle.getFile();
         return {
             file,
             handle: fileHandle
@@ -28,9 +28,9 @@ export class FileSystemClient {
             // console.log('building promise for file', entry);
             promises.push(entry.getFile().then((file) => {return {handle: entry, file}}));
         }
-        let result = await Promise.all(promises);
+        const result = await Promise.all(promises);
         // console.log('awaited results', result);
-        let results = result.filter(r => filter ? filter(r.file) : true);
+        const results = result.filter(r => filter ? filter(r.file) : true);
         // console.log('filtered results', results);
         return {dir: dirHandle.name, files: results};
     }
@@ -38,11 +38,11 @@ export class FileSystemClient {
     getDirectoriesandFiles = async (filter?: (file: File) => boolean): Promise<{[key: string]: LoadedFileHandle[]}> => {
         const dirHandle = await window.showDirectoryPicker();
         const getAllHandles = await this.listAllFilesAndDirs(dirHandle);
-        let obj: {[key: string]: LoadedFileHandle[]} = {}
+        const obj: {[key: string]: LoadedFileHandle[]} = {}
         for (const handle of getAllHandles) {
             if (handle.kind == "directory") {
-                let childRefs = getAllHandles.filter(f => f.kind == "file" && f.parent.name === handle.name);
-                let childHandles = childRefs.map(r => r.handle as FileSystemFileHandle);
+                const childRefs = getAllHandles.filter(f => f.kind == "file" && f.parent.name === handle.name);
+                const childHandles = childRefs.map(r => r.handle as FileSystemFileHandle);
                 if (childHandles.length == 0) {
                     break;
                 }
@@ -54,7 +54,7 @@ export class FileSystemClient {
                     // console.log('building promise for file', entry);
                     promises.push(entry.getFile().then((file) => {return {handle: entry, file}}));
                 }
-                let result = await Promise.all(promises);
+                const result = await Promise.all(promises);
                 obj[handle.name] = result.filter(r => filter ? filter(r.file) : true);
             }
         }
@@ -63,7 +63,7 @@ export class FileSystemClient {
 
     listAllFilesAndDirs = async (dirHandle: FileSystemDirectoryHandle) => {
         const files: {name: string, handle: FileSystemHandle, kind: "directory"|"file", parent: FileSystemDirectoryHandle}[] = [];
-        for await (let [name, handle] of dirHandle) {
+        for await (const [name, handle] of dirHandle) {
             const {kind} = handle;
             if (handle.kind === 'directory') {
                 files.push({name, handle, kind, parent: dirHandle});
