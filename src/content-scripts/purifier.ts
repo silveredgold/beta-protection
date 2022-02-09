@@ -10,6 +10,8 @@ export class Purifier {
     private _currentState: CensoringState;
     
     private _backlog : boolean = false;
+    private _port: chrome.runtime.Port | undefined;
+    private _portFaulted: boolean = false;
     public get backlog() : boolean {
         return this._backlog;
     }
@@ -42,17 +44,12 @@ export class Purifier {
         return this._urlTransformers;
     }
     
-    
-
-
-    private _lastRun: number;
     private _videoMode: string;
     /**
      *
      */
-    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], lastRun?: number) {
+    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], port?: chrome.runtime.Port) {
         // Only update once in a while.
-        this._lastRun = lastRun ?? new Date().getTime();
         this._currentState = state;
         this._placeholders = placeholders;
         this._ready = true
@@ -62,6 +59,7 @@ export class Purifier {
         }
         this._domain = location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
         this._urlTransformers.push(srcUrl => srcUrl.replace(".gifv", ".gif"))
+        this._port = port;
     }
 
     private getPlaceholderSrc = () => {
@@ -69,7 +67,7 @@ export class Purifier {
         if (this._placeholders.length && this._placeholders.length > 0) {
             try {
             let random = getRandom(this._placeholders);
-            console.debug('selecting candidate placeholder', random, random.data?.size ?? -1);
+            // console.debug('selecting candidate placeholder', random, random.data?.size ?? -1);
             
             let src = PlaceholderService.toSrc(random);
             placeholder = src ? src : placeholder;
@@ -154,10 +152,10 @@ export class Purifier {
 
     censorImage = (img: HTMLImageElement, runOnce: boolean = false) => {
         this.flattenSrc(img);
-        console.debug('censorImage', img, img.complete, img.naturalWidth);
+        // console.debug('censorImage', img, img.complete, img.naturalWidth);
         if (runOnce || (img.complete && img.naturalWidth > 0)) {
             const url = this.normalizeSrcUrl(img);
-            console.debug('running censorLoadedImage', img, runOnce);
+            // console.debug('running censorLoadedImage', img, runOnce);
             this.censorLoadedImage(url, img, runOnce ? true : (this._currentState && this._currentState.activeCensoring));
         } else if (!runOnce) {
             this.backlog = true;
@@ -194,7 +192,7 @@ export class Purifier {
                 if (active) {
                     img.setAttribute('censor-state', 'censoring');
                     const placeholder = this.getPlaceholderSrc();
-                    console.log(`got placeholder URL: ${placeholder}`);
+                    // console.log(`got placeholder URL: ${placeholder}`);
                     const priority = img.getBoundingClientRect().top | 0;
                     const placeHolderImage = new Image();
                     placeHolderImage.onload = () => {
@@ -218,14 +216,39 @@ export class Purifier {
     }
 
     private sendCensorRequest = (imageUrl: string, id: string, type: "BG"|"normal", priority?: number) => {
-        chrome.runtime.sendMessage({
-            msg: 'censorRequest',
-            imageURL: imageUrl,
-            id: id,
-            priority: priority ?? 1,
-            type: type,
-            domain: this._domain
-        });
+        if (this._port && !this._portFaulted) {
+            console.debug('using existing port for runtime message');
+            try {
+                this._port.postMessage({
+                    msg: 'censorRequest',
+                    imageURL: imageUrl,
+                    id: id,
+                    priority: priority ?? 1,
+                    type: type,
+                    domain: this._domain
+                });
+            } catch {
+                this._portFaulted = true;
+                chrome.runtime.sendMessage({
+                    msg: 'censorRequest',
+                    imageURL: imageUrl,
+                    id: id,
+                    priority: priority ?? 1,
+                    type: type,
+                    domain: this._domain
+                });
+            }
+        } else {
+            console.debug('using runtime for message');
+            chrome.runtime.sendMessage({
+                msg: 'censorRequest',
+                imageURL: imageUrl,
+                id: id,
+                priority: priority ?? 1,
+                type: type,
+                domain: this._domain
+            });
+        }
         // this.messageQueue.push(id);
     }
 
@@ -269,12 +292,12 @@ export class Purifier {
             if (this.isUnsafe(videoEl)) {
                 const videoPl = this.getVideoPlaceholderSrc();
                 videoEl.outerHTML = `<video censor-state="censored" poster='${videoPl.poster}'>` +
-                    `<source type="video/mp4">` +
+                    `<source type="video/mp4" src="${videoPl.video}">` +
                     `</video>`;
-                const srcEl = videoEl.getElementsByTagName('source');
-                if (srcEl && srcEl.length == 1) {
-                    srcEl[0].setAttribute('src', videoPl.video);
-                }
+                // const srcEl = videoEl.getElementsByTagName('source');
+                // if (srcEl && srcEl.length == 1) {
+                //     srcEl[0].setAttribute('src', videoPl.video);
+                // }
             }
         }
     }

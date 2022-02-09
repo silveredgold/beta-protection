@@ -18,6 +18,7 @@ export class WebSocketClient {
         }
         return new WebSocketClient(host);
     }
+    private _ports: { [tabId: number]: chrome.runtime.Port | undefined; } = {};
     /**
      *
      */
@@ -53,6 +54,10 @@ export class WebSocketClient {
         this.send(JSON.stringify(message), callback);
     }
 
+    usePorts = (ports: {[tabId: number]: chrome.runtime.Port|undefined}) => {
+        this._ports = ports;
+    }
+
     send = (message: string, callback?: any) => {
         // if (this.webSocket?.readyState !== 1) {
             if (false) {
@@ -71,7 +76,19 @@ export class WebSocketClient {
           }
     };
 
-
+    private sendRuntimeMessage = (tabId: number, obj: object) => {
+        if (tabId) {
+            let port = this._ports[tabId];
+            if (port) {
+                port.postMessage(obj);
+            } else {
+                chrome.tabs.sendMessage(tabId, obj);
+            }
+        } else {
+            chrome.runtime.sendMessage(obj)
+            // throw new Error("Cannot deliver message without tab ID!");
+        }
+    }
     
     
     public get ready() : boolean {
@@ -167,8 +184,8 @@ export class WebSocketClient {
             msg: "setSrc", censorURL: url,
             id: response.id, tabid: response.tabid, type: response.type
         };
-
-        chrome.tabs.sendMessage(parseInt(response.tabid), body);
+        this.sendRuntimeMessage(parseInt(response.tabid), body)
+        
     }
 
     processPlaceholderAndStickerResponse = (response) => {

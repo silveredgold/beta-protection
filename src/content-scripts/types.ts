@@ -9,13 +9,13 @@ export type CensoringState = {
 }
 
 export type CensoringContext = {
-    // tab: chrome.tabs.Tab,
     state: CensoringState,
     preferences: IPreferences,
     socketClient?: WebSocketClient,
     purifier: Purifier,
-    observer?: PageObserver
-}
+    observer?: PageObserver,
+    port: chrome.runtime.Port
+};
 
 export type ImageStyleElement = {
     element: Element,

@@ -64,7 +64,7 @@ export type MessageContext = {
     version: string;
 };
 
-export async function processMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void, ctxFactory: () => Promise<MessageContext>) {
+export async function processMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: ((response: any) => void)|undefined, ctxFactory: () => Promise<MessageContext>) {
     console.log('background processing msg', message);
     let msgHandlerFound = false;
     let ctx: MessageContext;

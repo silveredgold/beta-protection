@@ -6,7 +6,39 @@ import { getExtensionVersion } from "./util";
 import { CSSManager } from "./content-scripts/cssManager";
 import { IPreferences } from "./preferences";
 
+export const currentPorts: {[tabId: number]: chrome.runtime.Port|undefined} = {};
+
 let currentClient: WebSocketClient | null;
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port?.sender?.tab?.id) {
+    //got a valid port from a tab
+    let id = port.sender.tab.id;
+    console.log('tab runtime port opened', id);
+    port.onDisconnect.addListener(() => {
+      currentPorts[id] = undefined;
+    });
+    port.onMessage.addListener((msg, port) => {
+      let request = msg;
+      if (request.msg == 'heartBeat') {
+        port.postMessage({msg: 'heartBeatAlive'});
+      } else {
+        console.debug('got port message', port.sender?.tab?.id, request)
+        const factory = async () => {
+          let client = await getClient();
+          let version = getExtensionVersion();
+          return {
+            socketClient: client,
+            version
+          }
+        };
+        processMessage(request, port.sender!, undefined, factory);
+        return true;
+      }
+    });
+    currentPorts[id] = port;
+  }
+});
 
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('Configuring BP settings!');
@@ -63,19 +95,32 @@ chrome.tabs.onUpdated.addListener((id, change, tab) => {
 });
 
 chrome.tabs.onUpdated.addListener((id, change, tab) => {
+  const sendMsg = (tabId: number, msg: object) => {
+    // let port = currentPorts[tabId];
+    // if (port) {
+    //   // port.postMessage(msg)
+      chrome.tabs.sendMessage(tabId, msg);
+    // } else {
+    //   chrome.tabs.sendMessage(tabId, msg);
+    // }
+  }
+  console.log('onUpdated event', change);
   if (change.status === 'complete' && tab.id) {
     //caught a page load!
-    console.debug('page load detected, notifying content script!');
-    chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged'})
+    // console.debug('page load detected, notifying content script!');
+    sendMsg(tab.id, {msg: 'pageChanged:complete'});
+    // chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged'})
     // chrome.runtime.sendMessage({msg: 'pageChanged'})
   } else if (change.status === 'loading' && tab.id) {
-    chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged:loading'});
+    // chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged:loading'});
+    sendMsg(tab.id, {msg: 'pageChanged:loading', url: change.url});
   }
 });
 
 chrome.tabs.onRemoved.addListener((id, removeInfo) => {
   console.log('tab removed');
   getClient().then(client => {
+    currentPorts[id] = undefined;
     cancelRequestsForId(id, client);
   });
 });
