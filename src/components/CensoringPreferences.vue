@@ -136,9 +136,9 @@
 <script setup lang="ts">
 import { ComponentOptions, defineComponent, inject, onMounted, Ref, ref, toRefs, watch } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification, NTabs, NTab, NTabPane, NSpace, NForm, NFormItem, NInput, NSelect, NInputGroup, NSlider, NThing, NCheckbox } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, CensorType, BodyCensorModes } from '../preferences';
+import { loadPreferencesFromStorage, IPreferences, OperationMode, CensorType, BodyCensorModes } from '@/preferences';
 import { updateUserPrefs, userPrefs } from "../options/services";
-import { toTitleCase } from "../util";
+import { toTitleCase } from "@/util";
 
 const props = defineProps<{
     preferences: Ref<IPreferences>
@@ -150,7 +150,7 @@ const sliderMarks = {
     1: "Very Light",
     22: "Very Heavy"
 }
-let { preferences } = toRefs(props);
+const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 console.log(`injected prefs: ${JSON.stringify(preferences.value)}`);

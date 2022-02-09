@@ -17,14 +17,14 @@ const dbg = (...data: any[]) => {
 
 chrome.runtime.onConnect.addListener((port) => {
   const portMsgListener = (msg: any, port: chrome.runtime.Port) => {
-    let request = msg;
+    const request = msg;
     if (request.msg == 'heartBeat') {
       port.postMessage({msg: 'heartBeatAlive'});
     } else {
       dbg('got port message', port.sender?.tab?.id, request)
       const factory = async () => {
-        let client = await getClient();
-        let version = getExtensionVersion();
+        const client = await getClient();
+        const version = getExtensionVersion();
         return {
           socketClient: client,
           version
@@ -41,7 +41,7 @@ chrome.runtime.onConnect.addListener((port) => {
   }
   else if (port?.sender?.tab?.id) {
     //got a valid port from a tab
-    let id = port.sender.tab.id;
+    const id = port.sender.tab.id;
     dbg('tab runtime port opened', id);
     port.onDisconnect.addListener(() => {
       console.log('anonymous tab runtime port disconnected', port.sender?.tab?.id);
@@ -93,8 +93,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     initExtension();
   } else {
     const factory = async () => {
-      let client = await getClient();
-      let version = getExtensionVersion();
+      const client = await getClient();
+      const version = getExtensionVersion();
       return {
         socketClient: client,
         version

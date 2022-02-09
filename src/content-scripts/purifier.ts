@@ -77,10 +77,10 @@ export class Purifier {
         let placeholder = chrome.runtime.getURL('/images/loading.png');
         if (this._placeholders.length && this._placeholders.length > 0) {
             try {
-            let random = getRandom(this._placeholders);
+            const random = getRandom(this._placeholders);
             // console.debug('selecting candidate placeholder', random, random.data?.size ?? -1);
             
-            let src = PlaceholderService.toSrc(random);
+            const src = PlaceholderService.toSrc(random);
             placeholder = src ? src : placeholder;
             } catch {
                 console.warn('failed to get placeholder!');
@@ -99,15 +99,16 @@ export class Purifier {
         const elements = document.body.getElementsByTagName("img");
         const bgElements = document.body.getElementsByTagName("*");
         //images first
-        let targetEls = this.discoverImages([...elements]);
+        const targetEls = this.discoverImages([...elements]);
         for (const el of targetEls) {
             this.censorImage(el)
         }
-
+        // then backgrounds
         const targetBacks = this.discoverStyleImages([...bgElements]);
         for (const target of targetBacks) {
             this.censorStyleImage(target);
         }
+        // then videos
         if (this._currentState.activeCensoring && this._videoMode == "Block") {
             const videoElements = this.discoverVideos(['video', 'video-element']);
             this.disableVideos(videoElements);
@@ -128,7 +129,7 @@ export class Purifier {
             if (bg.background) { // should this be background-image?
                 //thanks https://stackoverflow.com/a/34166861
                 const urlMatch = /[:,\s]\s*url\s*\(\s*(?:'(\S*?)'|"(\S*?)"|((?:\\\s|\\\)|\\\"|\\\'|\S)*?))\s*\)/gi
-                let match = urlMatch.exec(bg.background);
+                const match = urlMatch.exec(bg.background);
                 if (match) {
                     bg.imageUrl = match[1]
                 }
@@ -236,7 +237,7 @@ export class Purifier {
             type: type,
             domain: this._domain
         };
-        let port = chrome.runtime.connect({name: id});
+        const port = chrome.runtime.connect({name: id});
         if (port) {
             // console.log('got named port!')
             port.onMessage.addListener((msg, port) => {
@@ -263,7 +264,7 @@ export class Purifier {
         if (img.imageUrl) {
             const imageURL = this.normalizeUrl(img.imageUrl);
             if (isValidUrl(imageURL) && !imageURL.includes(".svg")) {
-                let image = new Image();
+                const image = new Image();
 
                 // just in case it is not already loaded
                 image.addEventListener('on', () => {
@@ -271,7 +272,7 @@ export class Purifier {
                         const uniqueID = generateUUID();
                         img.element.setAttribute('censor-id', uniqueID);
                         if (this._currentState && this._currentState.activeCensoring) {
-                            let placeholder = this.getPlaceholderSrc();
+                            const placeholder = this.getPlaceholderSrc();
                             try {
                                 (img.element as HTMLElement).style.backgroundImage = 'url("' + placeholder + '")';
                             } catch { }
@@ -321,7 +322,7 @@ export class Purifier {
     private setExcluded(el: Element, reason?: string) {
         el.setAttribute('censor-style', 'excluded');
         if (reason) {
-            let existing = (el.getAttribute('censor-exclusion') ?? '').replace(reason, '').trim();
+            const existing = (el.getAttribute('censor-exclusion') ?? '').replace(reason, '').trim();
             el.setAttribute('censor-exclusion', existing ? `${existing} ${reason}` : reason);
         }
     }
@@ -329,7 +330,7 @@ export class Purifier {
     private setImgExcluded(el: HTMLImageElement, reason?: string) {
         el.setAttribute('censor-state', 'excluded');
         if (reason) {
-            let existing = (el.getAttribute('censor-exclusion') ?? '').replace(reason, '').trim();
+            const existing = (el.getAttribute('censor-exclusion') ?? '').replace(reason, '').trim();
             el.setAttribute('censor-exclusion', existing ? `${existing} ${reason}` : reason);
         }
     }
@@ -338,12 +339,7 @@ export class Purifier {
 
 const handleCensorResult = (request: any, safeList: number[], port: chrome.runtime.Port) => {
     if(request.msg === "setSrc" && request.type === "normal") {
-		// console.debug(`got normal setSrc message! ${request.id}`)
-		// if (currentContext?.purifier.messageQueue.includes(request.id)) {
-		// 	let idx = currentContext.purifier.messageQueue.indexOf(request.id);
-		// 	currentContext.purifier.messageQueue.splice(idx, 1);
-		// }
-		let requestElement = document.querySelector(`[censor-id="${request.id}"]`)
+		const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
 		if(requestElement){
 			// console.log(`finalizing purify for ${requestElement}`)
 			requestElement.setAttribute('src', request.censorURL);
@@ -354,7 +350,7 @@ const handleCensorResult = (request: any, safeList: number[], port: chrome.runti
         port.disconnect();
 	} else if(request.msg === "setSrc" && request.type === "BG") {
 		console.log(`got background setSrc message! ${request.id}`)
-		let requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
+		const requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
 		if(requestElement) {
 			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
 			// console.log(`finalizing BG purify for ${requestElement}`)

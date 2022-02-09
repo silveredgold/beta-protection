@@ -55,7 +55,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const notif = useNotification();
-let { preferences } = toRefs(props);
+const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 

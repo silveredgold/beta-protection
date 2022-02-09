@@ -28,23 +28,23 @@ export function toTitleCase(str: string) {
 
 export const themeOverrides: GlobalThemeOverrides = { common: { fontWeightStrong: '600' }, Result: {lineHeight: '1.1', titleFontSizeSmall: '24', iconSizeSmall: '48px'} };
 
-export function isSafe(url: string, safeList: number[]) {
-  let chrome = url && url.includes("chrome-extension://");
-  let inList = safeList.includes(hashCode(url));
-  return chrome || inList;
-}
+// export function isSafe(url: string, safeList: number[]) {
+//   const isChrome = url && url.includes("chrome-extension://");
+//   const inList = safeList.includes(hashCode(url));
+//   return isChrome || inList;
+// }
 
 export function isNodeSafe(node: Node, safeList: number[]) {
-  let plSrc = node["placeholder-name"] as string;
-  let url = node["src"] as string;
+  const plSrc = node["placeholder-name"] as string;
+  const url = node["src"] as string;
   let safeSrc = true;
   if (plSrc) {
-    let filename = (url.split('/').pop() ?? '').split('#')[0].split('?')[0];
+    const filename = (url.split('/').pop() ?? '').split('#')[0].split('?')[0];
     safeSrc = filename.toLowerCase() == plSrc.toLowerCase();
   }
-  let chrome = url && url.includes("chrome-extension://");
-  let inList = safeList.includes(hashCode(url));
-  return safeSrc || chrome || inList;
+  const isChrome = url && url.includes("chrome-extension://");
+  const inList = safeList.includes(hashCode(url));
+  return safeSrc || isChrome || inList;
 }
 
 export function hashCode(str: string) {

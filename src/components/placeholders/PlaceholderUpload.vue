@@ -77,7 +77,7 @@ const props = defineProps<{
 }>();
 
 const notif = useNotification();
-let { preferences } = toRefs(props);
+const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 
@@ -119,7 +119,7 @@ const enabled = computed({
 
 const openDir = async () => {
     const fs = new FileSystemClient();
-    let result = await fs.getFiles((file) => file.type.startsWith("image/"));
+    const  result = await fs.getFiles((file) => file.type.startsWith("image/"));
     console.log('loaded files', result);
     newFiles.value = result.files;
     categoryName.value = result.dir;

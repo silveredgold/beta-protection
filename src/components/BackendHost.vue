@@ -26,9 +26,9 @@ const updateFunc = debounce(1000, async (host: string) => {
 const currentHost = ref("");
 const getCurrentHost = async () => {
     var storeResponse = await chrome.storage.local.get({'backendHost': ''});
-    let currentHost = storeResponse['backendHost'] ?? "";
-    console.log('setting ref value', currentHost);
-    return currentHost;
+    const currentStoredHost = storeResponse['backendHost'] ?? "";
+    console.log('setting ref value', currentStoredHost);
+    return currentStoredHost;
 }
 
 const host = computed({

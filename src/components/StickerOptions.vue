@@ -31,7 +31,7 @@ const props = defineProps<{
 }>();
 
 const notif = useNotification();
-let { preferences } = toRefs(props);
+const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 const availableStickers: Ref<string[]> = ref([]);
@@ -66,7 +66,7 @@ onBeforeMount(() => {
 })
 
 const loadStickers = async () => {
-    let holders = await StickerService.getAvailable();;
+    const holders = await StickerService.getAvailable();
     return holders;
 }
 

@@ -58,9 +58,9 @@ export class PageObserver {
                 }
             }
             if (mutation.type === "attributes" && mutation.attributeName === "src") {
-                let target = mutation.target as Element;
+                const target = mutation.target as Element;
                 // let safe = isSafe(mutation.target["src"], this._hashList);
-                let safe = isNodeSafe(mutation.target, this._hashList);
+                const safe = isNodeSafe(mutation.target, this._hashList);
                 console.debug(`mutation running, checking for safe! ${safe}`, mutation.target);
                 if (safe) {
                     // Do nothing since it's safe.

@@ -16,7 +16,7 @@ export class RuntimePortManager {
 
     sendMessage = (msg: object, id: string, src: string) => {
         if (this.ports.has(id)) {
-            let port = this.ports.get(id);
+            const port = this.ports.get(id);
             console.log('dedicated port transport found, sending message', port, msg)
             port?.port.postMessage(msg);
 
@@ -30,7 +30,7 @@ export class RuntimePortManager {
     }
 
     closeForSrc = (src: string) => {
-        let allPorts = [...this.ports.values()].filter(p => p.src == src);
+        const allPorts = [...this.ports.values()].filter(p => p.src == src);
         if (allPorts.length > 0) {
             console.log('closing all ports for source', src, allPorts);
             for (const port of allPorts) {

@@ -3,12 +3,12 @@ import { IPreferences, OperationMode } from "@/preferences/types";
 import { Purifier } from "./purifier";
 import { runSubliminal } from "./subliminal";
 import { CensoringState, CensoringContext } from "./types";
-import { hashCode, isSafe } from "@/util";
+import { hashCode } from "@/util";
 import { PageObserver } from "./observer";
 import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
 
 let lastClickElement: HTMLElement|undefined|null;
-let safeList: number[] = [];
+const safeList: number[] = [];
 let currentContext: CensoringContext|undefined;
 let timerId: number|undefined;
 
@@ -18,22 +18,22 @@ const dbg = (...data: any[]) => {
 
 const getCensoringState = async (): Promise<CensoringState> => {
 	
-	let prefs = await loadPreferencesFromStorage();
-	let website = window.location.href.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
+	const prefs = await loadPreferencesFromStorage();
+	const currentSite = window.location.href.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
 	if (prefs?.mode) {
 		// let prefs = confPrefs["preferences"] as IPreferences;
-		let mode = prefs.mode;
+		const mode = prefs.mode;
 		dbg(`content script found preferences: ${prefs.mode}`)
-		let whitelist = prefs.allowList?.length ? prefs.allowList : [];
-		let blacklist = prefs.forceList?.length ? prefs.forceList : [];
-		dbg(`domain matching`, whitelist, blacklist, website);
+		const whitelist = prefs.allowList?.length ? prefs.allowList : [];
+		const blacklist = prefs.forceList?.length ? prefs.forceList : [];
+		dbg(`domain matching`, whitelist, blacklist, currentSite);
 		// console.log(`blacklist:`, blacklist);
-		let siteAllowed = whitelist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => website.includes(wle));
+		const siteAllowed = whitelist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => currentSite.includes(wle));
 		if (siteAllowed || mode == OperationMode.Disabled) {
 			dbg(`running in disabled mode`);
 			return {activeCensoring: false}
 		} else if (mode == OperationMode.OnDemand) {
-			let siteForced = blacklist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => website.includes(wle));
+			const siteForced = blacklist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => currentSite.includes(wle));
 			dbg(`running in on demand: ${siteForced}`);
 			return {activeCensoring: siteForced};
 		} else {
@@ -45,7 +45,7 @@ const getCensoringState = async (): Promise<CensoringState> => {
 }
 
 const buildPort = () => {
-	let port = chrome.runtime.connect();
+	const port = chrome.runtime.connect();
 	port.onMessage.addListener((msg, port) => {
 		console.log('got runtime port message in content-script', msg);
 		handleMessage(msg, port.sender);
@@ -66,26 +66,19 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	// 	currentContext?.observer?.stop();
 	// 	} catch {}
 	// }
-	let confPrefs = await chrome.storage.local.get('preferences');
-	let preferences = confPrefs['preferences'] as IPreferences;
-	// let tab = await chrome.tabs.getCurrent();
-	// let placeholders = await getAvailablePlaceholders();
-	let newProm = new Promise(resolve => {
+	const confPrefs = await chrome.storage.local.get('preferences');
+	const preferences = confPrefs['preferences'] as IPreferences;
+	const newProm = new Promise(resolve => {
 		chrome.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event}, resp => resolve(resp));
 	})
-	let placeholders: any = await newProm;
+	const placeholders: any = await newProm;
 	// console.debug('got placeholder response maybe?', placeholders)
 	//TODO; not how that works
-	preferences!.enabledPlaceholders = placeholders.categories;
-	
-	// port.onMessage.addListener((msg, port) => {
-		
-	// 	handlePageEvent(msg, port.sender);
-	// });
-	let port = buildPort();
-	let purifier = new Purifier(state, preferences!.videoCensorMode, window.location, placeholders.allImages, safeList);
+	// preferences!.enabledPlaceholders = placeholders.categories;
+	const port = buildPort();
+	const purifier = new Purifier(state, preferences!.videoCensorMode, window.location, placeholders.allImages, safeList);
 	purifier.port = port;
-	let context: CensoringContext = {
+	const context: CensoringContext = {
 		state,
 		preferences,
 		purifier,
@@ -96,7 +89,7 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 }
 
 const _sendMessage = (obj: object, context?: CensoringContext) => {
-	let ctx = context ?? currentContext;
+	const ctx = context ?? currentContext;
 	if (ctx?.port) {
 		ctx.port.postMessage(obj);
 	} else {
@@ -107,7 +100,7 @@ const _sendMessage = (obj: object, context?: CensoringContext) => {
 const injectStyles = async (context: CensoringContext): Promise<CensoringContext> => {
 	if(context.state.activeCensoring){
 		console.log("Beta Protection - Censoring Enabled!");
-		let msg = {msg: 'injectCSS', preferences: context.preferences};
+		const msg = {msg: 'injectCSS', preferences: context.preferences};
 		_sendMessage(msg, context);
 	} else {
 		console.log("Beta Protection - Not censoring current page.");
@@ -118,7 +111,7 @@ const injectStyles = async (context: CensoringContext): Promise<CensoringContext
 const prepareEvents = async (context: CensoringContext, runImmediately: boolean = false): Promise<void> => {
 
 	if (!context.observer) {
-		let observer = buildObserver(context.purifier);
+		const observer = buildObserver(context.purifier);
 		if (observer) {
 			observer.changeAction = (records) => {
 				// context.port.postMessage({msg: 'heartBeat'});
@@ -137,9 +130,6 @@ const prepareEvents = async (context: CensoringContext, runImmediately: boolean 
 	if (context.state.activeCensoring) {
 		dbg('censoring enabled, queuing purifier run from prepareEvents');
 		context.purifier.run();
-		// if (context.observer) {
-		// 	context.observer.start(document.body);
-		// }
 	}
 }
 
@@ -151,11 +141,11 @@ const buildObserver = (purifier: Purifier) => {
 const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, sendResponse?: (response?: any) => void) => {
 	if(request.msg === "getClickedEl" && lastClickElement) {
 		lastClickElement.classList.add("redoRequest");
-		let id = lastClickElement.getAttribute('censor-id');
+		const id = lastClickElement.getAttribute('censor-id');
 		if (id) {
-			let origSrc = lastClickElement.getAttribute('censor-src') ?? lastClickElement.getAttribute('src');
-			let domain = window.location.hostname.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()
-			let respValue = {src: lastClickElement.getAttribute("src"), id, origSrc, domain};
+			const origSrc = lastClickElement.getAttribute('censor-src') ?? lastClickElement.getAttribute('src');
+			const domain = window.location.hostname.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()
+			const respValue = {src: lastClickElement.getAttribute("src"), id, origSrc, domain};
 			dbg('sending getClickedEl response', respValue)
 			sendResponse?.(respValue);
 		} else {
@@ -166,12 +156,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 	}
 	// Results for censor requests here. Set the image in the appropriate element.
 	if(request.msg === "setSrc" && request.type === "normal") {
-		// console.debug(`got normal setSrc message! ${request.id}`)
-		// if (currentContext?.purifier.messageQueue.includes(request.id)) {
-		// 	let idx = currentContext.purifier.messageQueue.indexOf(request.id);
-		// 	currentContext.purifier.messageQueue.splice(idx, 1);
-		// }
-		let requestElement = document.querySelector(`[censor-id="${request.id}"]`)
+		const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
 		if(requestElement){
 			// console.log(`finalizing purify for ${requestElement}`)
 			requestElement.setAttribute('src', request.censorURL);
@@ -181,7 +166,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 		}
 	} else if(request.msg === "setSrc" && request.type === "BG") {
 		dbg(`got background setSrc message! ${request.id}`)
-		let requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
+		const requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
 		if(requestElement) {
 			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
 			// console.log(`finalizing BG purify for ${requestElement}`)
@@ -192,7 +177,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 		}
 	} else if (request.msg === "recheckPage") {
 		dbg('rechecking page');
-		let censored = document.querySelectorAll(`img[censor-placeholder]`);
+		const censored = document.querySelectorAll(`img[censor-placeholder]`);
 		for (const placeholder of censored) {
 			placeholder.removeAttribute('censor-state');
 			placeholder.removeAttribute('censor-style');
@@ -204,12 +189,12 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 		console.log('forcing censored state to on');
 		currentContext?.observer?.stop();
 		try {
-			let censored = document.querySelectorAll(`[censor-state]`)
+			const censored = document.querySelectorAll(`[censor-state]`)
 			for (const element of [...censored]) {
 				element.removeAttribute('censor-state');
 				element.removeAttribute('censor-exclusion');
 			}
-			let styles = document.querySelectorAll(`[censor-style]`)
+			const styles = document.querySelectorAll(`[censor-style]`)
 			for (const element of [...styles]) {
 				element.removeAttribute('censor-style');
 				element.removeAttribute('censor-exclusion');
@@ -297,7 +282,7 @@ const handlePageEvent = (req: any, sender?: chrome.runtime.MessageSender) => {
 	}
 }
 async function runCensoringAsync(forceEnable: boolean) {
-	let state = await getCensoringState();
+	const state = await getCensoringState();
 	if (forceEnable && !state.activeCensoring) {
 		state.activeCensoring = true;
 	}
@@ -306,9 +291,6 @@ async function runCensoringAsync(forceEnable: boolean) {
 	await prepareEvents(ctx, true);
 	return ctx;
 }
-// getLocalPlaceholder();
-
-// testStorage();
 
 configureListeners();
 console.log('evt: running main loop')
@@ -319,8 +301,3 @@ runCensoringAsync(false).then(ctx => {
 	// 	ctx.observer?.start(document.body);
 	// }
 });
-
-// loadPlaceholders().then(() => {
-// 	configureListeners();
-// 	// runCensoring(true);
-// });

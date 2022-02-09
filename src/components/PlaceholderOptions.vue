@@ -33,7 +33,7 @@ const props = defineProps<{
 }>();
 
 const notif = useNotification();
-let { preferences } = toRefs(props);
+const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 const availablePlaceholders: Ref<{categories: string[], allImages: LocalPlaceholder[]}> = ref({allImages: [], categories: []});
@@ -51,8 +51,8 @@ const enabled = computed({
 
 const getCount = (category: string): number => {
     let currentCount = 0;
-    let matchingItems = (availablePlaceholders?.value?.allImages ?? []);
-    let matchingAssets = matchingItems.filter(img => {
+    const matchingItems = (availablePlaceholders?.value?.allImages ?? []);
+    const matchingAssets = matchingItems.filter(img => {
         return img?.category === category
     });
     if (matchingAssets && matchingAssets.length > 0) {
@@ -73,7 +73,7 @@ onBeforeMount(() => {
 })
 
 const loadPlaceholders = async () => {
-    let holders = await getAvailablePlaceholders();
+    const holders = await getAvailablePlaceholders();
     console.log('got placeholder DB', holders);
     return holders;
 }

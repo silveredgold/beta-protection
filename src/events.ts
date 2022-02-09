@@ -13,19 +13,18 @@ export const CMENU_RECHECK_PAGE = "BP_RECHECK_PAGE";
 const knownMessages = [MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS, MSG_INJECT_CSS, MSG_STATUS];
 
 export function processContextClick(info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab|undefined, client: WebSocketClient) {
-    let eVersion = getExtensionVersion();
+    const eVersion = getExtensionVersion();
     console.log('prcessing context click event', info, tab);
     if (tab && info.menuItemId === CMENU_REDO_CENSOR) {
         chrome.tabs.sendMessage(tab.id!, {msg: "getClickedEl"}, function(value) {
             if (value.id) {
-                let id = value.id;
                 loadPreferencesFromStorage().then(prefs => {
                     client.sendObj({
                         version: eVersion,
                         msg: "redoCensor",
                         url: value.origSrc,
                         tabid: tab.id,
-                        id: id,
+                        id: value.id,
                         priority: 1,
                         preferences: toRaw(prefs),
                         type: "normal",
@@ -55,7 +54,7 @@ export async function processMessage(message: any, sender: chrome.runtime.Messag
             msgHandlerFound = true;
             ctx ??= await ctxFactory();
             console.debug('found matching event handler', msg);
-            let result = await msg.handler(message, sender, ctx);
+            const result = await msg.handler(message, sender, ctx);
             sendResponse?.(result);
         }
     }
