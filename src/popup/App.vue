@@ -20,7 +20,7 @@
   </n-page-header>
   <connection-status />
   <mode-switch />
-  <video-options :preferences="prefs" />
+  <video-options :preferences="prefs" :compact="true" />
   </n-card>
   </n-notification-provider>
   <n-global-style />
