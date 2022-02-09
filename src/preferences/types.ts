@@ -3,7 +3,7 @@ export interface IPreferences {
     exposed: BodyCensorModes;
     covered: BodyCensorModes;
     otherCensoring: {
-        femaleEyes: CensorType;
+        femaleEyes: 'Nothing'|'Box'|'Sticker';
         femaleFace: {method: CensorType, level: number},
         maleFace: {method: CensorType, level: number}
     }

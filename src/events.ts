@@ -1,14 +1,16 @@
 import { MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED } from "./messaging/placeholders";
-import { idUrlMap, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS } from "./messaging/util";
-import { loadPreferencesFromStorage } from "./preferences";
+import { idUrlMap, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATISTICS, MSG_STATUS } from "./messaging/util";
+import { loadPreferencesFromStorage, toRaw } from "./preferences";
 import { WebSocketClient } from "./transport/webSocketClient";
 import { getExtensionVersion } from "./util";
 
 export const CMENU_REDO_CENSOR = "BSNG_REDO_CENSOR";
+export const CMENU_ENABLE_ONCE = "BP_FORCE_RUN";
+export const CMENU_RECHECK_PAGE = "BP_RECHECK_PAGE";
 
 
 
-const knownMessages = [MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS];
+const knownMessages = [MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS, MSG_INJECT_CSS, MSG_STATUS];
 
 export function processContextClick(info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab|undefined, client: WebSocketClient) {
     let eVersion = getExtensionVersion();
@@ -18,26 +20,42 @@ export function processContextClick(info: chrome.contextMenus.OnClickData, tab: 
             if (value.id) {
                 let id = value.id;
                 let img: string;
-                    if(idUrlMap.has(id)){
-                        img = idUrlMap.get(id);
-                    } else {
-                        img = value.src;
-                        idUrlMap.set(id, value.src);
-                    }
+                    // if(idUrlMap.has(id)){
+                    //     img = idUrlMap.get(id);
+                    // } else {
+                    //     img = value.src;
+                    //     idUrlMap.set(id, value.src);
+                    // }
+                    
+                    // chrome.runtime.sendMessage({
+                    //     msg: 'censorRequest',
+                    //     imageURL: value.origSrc,
+                    //     id: value.id,
+                    //     priority: 1,
+                    //     tabId: tab.id,
+                    //     type: "normal",
+                    //     domain: value.domain,
+                    //     forceCensor: true
+                    // });
                     loadPreferencesFromStorage().then(prefs => {
                         client.sendObj({
                             version: eVersion,
                             msg: "redoCensor",
-                            url: img,
+                            url: value.origSrc,
                             tabid: tab.id,
                             id: id,
                             priority: 1,
-                            preferences: prefs,
-                            type: "normal"
+                            preferences: toRaw(prefs),
+                            type: "normal",
+                            domain: value.domain
                         });
                     });
             }
         });
+    } else if (tab && info.menuItemId == CMENU_ENABLE_ONCE) {
+        chrome.tabs.sendMessage(tab.id!, {msg: "enableOnPage"});
+    } else if (tab && info.menuItemId === CMENU_RECHECK_PAGE) {
+        chrome.tabs.sendMessage(tab.id!, {msg: "recheckPage"});
     }
 }
 
@@ -46,15 +64,22 @@ export type MessageContext = {
     version: string;
 };
 
-export async function processMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void, ctx: MessageContext) {
+export async function processMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: (response: any) => void, ctxFactory: () => Promise<MessageContext>) {
     console.log('background processing msg', message);
+    let msgHandlerFound = false;
+    let ctx: MessageContext;
     for (const msg of knownMessages) {
         if (message.msg === msg.event) {
-            let result = await msg.handler(message, sender, sendResponse, ctx);
+            msgHandlerFound = true;
+            ctx ??= await ctxFactory();
+            console.debug('found matching event handler', msg);
+            let result = await msg.handler(message, sender, ctx);
             sendResponse?.(result);
         }
     }
-    console.warn('did not find a known message handler, unknown runtime message', message, sender);
+    if (!msgHandlerFound) {
+        console.warn('did not find a known message handler, unknown runtime message', message, sender);
+    }
 }
 
 export function onTabChange(tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab, socketClient: WebSocketClient) {

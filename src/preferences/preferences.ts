@@ -36,7 +36,7 @@ export const defaultPrefs: IPreferences = {
         Pussy: {method: CensorType.Sticker, level: 7.4}
     },
     otherCensoring: {
-        femaleEyes: CensorType.Nothing,
+        femaleEyes: 'Nothing',
         femaleFace: {method: CensorType.Pixels, level: 1.0},
         maleFace: {method: CensorType.Nothing, level: 1.0}
     },
@@ -89,7 +89,14 @@ export function createPreferencesFromBackend(raw: rawPreferences): IPreferences 
         // mode: parseModus(raw.modus),
         obfuscateImages: raw.obfuscate === "true",
         otherCensoring: {
-            femaleEyes: raw.feyes.replace("feyes", "") as CensorType,
+            femaleEyes: (() => {
+                const rawEyes = raw.feyes.replace("feyes", "");
+                return rawEyes === 'bb' 
+                    ? 'Box'
+                    : rawEyes === 'sticker'
+                        ? 'Sticker'
+                        : 'Nothing'
+              })(),
             femaleFace: getCensorObj(raw, "fface"),
             maleFace: getCensorObj(raw, "mface")
         },
@@ -131,7 +138,7 @@ export const toRaw = (prefs: IPreferences): Partial<rawPreferences> => {
         epitslevel: prefs.exposed.Pits.level.toFixed(1),
         epussy: `epussy${prefs.exposed.Pussy.method.toLowerCase()}`,
         epussylevel: prefs.exposed.Pussy.level.toFixed(1),
-        feyes: `feyes${prefs.otherCensoring.femaleEyes.toLowerCase()}`,
+        feyes: `feyes${prefs.otherCensoring.femaleEyes === 'Box' ? 'bb' : prefs.otherCensoring.femaleEyes.toLowerCase()}`,
         fface: `fface${prefs.otherCensoring.femaleFace.method.toLowerCase()}`,
         ffacelevel: prefs.otherCensoring.femaleFace.level.toFixed(1),
         localCopy: prefs.saveLocalCopy.toString(),

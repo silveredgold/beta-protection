@@ -81,6 +81,7 @@ import ErrorOptions from "@/components/ErrorOptions.vue";
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 const extensionVersion = getExtensionVersion();
+// const notif = useNotification();
 
 // let prefs = ref({} as IPreferences);
 
@@ -94,8 +95,8 @@ const getCurrentPrefs = async () => {
 }
 
 const updateFunc = debounce(1000, async (prefs) => {
-  console.log(`persisting prefs`, prefs);
-  console.log(`serialized prefs`, JSON.stringify(prefs));
+  // console.log(`persisting prefs`, prefs);
+  // console.log(`serialized prefs`, JSON.stringify(prefs));
   await savePreferencesToStorage(prefs);
 })
 

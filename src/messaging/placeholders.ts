@@ -25,10 +25,10 @@ export const MSG_PLACEHOLDERS_ENABLED: RuntimeEvent<{categories: string[], allIm
 
 export type RuntimeEvent<Type> = {
     event: string;
-    handler: (message: any, sender: chrome.runtime.MessageSender, sendResponse: (resp: any) => void, ctx: MessageContext) => Promise<Type> 
+    handler: (message: any, sender: chrome.runtime.MessageSender, ctx: MessageContext) => Promise<Type> 
 }
 
-export async function processAvailableMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: (resp: any) => void, ctx: MessageContext) : Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
+export async function processAvailableMessage(message: any, sender: chrome.runtime.MessageSender, ctx: MessageContext) : Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
     if (message['msg'] == MSG_PLH_AVAILABLE) {
         let res = await getAvailablePlaceholders();
         return res;
@@ -36,7 +36,7 @@ export async function processAvailableMessage(message: any, sender: chrome.runti
     throw new Error("Unrecognized message!");
 }
 
-export async function processEnabledMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: (resp: any) => void, ctx: MessageContext) : Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
+export async function processEnabledMessage(message: any, sender: chrome.runtime.MessageSender, ctx: MessageContext) : Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
     if (message['msg'] == MSG_PLH_ENABLED) {
         let res = await getEnabledPlaceholders();
         for (const placeholder of res.allImages) {

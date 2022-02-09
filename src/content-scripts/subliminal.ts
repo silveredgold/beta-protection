@@ -50,7 +50,7 @@ export function runSubliminal(opts: SubliminalOptions) {
     let subliminalDelay = opts.delay;
     let subliminalDuration = opts.duration;
 
-    setInterval(function () {
+    return setInterval(function () {
         let seed = Math.floor(Math.random() * messages.length);
         let subEl = document.getElementById("subliminal");
         if (subEl) {

@@ -9,7 +9,7 @@
                             <n-input-group class="censor-input-group">
                                 <n-select
                                         v-model:value="prefs.otherCensoring.femaleEyes"
-                                        :options="rawCensorTypes"
+                                        :options="eyeCensorTypes"
                                         :style="{ width: '75%' }"
                                         class="censor-input"
                                     />
@@ -54,7 +54,19 @@
                                 </n-input-group>
                         </n-form-item>
                     </n-form>
-                    
+                    <n-card size="small">
+                    <n-thing>
+                        <template #header>Obfuscation</template>
+                        <template #description>Enable obfuscating images during censoring.</template>
+                        This will include a very aggressive watermark on images when they are censored. This is very noticeable and a little obnoxious, but will further hide the image while preventing reverse searches from finding the image.
+                        <template #foooter>Only enable if you're ready for it!</template>
+                        <template #action>
+                            <n-space item-style="display: flex;" align="center">
+                                <n-checkbox v-model:checked="prefs.obfuscateImages">Enable Obfuscation</n-checkbox>
+                            </n-space>
+                        </template>
+                    </n-thing>
+                    </n-card>
                 </div>
             </n-tab-pane>
             <template v-for="mode in ['exposed', 'covered']" v-bind:key="mode">
@@ -123,7 +135,7 @@
 </template>
 <script setup lang="ts">
 import { ComponentOptions, defineComponent, inject, onMounted, Ref, ref, toRefs, watch } from 'vue';
-import { NCard, NRadioGroup, NRadioButton, useNotification, NTabs, NTab, NTabPane, NSpace, NForm, NFormItem, NInput, NSelect, NInputGroup, NSlider } from "naive-ui";
+import { NCard, NRadioGroup, NRadioButton, useNotification, NTabs, NTab, NTabPane, NSpace, NForm, NFormItem, NInput, NSelect, NInputGroup, NSlider, NThing, NCheckbox } from "naive-ui";
 import { loadPreferencesFromStorage, IPreferences, OperationMode, CensorType, BodyCensorModes } from '../preferences';
 import { updateUserPrefs, userPrefs } from "../options/services";
 import { toTitleCase } from "../util";
@@ -147,6 +159,8 @@ console.log(`injected updater: ${!!updatePrefs}`);
 const rawCensorTypes = [{
     label: "Nothing", value: "nothing"
 }, { label: "Pixels", value: "pix" }, { label: "Caption", value: "caption" }, { label: "Sticker", value: "sticker" }, { label: "Blur", value: "blur" }];
+
+const eyeCensorTypes = [{label: 'Nothing', value: 'nothing'}, {label: 'Black Bars', value: 'Box'}, {label: 'Sticker', value: 'Sticker'}];
 
 watch(prefs, async (newMode, prevMode) => {
     console.log(`prefs watch: ${prevMode}->${newMode}`);

@@ -42,6 +42,7 @@ import { themeOverrides } from "../util";
 
 
 const iconSrc = chrome.runtime.getURL('/images/icon.png');
+// const notif = useNotification();
 const openSettings = () => {
   if (chrome.runtime.openOptionsPage) {
     chrome.runtime.openOptionsPage();
@@ -62,6 +63,11 @@ const getCurrentPrefs = async () => {
 const updateFunc = debounce(1000, async (prefs) => {
   console.log(`persisting prefs`, prefs);
   await savePreferencesToStorage(prefs);
+  const n = notif?.create({
+          content: 'Saved!',
+          duration: 2500,
+          closable: true
+        });
 });
 
 let store = reactive({

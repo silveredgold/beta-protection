@@ -81,8 +81,8 @@ export class Purifier {
     }
 
     private getVideoPlaceholderSrc = (): {poster: string, video: string} => {
-        const placeholder = chrome.runtime.getURL("images/video.gif");
-        const video = chrome.runtime.getURL("image/video.mp4");
+        const placeholder = chrome.runtime.getURL("images/poster.jpg");
+        const video = chrome.runtime.getURL("images/blocked_video.mp4");
         return {poster: placeholder, video};
     }
 
@@ -128,16 +128,20 @@ export class Purifier {
         return matchingEls;
     }
 
+    private flattenSrc = (el: HTMLImageElement) => {
+        if (el.tagName === "IMG" && el.srcset.length > 0) {
+            const url = el.currentSrc;
+            if (url !== "" && isValidUrl(url)) {
+                el.srcset = "";
+                el.src = url;
+            }
+        }
+    }
+
     private discoverImages = (elements: HTMLImageElement[]): HTMLImageElement[] => {
         const targetEls: HTMLImageElement[] = [];
         elements.forEach(el => {
-            if (el.tagName === "IMG" && el.srcset.length > 0) {
-                const url = el.currentSrc;
-                if (url !== "" && isValidUrl(url)) {
-                    el.srcset = "";
-                    el.src = url;
-                }
-            }
+            this.flattenSrc(el);
             if (el.tagName === "IMG" && isValidUrl(el.src)) {
                 if (this.isUnsafe(el)) {
                     targetEls.push(el);
@@ -148,19 +152,24 @@ export class Purifier {
         return targetEls;
     }
 
-    private censorImage = (img: HTMLImageElement) => {
-        if (img.complete && img.naturalWidth > 0) {
+    censorImage = (img: HTMLImageElement, runOnce: boolean = false) => {
+        this.flattenSrc(img);
+        console.debug('censorImage', img, img.complete, img.naturalWidth);
+        if (runOnce || (img.complete && img.naturalWidth > 0)) {
             const url = this.normalizeSrcUrl(img);
-            this.censorLoadedImage(url, img);
-        } else {
+            console.debug('running censorLoadedImage', img, runOnce);
+            this.censorLoadedImage(url, img, runOnce ? true : (this._currentState && this._currentState.activeCensoring));
+        } else if (!runOnce) {
             this.backlog = true;
+        } else {
+            // console.debug('unmatched');
         }
     }
 
     // backend seems to take almost anything these days
     // this is more of an extension point.
     private normalizeSrcUrl = (img: HTMLImageElement) => {
-        const imageURL = img.getAttribute('src')!;
+        const imageURL = img.getAttribute('censor-src') ?? img.getAttribute('src')!;
         return this.normalizeUrl(imageURL);
     }
 
@@ -173,7 +182,7 @@ export class Purifier {
         return srcUrl;
     }
 
-    private censorLoadedImage = (imageURL: string, img: HTMLImageElement) => {
+    private censorLoadedImage = (imageURL: string, img: HTMLImageElement, active: boolean) => {
         if (this.isUnsafe(img) && this._ready) {
             if (img.width * img.height > 15000 && img.width > 100 && img.height > 100 && !imageURL.includes(".svg")) {
                 const uniqueID = generateUUID();
@@ -182,7 +191,7 @@ export class Purifier {
                 if (img.clientWidth > 0) {
                     img.width = img.clientWidth;
                 }
-                if (this._currentState && this._currentState.activeCensoring) {
+                if (active) {
                     img.setAttribute('censor-state', 'censoring');
                     const placeholder = this.getPlaceholderSrc();
                     console.log(`got placeholder URL: ${placeholder}`);
@@ -193,14 +202,15 @@ export class Purifier {
                             img.setAttribute('censor-state', 'censored');
                         }, { once: true });
                         img.src = placeHolderImage.src;
+                        img.toggleAttribute('censor-placeholder', true);
                         this.sendCensorRequest(imageURL, uniqueID, "normal", priority);
                     };
                     placeHolderImage.setAttribute('src', placeholder);
                 } else {
-                    img.setAttribute('censor-state', 'censored');
+                    this.setImgExcluded(img, 'disabled');
                 }
             } else {
-                img.setAttribute('censor-state', 'excluded');
+                this.setImgExcluded(img, 'size_format');
             }
         } else {
             this.backlog = true;
@@ -216,6 +226,7 @@ export class Purifier {
             type: type,
             domain: this._domain
         });
+        // this.messageQueue.push(id);
     }
 
     private censorStyleImage = (img: ImageStyleElement) => {
@@ -238,15 +249,13 @@ export class Purifier {
                         }
                         img.element.setAttribute('censor-style', 'censored');
                     } else {
-                        img.element.setAttribute('censor-style', 'excluded');
-                        img.element.setAttribute('censor-exclusion', 'size');
+                        this.setExcluded(img.element, 'size');
                     }
                 }, { once: true });
                 image.src = imageURL;
             }
         } else {
-            img.element.setAttribute('censor-style', 'unmatched_url');
-            img.element.setAttribute('censor-exclusion', 'size');
+            this.setExcluded(img.element, 'unmatched_url');
         }
     }
 
@@ -279,4 +288,19 @@ export class Purifier {
         return elState !== 'censored' && elState !== 'censoring' && elState !== 'excluded';
     }
 
+    private setExcluded(el: Element, reason?: string) {
+        el.setAttribute('censor-style', 'excluded');
+        if (reason) {
+            let existing = (el.getAttribute('censor-exclusion') ?? '').replace(reason, '').trim();
+            el.setAttribute('censor-exclusion', existing ? `${existing} ${reason}` : reason);
+        }
+    }
+
+    private setImgExcluded(el: HTMLImageElement, reason?: string) {
+        el.setAttribute('censor-state', 'excluded');
+        if (reason) {
+            let existing = (el.getAttribute('censor-exclusion') ?? '').replace(reason, '').trim();
+            el.setAttribute('censor-exclusion', existing ? `${existing} ${reason}` : reason);
+        }
+    }
 }

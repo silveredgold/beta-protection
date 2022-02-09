@@ -1,6 +1,7 @@
 import { IPreferences } from "@/preferences/types"
 import { WebSocketClient } from "@/transport/webSocketClient"
 import { CSSManager } from "./cssManager"
+import { PageObserver } from "./observer"
 import { Purifier } from "./purifier"
 
 export type CensoringState = {
@@ -12,8 +13,8 @@ export type CensoringContext = {
     state: CensoringState,
     preferences: IPreferences,
     socketClient?: WebSocketClient,
-    purifier: Purifier
-    // cssManager: CSSManager
+    purifier: Purifier,
+    observer?: PageObserver
 }
 
 export type ImageStyleElement = {

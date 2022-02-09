@@ -52,7 +52,7 @@
     {
       "run_at": "document_start",
 		"matches": ["<all_urls>"],
-		"all_frames": true,
+		"all_frames": false,
       "js": ["js/content-script.js"]
     }
   ]

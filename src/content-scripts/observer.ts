@@ -63,9 +63,19 @@ export class PageObserver {
             throw new Error("You must attach this observer to a node first!");
         }
         this._observer.observe(this._element ?? element!, this._options);
+        this._isRunning = true;
+
     }
 
     stop = () => {
         this._observer.disconnect();
+        this._isRunning = false;
     }
+
+    
+    private _isRunning : boolean = false;
+    public get isRunning() : boolean {
+        return this._isRunning;
+    }
+    
 }
