@@ -24,7 +24,7 @@ In Chrome, click the Extensions button in your browser toolbar (the puzzle piece
 
 <!-- ![Chrome Manage Extensions menu from Extensions popup on main toolbar](../assets/chrome_manage_extensions.jpg) -->
 <ImageZoom 
-  src="../assets/chrome_manage_extensions.jpg" 
+  src="/beta-protection/assets/chrome_manage_extensions.jpg" 
   :border="true" 
   width="200"
 />

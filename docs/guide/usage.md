@@ -13,7 +13,7 @@ If you have your backend running somewhere other than your local PC, open the se
 </Note>
 
 <ImageZoom 
-  src="../assets/chrome_popup.jpg" 
+  src="/beta-protection/assets/chrome_popup.jpg" 
   :border="true" 
   width="300"
 />
