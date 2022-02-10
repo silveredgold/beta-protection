@@ -39,16 +39,17 @@ import { computed, onBeforeMount, provide, reactive, watch } from "vue";
 import { updateUserPrefs } from "@/options/services";
 import ConnectionStatus from "../components/ConnectionStatus.vue";
 import { themeOverrides } from "../util";
+import browser from 'webextension-polyfill';
 
 
-const iconSrc = chrome.runtime.getURL('/images/icon.png');
+const iconSrc = browser.runtime.getURL('/images/icon.png');
 // const notif = useNotification();
 const openSettings = () => {
-  if (chrome.runtime.openOptionsPage) {
-    chrome.runtime.openOptionsPage();
-  } else {
-    window.open(chrome.runtime.getURL('options.html'));
-  }
+  // if (browser.runtime.openOptionsPage) {
+    // chrome.runtime.openOptionsPage();
+  // } else {
+    window.open(browser.runtime.getURL('options.html'));
+  // }
 }
 
 // loading
@@ -97,7 +98,7 @@ provide(updateUserPrefs, updatePrefs);
 
 
 //I don't see how this would ever be possible/needed, but may as well
-chrome.runtime.onMessage.addListener((request, sender, response) => {
+browser.runtime.onMessage.addListener((request, sender) => {
   if (request['msg'] === 'reloadPreferences') {
     setTimeout(() => {
       console.log('reloading preferences for options view');

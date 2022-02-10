@@ -15,17 +15,18 @@
 import { ComponentOptions, computed, defineComponent, onBeforeMount, onMounted, ref } from 'vue';
 import { NCard, NButton, NInput } from "naive-ui";
 import { debounce } from "throttle-debounce";
+import browser from 'webextension-polyfill';
 
 const updateFunc = debounce(1000, async (host: string) => {
   console.log(`persisting host`, JSON.stringify(host));
-  var storeResponse = await chrome.storage.local.set({'backendHost': host});
-  chrome.runtime.sendMessage({msg: 'reloadSocket'});
+  var storeResponse = await browser.storage.local.set({'backendHost': host});
+  browser.runtime.sendMessage({msg: 'reloadSocket'});
 //   await savePreferencesToStorage(prefs);
 })
 
 const currentHost = ref("");
 const getCurrentHost = async () => {
-    var storeResponse = await chrome.storage.local.get({'backendHost': ''});
+    var storeResponse = await browser.storage.local.get({'backendHost': ''});
     const currentStoredHost = storeResponse['backendHost'] ?? "";
     console.log('setting ref value', currentStoredHost);
     return currentStoredHost;
@@ -42,7 +43,6 @@ const host = computed({
 const saveHost = async () => {
     console.log(`queuing host ${currentHost.value}`);
     updateFunc(currentHost.value);
-    // var storeResponse = await chrome.storage.local.set({'backendHost': host.value});
 }
 
 onBeforeMount(() => {

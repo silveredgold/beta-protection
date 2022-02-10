@@ -1,4 +1,5 @@
 import { MessageContext } from "@/events";
+import browser from 'webextension-polyfill';
 
 export const MSG_STATUS: RuntimeEvent<{queue: number, state: boolean}> = {
     event: 'getSocketStatus',
@@ -42,5 +43,5 @@ export class Deferred {
 
 export type RuntimeEvent<Type> = {
     event: string;
-    handler: (message: any, sender: chrome.runtime.MessageSender, ctx: MessageContext) => Promise<Type> 
+    handler: (message: any, sender: browser.Runtime.MessageSender, ctx: MessageContext) => Promise<Type> 
 }

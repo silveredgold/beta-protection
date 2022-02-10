@@ -1,12 +1,13 @@
 import { GlobalThemeOverrides } from "naive-ui";
 import { IPreferences, OperationMode } from "./preferences";
+import browser from 'webextension-polyfill';
 
 
 let _extensionVersion: string;
 
 export function getExtensionVersion(): string {
     if (!_extensionVersion) {
-        const manifestData = chrome.runtime.getManifest();
+        const manifestData = browser.runtime.getManifest();
         _extensionVersion = manifestData.version;
     }
     return _extensionVersion;
@@ -43,7 +44,7 @@ export function isNodeSafe(node: Node, safeList: number[]) {
     const filename = (url.split('/').pop() ?? '').split('#')[0].split('?')[0];
     safeSrc = filename.toLowerCase() == plSrc.toLowerCase();
   }
-  const isChrome = url && url.includes("chrome-extension://");
+  const isChrome = url && url.includes("extension://"); //edge doesn't use a prefix
   const inList = safeList.includes(hashCode(url));
   return safeSrc || isChrome || inList;
 }

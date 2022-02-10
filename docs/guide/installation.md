@@ -6,6 +6,8 @@ If you are currently using the Beta Safety Chrome extension, ***disable it first
 
 </Note>
 
+Beta Protection currently supports Chrome and Edge and _should_ work on any other Chrome derivatives (like Vivaldi). The extension actually _would_ support Firefox but Mozilla [still](https://blog.mozilla.org/addons/2021/05/27/manifest-v3-update/) don't support the latest version of the browser API that this extension relies on.
+
 ## Prerequisites
 
 First off, make sure you have Beta Safety running somewhere. Follow the guides included with Beta Safety to run the backend, but you can ignore the parts about loading the extension into Chrome since we'll be using Beta Protection for that part.

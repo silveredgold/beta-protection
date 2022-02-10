@@ -1,5 +1,7 @@
+import browser from 'webextension-polyfill';
+
 export class RuntimePortManager {
-    private ports: Map<string, {src: string, port: chrome.runtime.Port}> = new Map();
+    private ports: Map<string, {src: string, port: browser.Runtime.Port}> = new Map();
 
     /**
      *
@@ -9,7 +11,7 @@ export class RuntimePortManager {
         
     }
 
-    addNamedPort = (port: chrome.runtime.Port, sender: string) => {
+    addNamedPort = (port: browser.Runtime.Port, sender: string) => {
         this.ports.set(port.name, {src: sender, port});
 
     } 
@@ -22,10 +24,10 @@ export class RuntimePortManager {
 
         } else if (src) {
             console.log('no dedicated port found, falling back to tabs', src, msg);
-            chrome.tabs.sendMessage(parseInt(src), msg);
+            browser.tabs.sendMessage(parseInt(src), msg);
         } else {
             console.log('no dedicated port found, falling back to runtime', msg);
-            chrome.runtime.sendMessage(msg);
+            browser.runtime.sendMessage(msg);
         }
     }
 

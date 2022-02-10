@@ -3,6 +3,7 @@ import { WebSocketClient } from "@/transport/webSocketClient"
 import { CSSManager } from "./cssManager"
 import { PageObserver } from "./observer"
 import { Purifier } from "./purifier"
+import browser from 'webextension-polyfill';
 
 export type CensoringState = {
     activeCensoring: boolean
@@ -14,7 +15,7 @@ export type CensoringContext = {
     socketClient?: WebSocketClient,
     purifier: Purifier,
     observer?: PageObserver,
-    port: chrome.runtime.Port
+    port: browser.Runtime.Port
 };
 
 export type ImageStyleElement = {

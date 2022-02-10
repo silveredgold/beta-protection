@@ -1,17 +1,17 @@
 import { toTitleCase } from "@/util";
 import { CensorType, IPreferences, OperationMode, rawPreferences } from "./types";
 import clone from "just-clone";
+import browser from 'webextension-polyfill';
 
 
 export async function loadPreferencesFromStorage(): Promise<IPreferences> {
-    // let result = await chrome.storage.local.get({'preferences': defaultPrefs}) as IPreferences;
-    const result = await chrome.storage.local.get('preferences') as IPreferences;
+    const result = await browser.storage.local.get('preferences') as IPreferences;
     return result['preferences'];
 }
 
 export async function savePreferencesToStorage(prefs: IPreferences, skipClone: boolean = false): Promise<void> {
     const clonedPrefs = skipClone ? prefs : clone(prefs);
-    await chrome.storage.local.set({ 'preferences': clonedPrefs });
+    await browser.storage.local.set({ 'preferences': clonedPrefs });
 }
 
 

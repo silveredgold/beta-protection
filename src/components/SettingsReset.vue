@@ -31,7 +31,7 @@ const updatePrefs = inject(updateUserPrefs);
 
 const resetToDefault = async () => {
   updatePrefs!(defaultPrefs).then(() => {
-      chrome.runtime.sendMessage({msg: 'reloadPreferences'});
+      browser.runtime.sendMessage({msg: 'reloadPreferences'});
   });
 
 }
