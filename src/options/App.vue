@@ -174,12 +174,4 @@ html {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
-
-
-/* purgecss start ignore */
-/* @tailwind base;
-@tailwind components; */
-/* purgecss end ignore */
-
-/* @tailwind utilities; */
 </style>

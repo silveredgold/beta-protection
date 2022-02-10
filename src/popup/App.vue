@@ -121,11 +121,4 @@ html {
   width: 500px;
   height: 500px;
 }
-
-/* purgecss start ignore */
-/* @tailwind base;
-@tailwind components; */
-/* purgecss end ignore */
-
-/* @tailwind utilities; */
 </style>

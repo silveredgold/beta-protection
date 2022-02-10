@@ -15,7 +15,7 @@ export class SubliminalService {
 
     static loadFromText = (rawText: string) => {
         const lines = rawText.split(/\r?\n/);
-        let records: SubliminalMessage[] = [];
+        const records: SubliminalMessage[] = [];
         for (const line of lines) {
             if (line) {
                 const match = line.match(/(?<count>\d)?:?(?<message>.*)/i);

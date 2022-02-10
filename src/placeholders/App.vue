@@ -115,11 +115,4 @@ html {
   height: 800px;
   padding: 1.5rem;
 }
-
-/* purgecss start ignore */
-/* @tailwind base;
-@tailwind components; */
-/* purgecss end ignore */
-
-/* @tailwind utilities; */
 </style>

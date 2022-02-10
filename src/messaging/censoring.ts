@@ -62,7 +62,7 @@ export const MSG_INJECT_SUBLIMINAL : RuntimeEvent<void> = {
     event: 'runSubliminal',
     handler: async (request, sender, ctx) => {
         if (sender?.tab?.id) {
-            let svc = new SubliminalService();
+            const svc = new SubliminalService();
             svc.injectSubliminalScript(sender!.tab)
         }
     }
