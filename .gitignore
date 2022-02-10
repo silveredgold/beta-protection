@@ -29,3 +29,6 @@ pnpm-debug.log*
 /artifacts
 
 /assets
+
+.temp
+.cache

@@ -4,14 +4,14 @@
         <div>
             
             <n-radio-group v-model:value="prefs.errorMode" name="left-size" size="small" style="margin-bottom: 12px;">
-            <template v-for="opt in ['SFW', 'NSFW']" v-bind:key="opt">
+            <template v-for="opt in ['Subtle', 'Normal']" v-bind:key="opt">
                 <n-radio-button :value="opt">{{opt}}</n-radio-button>
             </template>
             </n-radio-group>
         </div>
         <template #footer>
             <!-- <p>{{mode}}</p> -->
-            Discreet will show a subtler SFW placeholder when censoring fails, while Normal will show an NSFW image instead.
+            Subtle will show a subtler SFW placeholder when censoring fails, while Normal will show an NSFW image instead.
         </template>
     </n-card>
 </template>

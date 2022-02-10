@@ -175,7 +175,7 @@ function initContextMenus() {
   });
   chrome.contextMenus.create({
     id: CMENU_ENABLE_ONCE,
-    title: "Enabling censoring this tab",
+    title: "Enable censoring this tab",
     contexts: ["page"]
   }, () => {
     console.log('force-enable menu created', chrome.runtime.lastError);

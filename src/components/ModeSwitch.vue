@@ -34,7 +34,7 @@ const updateMode = async () => {
     prefs.mode = mode.value;
     const modeText = (mode.value as OperationMode) == OperationMode.Disabled
         ? '❌'
-        : newMode == OperationMode.Enabled
+        : (mode.value as OperationMode) == OperationMode.Enabled
             ? '✅'
             : '💡';
     try {
