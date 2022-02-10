@@ -36,9 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - name: Set output
-      id: vars
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+    - uses: actions/checkout@v2
     - name: Download build artifact
       uses: actions/download-artifact@v2
       with:
