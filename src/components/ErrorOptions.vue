@@ -31,7 +31,7 @@ const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 
 watch(prefs, async (newMode, prevMode) => {
-    updatePrefs();
+    updatePrefs?.();
 }, {deep: true});
 
 

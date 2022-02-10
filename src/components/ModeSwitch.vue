@@ -19,6 +19,7 @@
 import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
 import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage } from '../preferences';
+import browser from 'webextension-polyfill';
 
 const notif = useNotification();
 const mode: Ref<OperationMode> = ref("" as OperationMode);

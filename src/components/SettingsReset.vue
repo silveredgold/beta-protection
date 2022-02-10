@@ -14,6 +14,7 @@ import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch
 import { NCard, useNotification, NButton } from "naive-ui";
 import { loadPreferencesFromStorage, IPreferences, OperationMode, defaultPrefs } from '../preferences';
 import { updateUserPrefs } from '../options/services';
+import browser from 'webextension-polyfill';
 
 // const props = defineProps<{
 //     preferences: Ref<IPreferences>

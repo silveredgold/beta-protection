@@ -38,7 +38,7 @@ import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
 import { defaultPrefs, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
-import { updateUserPrefs, userPrefs } from "@/services";
+import { updateUserPrefs, userPrefs } from "@/options/services";
 import CensoringPreferences from "../components/CensoringPreferences.vue";
 import VideoOptions from "../components/VideoOptions.vue";
 import PlaceholderOptions from "../components/placeholders/PlaceholderOptions.vue";
@@ -87,6 +87,7 @@ watch(prefs, async (newMode, prevMode) => {
 const updatePrefs = async (preferences?: IPreferences) => {
   console.log(`queuing prefs save`);
   store.updatePreferences(preferences);
+  return true;
 }
 
 onBeforeMount(async () => {

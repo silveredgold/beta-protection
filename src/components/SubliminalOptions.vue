@@ -9,7 +9,7 @@
             These messages will noticeably flash and may cause irritation for some users, as well as being (deliberately) intrusive.
         </n-thing>
         <template #footer>
-            <n-space item-style="display: flex;" justify="space-around" align="center" >
+            <n-space item-style="display: flex;" justify="space-around" align="center" v-if="loaded && prefs?.subliminal" >
                 <n-input-group>
                     <n-input-group-label>Delay</n-input-group-label>
                     <n-input-number
@@ -31,7 +31,7 @@
             </n-space>
         </template>
         <template #action>
-            <n-space item-style="display: flex;" justify="space-between" v-if="loaded">
+            <n-space item-style="display: flex;" justify="space-between" v-if="loaded && prefs?.subliminal">
                 <n-space vertical>
                     {{messageCount}} messages loaded.
                     <n-tooltip trigger="hover">
@@ -58,13 +58,12 @@ import { SubliminalMessage, SubliminalService } from '@/services/subliminal-serv
 import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
 
 interface Props {
-    preferences: IPreferences,
+    preferences?: IPreferences,
     compact?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    compact: false,
-    preferences: {}
+    compact: false
 });
 
 const notif = useNotification();
@@ -73,13 +72,13 @@ const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 const messages: Ref<string[]> = ref([]);
 
-const loaded = computed(() => preferences.value !== {});
+const loaded = computed(() => preferences?.value !== undefined);
 const messageCount = computed(() => messages.value.length);
 
 const svc = new SubliminalService();
 
-watch(prefs, async (newMode, prevMode) => {
-    updatePrefs();
+watch(prefs!, async (newMode, prevMode) => {
+    updatePrefs?.();
 }, { deep: true });
 
 onBeforeMount(() => {
