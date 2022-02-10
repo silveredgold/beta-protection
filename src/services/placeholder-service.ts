@@ -2,7 +2,7 @@ import { LocalPlaceholder } from "@/placeholders";
 import { hashCode } from "@/util";
 import { DbClient } from "./db-client";
 import { LoadedFileHandle } from "./fs-client";
-
+import browser from 'webextension-polyfill';
 
 export class PlaceholderService {
 
@@ -29,7 +29,7 @@ export class PlaceholderService {
             categories = await PlaceholderService.getCategories();
         }
         const relPaths: string[] = await PlaceholderService.getBackendAssetPaths(categories!);
-        const fullPaths = relPaths.map(rel => chrome.runtime.getURL(rel)).filter(aPath => !!aPath);
+        const fullPaths = relPaths.map(rel => browser.runtime.getURL(rel)).filter(aPath => !!aPath);
         return fullPaths;
     }
 
@@ -41,7 +41,7 @@ export class PlaceholderService {
         categories.forEach(cat => {
             query.backendAssets[cat] = [];
         });
-        const response = await chrome.storage.local.get(query);
+        const response = await browser.storage.local.get(query);
         const foundAssets = response['backendAssets'] as { [key: string]: string[] };
         // console.log('got query response', response);
         for (const category of categories) {
@@ -53,14 +53,14 @@ export class PlaceholderService {
     public static loadBackendPlaceholders = async (message: any) => {
         const placeholderCategories = message['placeholders'] as string[];
         if (placeholderCategories && placeholderCategories.length > 0) {
-            await chrome.storage.local.set({ 'placeholders': placeholderCategories });
+            await browser.storage.local.set({ 'placeholders': placeholderCategories });
             const assets: { [key: string]: string[] } = {
             };
             for (const category of placeholderCategories) {
                 const images: string[] = message[category];
                 assets[category] = images;
             }
-            await chrome.storage.local.set({ 'backendAssets': assets });
+            await browser.storage.local.set({ 'backendAssets': assets });
         }
     }
 

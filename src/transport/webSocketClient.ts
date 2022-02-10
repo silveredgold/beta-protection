@@ -4,13 +4,14 @@ import { PlaceholderService } from "@/services/placeholder-service";
 import { StickerService } from "@/services/sticker-service";
 import Sockette from "sockette";
 import { RuntimePortManager } from "./runtimePort";
+import browser from 'webextension-polyfill';
 
 export class WebSocketClient {
 
     static create = async (host?: string): Promise<WebSocketClient> => {
         console.trace('creating new socket client!');
         if (!host) {
-            const configHost = await chrome.storage.local.get('backendHost');
+            const configHost = await browser.storage.local.get('backendHost');
             // console.log(`pulled host config: ${JSON.stringify(configHost)}`);
             if (configHost['backendHost']) {
                 host = configHost['backendHost'];
@@ -18,7 +19,7 @@ export class WebSocketClient {
         }
         return new WebSocketClient(host);
     }
-    private _ports: { [tabId: number]: chrome.runtime.Port | undefined; } = {};
+    private _ports: { [tabId: number]: browser.Runtime.Port | undefined; } = {};
     private _portManager?: RuntimePortManager;
     /**
      *
@@ -37,7 +38,7 @@ export class WebSocketClient {
         this.send(JSON.stringify(message), callback);
     }
 
-    usePorts = (ports: {[tabId: number]: chrome.runtime.Port|undefined}) => {
+    usePorts = (ports: {[tabId: number]: browser.Runtime.Port|undefined}) => {
         this._ports = ports;
     }
 
@@ -71,10 +72,10 @@ export class WebSocketClient {
             if (port) {
                 port.postMessage(obj);
             } else {
-                chrome.tabs.sendMessage(parseInt(tabId), obj);
+                browser.tabs.sendMessage(parseInt(tabId), obj);
             }
         } else {
-            chrome.runtime.sendMessage(obj)
+            browser.runtime.sendMessage(obj)
             // throw new Error("Cannot deliver message without tab ID!");
         }
     }
@@ -100,7 +101,7 @@ export class WebSocketClient {
             };
             const onClose = (e) => {
                 if (e.code !== 4999) {
-                    chrome.runtime.sendMessage({msg: 'socketClosed'});
+                    browser.runtime.sendMessage({msg: 'socketClosed'});
                     console.error('Socket is closed.', e);
                     // setTimeout(() => {
                     //     this.connectTo(host);
@@ -117,7 +118,7 @@ export class WebSocketClient {
                 onopen: onOpen,
                 onmessage: onMessage,
                 onreconnect: (e) => {
-                    chrome.runtime.sendMessage({msg: 'socketReconnect'});
+                    browser.runtime.sendMessage({msg: 'socketReconnect'});
                     while (this.messageQueue.length > 0) {
                         webSocket.send(this.messageQueue.pop());
                     }
@@ -165,8 +166,8 @@ export class WebSocketClient {
         } else {
             console.log(`error image response`, response);
             url = prefs.errorMode === 'normal'
-                ? chrome.runtime.getURL("images/error_normal.png")
-                : chrome.runtime.getURL("images/error_simple.jpg");
+                ? browser.runtime.getURL("images/error_normal.png")
+                : browser.runtime.getURL("images/error_simple.jpg");
             // we don't have an NSFW error screen yet
             // ignore that, we do now
         }

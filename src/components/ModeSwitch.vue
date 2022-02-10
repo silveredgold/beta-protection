@@ -38,8 +38,8 @@ const updateMode = async () => {
             ? '✅'
             : '💡';
     try {
-        chrome.action.setBadgeText({ text: modeText });
-        chrome.action.setBadgeBackgroundColor({color: 'silver'});
+        browser.action.setBadgeText({ text: modeText });
+        browser.action.setBadgeBackgroundColor({color: 'silver'});
     } catch {}
     await savePreferencesToStorage(prefs);
 }

@@ -1,9 +1,10 @@
 import { IPreferences } from "@/preferences";
+import browser from 'webextension-polyfill';
 
 
 export class CSSManager {
     private _prefs: IPreferences;
-    private _target: chrome.scripting.InjectionTarget;
+    private _target: browser.Scripting.InjectionTarget;
     /**
      *
      */
@@ -19,61 +20,60 @@ export class CSSManager {
 
     addVideo = async () => {
         if (this._prefs.videoCensorMode == "Blur") {
-            await chrome.scripting.insertCSS(this.videoBase);
-            await chrome.scripting.insertCSS(this.blurVideo);
+            await browser.scripting.insertCSS(this.videoBase);
+            await browser.scripting.insertCSS(this.blurVideo);
         }
         if (this._prefs.videoCensorMode == "Block") {
-            await chrome.scripting.insertCSS(this.videoBase);
-            await chrome.scripting.insertCSS(this.blockVideo);
+            await browser.scripting.insertCSS(this.videoBase);
+            await browser.scripting.insertCSS(this.blockVideo);
         }
     }
 
     removeVideo = async () => {
-        await (chrome.scripting as any).removeCSS(this.videoBase);
-        await (chrome.scripting as any).removeCSS(this.blurVideo);
-        await (chrome.scripting as any).removeCSS(this.blockVideo);
+        await browser.scripting.removeCSS(this.videoBase);
+        await browser.scripting.removeCSS(this.blurVideo);
+        await browser.scripting.removeCSS(this.blockVideo);
     }
 
     addCSS = async () => {
-        await chrome.scripting.insertCSS(this.active);
+        await browser.scripting.insertCSS(this.active);
 
     }
 
     removeCSS = async () => {
-        //TODO: why don't the types include this? It's in Chrome 90+ at least
-        await (chrome.scripting as any).removeCSS(this.active);
+        await browser.scripting.removeCSS(this.active);
     }
 
     addSubliminal = async () => {
-        await chrome.scripting.insertCSS(this.subliminal)
+        await browser.scripting.insertCSS(this.subliminal)
     }
 
     removeSubliminal = async () => {
-        await (chrome.scripting as any).removeCSS(this.subliminal)
+        await browser.scripting.removeCSS(this.subliminal)
     }
 
-    public get subliminal() : chrome.scripting.CSSInjection {
+    public get subliminal() : browser.Scripting.CSSInjection {
         return {
             target: this._target,
             files: ["css/subliminal.css"]
         };
     }
     
-    public get active() : chrome.scripting.CSSInjection {
+    public get active() : browser.Scripting.CSSInjection {
         return {
             target: this._target,
             files: ["css/images.css"]
         };
     }
 
-    public get videoBase() : chrome.scripting.CSSInjection {
+    public get videoBase() : browser.Scripting.CSSInjection {
         return {
             target: this._target,
             files: ["css/video.css"]
         };
     }
 
-    public get blurVideo() : chrome.scripting.CSSInjection {
+    public get blurVideo() : browser.Scripting.CSSInjection {
         return {
             target: this._target,
             css: `
@@ -85,18 +85,18 @@ video {
 video:not([censor-state='censored']) {
     visibility: visible !important;
 }
-            `
+`
         };
     }
 
-    public get blockVideo() : chrome.scripting.CSSInjection {
+    public get blockVideo() : browser.Scripting.CSSInjection {
         return {
             target: this._target,
             css: `
 video:not([censor-state='censored']) {
     visibility: hidden !important;
 }
-            `
+`
         }
     }
 }

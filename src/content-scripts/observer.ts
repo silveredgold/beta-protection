@@ -1,5 +1,6 @@
 import { isNodeSafe } from "@/util";
 import { Purifier } from "./purifier";
+import browser from 'webextension-polyfill';
 
 
 export class PageObserver {
@@ -53,7 +54,7 @@ export class PageObserver {
                 console.warn('found an iframe!');
                 for (const iframe of [...mutation.addedNodes].filter(n => n.nodeName === 'IFRAME')) {
                     iframe.addEventListener('load', () => {
-                        chrome.runtime.sendMessage({'msg': 'injectCSS'});
+                        browser.runtime.sendMessage({'msg': 'injectCSS'});
                     })
                 }
             }

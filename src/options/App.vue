@@ -91,6 +91,7 @@ import DomainListOptions from "../components/DomainListOptions.vue";
 import { getExtensionVersion, themeOverrides } from "../util";
 import ErrorOptions from "@/components/ErrorOptions.vue";
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
+import browser from 'webextension-polyfill';
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
@@ -99,7 +100,7 @@ const extensionVersion = getExtensionVersion();
 
 // let prefs = ref({} as IPreferences);
 
-const iconSrc = chrome.runtime.getURL('/images/icon.png');
+const iconSrc = browser.runtime.getURL('/images/icon.png');
 
 const getCurrentPrefs = async () => {
   var storeResponse = await loadPreferencesFromStorage();
@@ -132,13 +133,14 @@ watch(prefs, async (newMode, prevMode) => {
 const updatePrefs = async (preferences?: IPreferences) => {
   console.log(`queuing prefs save`);
   store.updatePreferences(preferences);
+  return true;
 }
 
 onBeforeMount(async () => {
   store.preferences = await getCurrentPrefs();
 });
 
-chrome.runtime.onMessage.addListener((request, sender, response) => {
+browser.runtime.onMessage.addListener((request, sender) => {
   if (request['msg'] === 'reloadPreferences') {
     setTimeout(() => {
       console.log('reloading preferences for options view');
@@ -148,10 +150,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
     }, 1000);
   }
 });
-
-const openPopup = () => {
-  chrome.runtime.open
-}
 
 // provide(userPrefs, prefs);
 provide(updateUserPrefs, updatePrefs);

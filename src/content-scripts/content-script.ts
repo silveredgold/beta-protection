@@ -6,6 +6,8 @@ import { hashCode, shouldCensor } from "@/util";
 import { PageObserver } from "./observer";
 import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
 import { MSG_INJECT_SUBLIMINAL } from "@/messaging";
+import browser from 'webextension-polyfill';
+import { CMENU_RECHECK_PAGE, CMENU_REDO_CENSOR } from "@/events";
 
 let lastClickElement: HTMLElement|undefined|null;
 const safeList: number[] = [];
@@ -26,7 +28,7 @@ const getCensoringState = async (): Promise<CensoringState> => {
 }
 
 const buildPort = () => {
-	const port = chrome.runtime.connect();
+	const port = browser.runtime.connect();
 	port.onMessage.addListener((msg, port) => {
 		console.log('got runtime port message in content-script', msg);
 		handleMessage(msg, port.sender);
@@ -47,12 +49,13 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	// 	currentContext?.observer?.stop();
 	// 	} catch {}
 	// }
-	const confPrefs = await chrome.storage.local.get('preferences');
+	const confPrefs = await browser.storage.local.get('preferences');
 	const preferences = confPrefs['preferences'] as IPreferences;
-	const newProm = new Promise(resolve => {
-		chrome.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event}, resp => resolve(resp));
-	})
-	const placeholders: any = await newProm;
+	const placeholders: any = await browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event});
+	// const newProm = new Promise(resolve => {
+	// 	browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event}, resp => resolve(resp));
+	// })
+	// const placeholders: any = await newProm;
 	// console.debug('got placeholder response maybe?', placeholders)
 	//TODO; not how that works
 	// preferences!.enabledPlaceholders = placeholders.categories;
@@ -74,7 +77,7 @@ const _sendMessage = (obj: object, context?: CensoringContext) => {
 	if (ctx?.port) {
 		ctx.port.postMessage(obj);
 	} else {
-		chrome.runtime.sendMessage(obj);
+		browser.runtime.sendMessage(obj);
 	}
 }
 
@@ -119,8 +122,8 @@ const buildObserver = (purifier: Purifier) => {
 	return observer;
 }
 
-const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, sendResponse?: (response?: any) => void) => {
-	if(request.msg === "getClickedEl" && lastClickElement) {
+const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => {
+	if(request.msg === CMENU_REDO_CENSOR && lastClickElement) {
 		lastClickElement.classList.add("redoRequest");
 		const id = lastClickElement.getAttribute('censor-id');
 		if (id) {
@@ -128,7 +131,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 			const domain = window.location.hostname.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()
 			const respValue = {src: lastClickElement.getAttribute("src"), id, origSrc, domain};
 			dbg('sending getClickedEl response', respValue)
-			sendResponse?.(respValue);
+			return respValue;
 		} else {
 			console.debug('running purifier on single element');
 			currentContext?.purifier?.censorImage(lastClickElement as HTMLImageElement, true);
@@ -156,7 +159,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 			//TODO: should this remove the CSS classes?
 			safeList.push(hashCode(request.censorURL));
 		}
-	} else if (request.msg === "recheckPage") {
+	} else if (request.msg === CMENU_RECHECK_PAGE) {
 		dbg('rechecking page');
 		const censored = document.querySelectorAll(`img[censor-placeholder]`);
 		for (const placeholder of censored) {
@@ -190,7 +193,7 @@ const handleMessage = (request: any, sender?: chrome.runtime.MessageSender, send
 
 const configureListeners = () => {
 	console.log('evt: wiring up page event listeners');
-	chrome.runtime.onMessage.addListener((req, sender) => {
+	browser.runtime.onMessage.addListener((req, sender) => {
 		handlePageEvent(req, sender);
 	});
 
@@ -199,16 +202,16 @@ const configureListeners = () => {
 	}, true);
 
 	// Receive message from the background script here.
-	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+	browser.runtime.onMessage.addListener(function(request, sender) {
 		// console.log(`content-script onMessage listener!`);
-		handleMessage(request, sender, sendResponse);
+		handleMessage(request, sender);
 	});
 
 	
 		
 }
 
-const handlePageEvent = (req: any, sender?: chrome.runtime.MessageSender) => {
+const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 	// console.log('notified of page event', req);
 	if (req.msg === 'pageChanged:complete') {
 		console.log('evt: notified of page change, re-running!');
@@ -221,7 +224,7 @@ const handlePageEvent = (req: any, sender?: chrome.runtime.MessageSender) => {
 			// just inject it from there on page load, but that needs a refactor first.
 			// that actually requires a lot of info on the background side.
 			// this method ties it to the page censoring process, for better *and* worse
-			chrome.runtime.sendMessage({msg: MSG_INJECT_SUBLIMINAL.event});
+			browser.runtime.sendMessage({msg: MSG_INJECT_SUBLIMINAL.event});
 		}
 		// if (currentContext?.port) {
 		// 	console.warn('running port disconnect from pageChanged!');
@@ -231,9 +234,9 @@ const handlePageEvent = (req: any, sender?: chrome.runtime.MessageSender) => {
 		// 	currentContext.observer?.stop();
 		// }
 		if (!currentContext) {
-			console.warn('censoring not complete, ignoring event!')
+			console.log('page loaded, but censoring not complete. Ignoring loaded event!')
 		} else {
-			console.log('evt: page change notification triggering censoring run', window.location.href)
+			// console.log('evt: page change notification triggering censoring run', window.location.href)
 			// runCensoringAsync(true).then(ctx => {
 			// 	currentContext = ctx;
 			// });

@@ -1,6 +1,7 @@
 import { CSSManager } from "@/content-scripts/cssManager";
 import { IPreferences, loadPreferencesFromStorage, OperationMode, SubliminalOptions } from "@/preferences";
 import { DbClient } from "./db-client";
+import browser from 'webextension-polyfill';
 
 const dbg = (...data: any[]) => {
     console.log(...data);
@@ -54,7 +55,7 @@ export class SubliminalService {
         }
     }
 
-    injectSubliminalScript = async (tab: chrome.tabs.Tab) => {
+    injectSubliminalScript = async (tab: browser.Tabs.Tab) => {
 
         const prefs = await loadPreferencesFromStorage();
         const msgs = await this.getMessages();
@@ -64,7 +65,7 @@ export class SubliminalService {
             dbg(`injecting CSS to ${tab.id}`, prefs);
             await css.removeSubliminal();
             await css.addSubliminal();
-            const result = await chrome.scripting.executeScript({
+            const result = await browser.scripting.executeScript({
                 target: {
                     tabId: tab.id,
                     allFrames: false

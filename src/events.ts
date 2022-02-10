@@ -2,6 +2,7 @@ import { MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATI
 import { loadPreferencesFromStorage, toRaw } from "./preferences";
 import { WebSocketClient } from "./transport/webSocketClient";
 import { getExtensionVersion } from "./util";
+import browser from 'webextension-polyfill';
 
 export const CMENU_REDO_CENSOR = "BSNG_REDO_CENSOR";
 export const CMENU_ENABLE_ONCE = "BP_FORCE_RUN";
@@ -11,11 +12,11 @@ export const CMENU_RECHECK_PAGE = "BP_RECHECK_PAGE";
 
 const knownMessages = [MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS, MSG_INJECT_CSS, MSG_INJECT_SUBLIMINAL, MSG_STATUS];
 
-export function processContextClick(info: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab|undefined, client: WebSocketClient) {
+export function processContextClick(info: browser.Menus.OnClickData, tab: browser.Tabs.Tab|undefined, client: WebSocketClient) {
     const eVersion = getExtensionVersion();
     console.log('prcessing context click event', info, tab);
     if (tab && info.menuItemId === CMENU_REDO_CENSOR) {
-        chrome.tabs.sendMessage(tab.id!, {msg: "getClickedEl"}, function(value) {
+        browser.tabs.sendMessage(tab.id!, {msg: CMENU_REDO_CENSOR}).then(value => {
             if (value.id) {
                 loadPreferencesFromStorage().then(prefs => {
                     client.sendObj({
@@ -33,9 +34,9 @@ export function processContextClick(info: chrome.contextMenus.OnClickData, tab: 
             }
         });
     } else if (tab && info.menuItemId == CMENU_ENABLE_ONCE) {
-        chrome.tabs.sendMessage(tab.id!, {msg: "enableOnPage"});
+        browser.tabs.sendMessage(tab.id!, {msg: "enableOnPage"});
     } else if (tab && info.menuItemId === CMENU_RECHECK_PAGE) {
-        chrome.tabs.sendMessage(tab.id!, {msg: "recheckPage"});
+        browser.tabs.sendMessage(tab.id!, {msg: CMENU_RECHECK_PAGE});
     }
 }
 
@@ -44,8 +45,8 @@ export type MessageContext = {
     version: string;
 };
 
-export async function processMessage(message: any, sender: chrome.runtime.MessageSender, sendResponse: ((response: any) => void)|undefined, ctxFactory: () => Promise<MessageContext>) {
-    console.log('background processing msg', message);
+export async function processMessage(message: any, sender: browser.Runtime.MessageSender, ctxFactory: () => Promise<MessageContext>) {
+    console.log('background processing msg', message, knownMessages.map(e => e.event));
     let msgHandlerFound = false;
     let ctx: MessageContext;
     for (const msg of knownMessages) {
@@ -54,17 +55,11 @@ export async function processMessage(message: any, sender: chrome.runtime.Messag
             ctx ??= await ctxFactory();
             console.debug('found matching event handler', msg);
             const result = await msg.handler(message, sender, ctx);
-            sendResponse?.(result);
+            return result;
         }
     }
     if (!msgHandlerFound) {
         console.warn('did not find a known message handler, unknown runtime message', message, sender);
-    }
-}
-
-export function onTabChange(tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab, socketClient: WebSocketClient) {
-    if (changeInfo.url) {
-        cancelRequestsForId(tabId, socketClient);
     }
 }
 

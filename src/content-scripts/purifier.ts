@@ -4,13 +4,14 @@ import { generateUUID, getRandom } from "@/util";
 import { debounce } from "throttle-debounce";
 import { LocalPlaceholder } from "@/placeholders";
 import { PlaceholderService } from "@/services/placeholder-service";
+import browser from 'webextension-polyfill';
 
 
 export class Purifier {
     private _currentState: CensoringState;
     
     private _backlog : boolean = false;
-    private _port: chrome.runtime.Port | undefined;
+    private _port: browser.Runtime.Port | undefined;
     private _portFaulted: boolean = false;
     private _safeList: number[];
     public get backlog() : boolean {
@@ -65,16 +66,16 @@ export class Purifier {
     }
 
     
-    public get port() : chrome.runtime.Port | undefined {
+    public get port() : browser.Runtime.Port | undefined {
         return this._port;
     }
-    public set port(v : chrome.runtime.Port|undefined) {
+    public set port(v : browser.Runtime.Port|undefined) {
         this._port = v;
     }
     
 
     private getPlaceholderSrc = () => {
-        let placeholder = chrome.runtime.getURL('/images/loading.png');
+        let placeholder = browser.runtime.getURL('/images/loading.png');
         if (this._placeholders.length && this._placeholders.length > 0) {
             try {
             const random = getRandom(this._placeholders);
@@ -90,8 +91,8 @@ export class Purifier {
     }
 
     private getVideoPlaceholderSrc = (): {poster: string, video: string} => {
-        const placeholder = chrome.runtime.getURL("images/poster.jpg");
-        const video = chrome.runtime.getURL("images/blocked_video.mp4");
+        const placeholder = browser.runtime.getURL("images/poster.jpg");
+        const video = browser.runtime.getURL("images/blocked_video.mp4");
         return {poster: placeholder, video};
     }
 
@@ -237,7 +238,7 @@ export class Purifier {
             type: type,
             domain: this._domain
         };
-        const port = chrome.runtime.connect({name: id});
+        const port = browser.runtime.connect({name: id});
         if (port) {
             // console.log('got named port!')
             port.onMessage.addListener((msg, port) => {
@@ -251,11 +252,11 @@ export class Purifier {
                 this._port.postMessage(msg);
             } catch {
                 this._portFaulted = true;
-                chrome.runtime.sendMessage(msg);
+                browser.runtime.sendMessage(msg);
             }
         } else {
             // console.debug('using runtime for message');
-            chrome.runtime.sendMessage(msg);
+            browser.runtime.sendMessage(msg);
         }
         // this.messageQueue.push(id);
     }
@@ -337,7 +338,7 @@ export class Purifier {
 }
 
 
-const handleCensorResult = (request: any, safeList: number[], port: chrome.runtime.Port) => {
+const handleCensorResult = (request: any, safeList: number[], port: browser.Runtime.Port) => {
     if(request.msg === "setSrc" && request.type === "normal") {
 		const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
 		if(requestElement){

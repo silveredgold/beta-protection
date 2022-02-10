@@ -38,7 +38,7 @@ import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
 import { defaultPrefs, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
-import { updateUserPrefs, userPrefs } from "./services";
+import { updateUserPrefs, userPrefs } from "@/services";
 import CensoringPreferences from "../components/CensoringPreferences.vue";
 import VideoOptions from "../components/VideoOptions.vue";
 import PlaceholderOptions from "../components/placeholders/PlaceholderOptions.vue";
@@ -47,13 +47,14 @@ import SettingsReset from "../components/SettingsReset.vue";
 import ConnectionStatus from "../components/ConnectionStatus.vue";
 import DomainListOptions from "../components/DomainListOptions.vue";
 import { themeOverrides } from "../util";
+import browser from 'webextension-polyfill';
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
 // let prefs = ref({} as IPreferences);
 
-const iconSrc = chrome.runtime.getURL('/images/icon.png');
+const iconSrc = browser.runtime.getURL('/images/icon.png');
 
 const getCurrentPrefs = async () => {
   var storeResponse = await loadPreferencesFromStorage();
@@ -92,7 +93,7 @@ onBeforeMount(async () => {
   store.preferences = await getCurrentPrefs();
 });
 
-chrome.runtime.onMessage.addListener((request, sender, response) => {
+browser.runtime.onMessage.addListener((request, sender) => {
   if (request['msg'] === 'reloadPreferences') {
     setTimeout(() => {
       console.log('reloading preferences for options view');
