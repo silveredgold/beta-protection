@@ -1,6 +1,7 @@
 import { CSSManager } from "@/content-scripts/cssManager";
 import { IPreferences, loadPreferencesFromStorage, toRaw } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
+import { getDomain } from "@/util";
 import { Deferred, RuntimeEvent } from "./util";
 
 export const idUrlMap = new Map();
@@ -35,7 +36,7 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
                 priority: message.priority,
                 preferences: rawPrefs,
                 type: message.type,
-                domain: message.domain
+                domain: getDomain(message.domain, preferences)
             });
         return deferred.task.promise;
     }

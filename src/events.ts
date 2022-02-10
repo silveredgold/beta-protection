@@ -1,7 +1,7 @@
 import { MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATISTICS, MSG_STATUS, MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_INJECT_SUBLIMINAL } from "./messaging";
 import { loadPreferencesFromStorage, toRaw } from "./preferences";
 import { WebSocketClient } from "./transport/webSocketClient";
-import { getExtensionVersion } from "./util";
+import { getDomain, getExtensionVersion } from "./util";
 import browser from 'webextension-polyfill';
 
 export const CMENU_REDO_CENSOR = "BSNG_REDO_CENSOR";
@@ -28,7 +28,7 @@ export function processContextClick(info: browser.Menus.OnClickData, tab: browse
                         priority: 1,
                         preferences: toRaw(prefs),
                         type: "normal",
-                        domain: value.domain
+                        domain: getDomain(value.domain, prefs)
                     });
                 });
             }

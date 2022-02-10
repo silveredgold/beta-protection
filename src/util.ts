@@ -135,6 +135,12 @@ export const shouldCensor = (prefs: IPreferences, url: string): boolean => {
 	}
 }
 
+export const getDomain = (location: string, prefs?: IPreferences|boolean) => {
+  return (typeof prefs === 'boolean' && prefs) || (prefs && prefs.hideDomains)
+    ? "unknown.tld"
+    : location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
+}
+
 const dbg = (...data: any[]) => {
 	console.debug(...data);
 }

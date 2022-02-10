@@ -19,6 +19,7 @@ export interface IPreferences {
     allowList: string[];
     forceList: string[];
     errorMode: "subtle"|"normal";
+    hideDomains: boolean;
 }
 
 

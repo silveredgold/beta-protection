@@ -2,7 +2,7 @@ import { getAvailablePlaceholders, getEnabledPlaceholders, loadPreferencesFromSt
 import { IPreferences, OperationMode } from "@/preferences/types";
 import { Purifier } from "./purifier";
 import { CensoringState, CensoringContext } from "./types";
-import { hashCode, shouldCensor } from "@/util";
+import { getDomain, hashCode, shouldCensor } from "@/util";
 import { PageObserver } from "./observer";
 import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
 import { MSG_INJECT_SUBLIMINAL } from "@/messaging";
@@ -12,7 +12,6 @@ import { CMENU_RECHECK_PAGE, CMENU_REDO_CENSOR } from "@/events";
 let lastClickElement: HTMLElement|undefined|null;
 const safeList: number[] = [];
 let currentContext: CensoringContext|undefined;
-let timerId: number|undefined;
 
 const dbg = (...data: any[]) => {
 	console.debug(...data);
@@ -61,6 +60,7 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	// preferences!.enabledPlaceholders = placeholders.categories;
 	const port = buildPort();
 	const purifier = new Purifier(state, preferences!.videoCensorMode, window.location, placeholders.allImages, safeList);
+	purifier.hideDomains = preferences.hideDomains ?? false;
 	purifier.port = port;
 	const context: CensoringContext = {
 		state,
@@ -128,7 +128,7 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => 
 		const id = lastClickElement.getAttribute('censor-id');
 		if (id) {
 			const origSrc = lastClickElement.getAttribute('censor-src') ?? lastClickElement.getAttribute('src');
-			const domain = window.location.hostname.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()
+			const domain = getDomain(window.location.hostname, currentContext?.preferences).toLowerCase()
 			const respValue = {src: lastClickElement.getAttribute("src"), id, origSrc, domain};
 			dbg('sending getClickedEl response', respValue)
 			return respValue;

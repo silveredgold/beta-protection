@@ -1,4 +1,4 @@
-import { hashCode, isValidUrl } from "@/util";
+import { getDomain, hashCode, isValidUrl } from "@/util";
 import { CensoringState, ImageStyleElement } from "./types";
 import { generateUUID, getRandom } from "@/util";
 import { debounce } from "throttle-debounce";
@@ -59,8 +59,7 @@ export class Purifier {
         if (typeof location !== 'string') {
             location = (location as Location).hostname;
         }
-        // this._domain = location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
-        this._domain = "unknown.com";
+        this._domain = getDomain(location).toLowerCase();
         this._urlTransformers.push(srcUrl => srcUrl.replace(".gifv", ".gif"))
         this._safeList = safeList;
     }
@@ -71,6 +70,15 @@ export class Purifier {
     }
     public set port(v : browser.Runtime.Port|undefined) {
         this._port = v;
+    }
+
+    
+    private _hideDomains : boolean = false;
+    public get hideDomains() : boolean {
+        return this._hideDomains;
+    }
+    public set hideDomains(v : boolean) {
+        this._hideDomains = v;
     }
     
 
@@ -236,7 +244,7 @@ export class Purifier {
             id: id,
             priority: priority ?? 1,
             type: type,
-            domain: this._domain
+            domain: getDomain(this._domain, this._hideDomains)
         };
         const port = browser.runtime.connect({name: id});
         if (port) {

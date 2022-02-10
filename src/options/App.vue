@@ -23,7 +23,8 @@
       <connection-status :style="{marginBottom: '2em'}" />
       <n-collapse :style="{ marginTop: '1em', marginBottom: '1em', padding: '0.5em'}">
         <n-collapse-item title="Backend Host" name="backend-host">
-          <backend-host />
+          <backend-host class="control-group" />
+          <privacy-options :preferences="prefs" class="control-group" />
           <template #header-extra>Set where your backend is running</template>
         </n-collapse-item>
         <n-collapse-item title="Censoring Options" name="censoring-options" v-if="prefs">
@@ -91,6 +92,7 @@ import DomainListOptions from "../components/DomainListOptions.vue";
 import { getExtensionVersion, themeOverrides } from "../util";
 import ErrorOptions from "@/components/ErrorOptions.vue";
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
+import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import browser from 'webextension-polyfill';
 
 const osTheme = useOsTheme()

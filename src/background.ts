@@ -5,7 +5,6 @@ import { CSSManager } from "./content-scripts/cssManager";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID } from "@/util";
 import browser from "webextension-polyfill";
-import to from 'await-to-js';
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 
