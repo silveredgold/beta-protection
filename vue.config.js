@@ -45,7 +45,7 @@ module.exports = {
     },
   },
   configureWebpack: {
-    devtool: process.env.NODE_ENV === 'development' ? 'cheap-module-eval-source-map' : 'source-map',
+    devtool: process.env.NODE_ENV === 'development' ? 'cheap-source-map' : 'source-map',
     plugins: [
       // new BundleAnalyzerPlugin()
     ]

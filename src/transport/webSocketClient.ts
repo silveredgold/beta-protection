@@ -166,8 +166,8 @@ export class WebSocketClient {
         } else {
             console.log(`error image response`, response);
             url = prefs.errorMode === 'normal'
-                ? browser.runtime.getURL("images/error_normal.png")
-                : browser.runtime.getURL("images/error_simple.jpg");
+                ? browser.runtime.getURL("images/error_normal.jpg")
+                : browser.runtime.getURL("images/error_simple.png");
             // we don't have an NSFW error screen yet
             // ignore that, we do now
         }

@@ -28,7 +28,7 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject, onBeforeMount, defineEmits } from 'vue';
+import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup, NButton, NIcon } from "naive-ui";
 import { loadPreferencesFromStorage, IPreferences, OperationMode, getAvailablePlaceholders } from '@/preferences';
 import { Refresh } from "@vicons/ionicons5";
