@@ -20,24 +20,6 @@ index ee3d36c..97f92ef 100644
      )
      webpackConfig.merge({ entry })
  
-diff --git a/node_modules/vue-cli-plugin-browser-extension/lib/manifest.js b/node_modules/vue-cli-plugin-browser-extension/lib/manifest.js
-index c62792c..6309d05 100644
---- a/node_modules/vue-cli-plugin-browser-extension/lib/manifest.js
-+++ b/node_modules/vue-cli-plugin-browser-extension/lib/manifest.js
-@@ -34,11 +34,12 @@ module.exports = (api, pluginOptions, packageJson) => async (content) => {
-   // If building for production (going to web store) abort early.
-   // The browser extension store will hash your signing key and apply CSP policies.
-   if (isProduction) {
--    manifest.content_security_policy = manifest.content_security_policy.replace(/'unsafe-eval'/, '')
- 
-     // validate minimum options
- 
-     return getManifestJsonString(pluginOptions, manifest)
-+  } else {
-+    manifest.content_security_policy.extension_pages += '; connect-src ws://localhost:9090/ ws://*:8090/ws'
-   }
- 
-   if (hasKeyFile) {
 diff --git a/node_modules/vue-cli-plugin-browser-extension/lib/webpack-extension-reloader.js b/node_modules/vue-cli-plugin-browser-extension/lib/webpack-extension-reloader.js
 new file mode 100644
 index 0000000..a1de3d5
