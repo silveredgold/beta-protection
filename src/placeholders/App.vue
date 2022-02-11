@@ -1,120 +1,106 @@
 <template>
   <n-config-provider :theme-overrides="themeOverrides" :theme="theme">
     <n-notification-provider>
-      <n-page-header
-        subtitle="For the full set of options, check the extension settings"
-        style="padding-bottom: 2rem;"
-      >
-        <template #title>Beta Protection</template>
-        <!-- <template #header>
-      <n-breadcrumb>
-        <n-breadcrumb-item>Podcast</n-breadcrumb-item>
-        <n-breadcrumb-item>Best Collection</n-breadcrumb-item>
-        <n-breadcrumb-item>Ultimate Best Collection</n-breadcrumb-item>
-        <n-breadcrumb-item>Anyway.FM</n-breadcrumb-item>
-      </n-breadcrumb>
-        </template>-->
-        <template #avatar>
-          <n-avatar :src="iconSrc" />
-        </template>
-        <template #extra>
-          <n-space>
-            <n-button size="small">
-              <n-icon size="30" :component="Settings" />
-            </n-button>
-          </n-space>
-        </template>
-        <template #footer>To change the censoring mode, use the popup from your extension toolbar!</template>
-      </n-page-header>
+      <store-header v-if="preferences" :placeholders="placeholders" :preferences="preferences" style="height: calc(20vh - 3rem);" />
+      <store v-if="preferences" :preferences="preferences" :placeholders="placeholders" style="height: calc(80vh - 3rem);" />
     </n-notification-provider>
     <n-global-style />
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NCard, NButton, NIcon, NAvatar, NPageHeader, NSpace, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme } from "naive-ui";
+import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NCard, NButton, NIcon, NAvatar, NPageHeader, NSpace, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme, NGrid, NGi } from "naive-ui";
 import { Settings } from "@vicons/ionicons5";
 import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
-import { defaultPrefs, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
+import { defaultPrefs, getAvailablePlaceholders, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
 import { updateUserPrefs, userPrefs } from "@/options/services";
-import CensoringPreferences from "../components/CensoringPreferences.vue";
-import VideoOptions from "../components/VideoOptions.vue";
-import PlaceholderOptions from "../components/placeholders/PlaceholderOptions.vue";
-import StickerOptions from "../components/StickerOptions.vue";
-import SettingsReset from "../components/SettingsReset.vue";
-import ConnectionStatus from "../components/ConnectionStatus.vue";
-import DomainListOptions from "../components/DomainListOptions.vue";
 import { themeOverrides } from "../util";
 import browser from 'webextension-polyfill';
+import StoreHeader from './StoreHeader.vue';
+import Store from './components/Store.vue';
+import mitt from 'mitt';
+import { eventEmitter, ActionEvents } from "@/messaging";
+import { PlaceholderSet } from "./types";
+import { PlaceholderService } from "@/services/placeholder-service";
 
+const events = mitt<ActionEvents>();
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
-// let prefs = ref({} as IPreferences);
-
-const iconSrc = browser.runtime.getURL('/images/icon.png');
+const preferences = ref<IPreferences|undefined>(undefined);
+const placeholders = ref<PlaceholderSet>({allImages: [], categories: []});
 
 const getCurrentPrefs = async () => {
   var storeResponse = await loadPreferencesFromStorage();
   console.log(`options loaded prefs:`, storeResponse);
-  // prefs = reactive(storeResponse);
   return storeResponse;
 }
 
-const updateFunc = debounce(1000, async (prefs) => {
+const getCurrentPlaceholders = async () => {
+  const storeResponse = await getAvailablePlaceholders();
+  console.log(`options loaded placeholders:`, storeResponse);
+  return storeResponse;
+}
+
+const _updateFunc = debounce(1000, async (prefs) => {
   console.log(`persisting prefs`, prefs);
   console.log(`serialized prefs`, JSON.stringify(prefs));
   await savePreferencesToStorage(prefs);
+  return true;
 })
 
-let store = reactive({
-  preferences: {} as IPreferences,
-  updatePreferences(prefs?: IPreferences) {
-    let targetPrefs = prefs?.mode ? prefs : this.preferences;
-    updateFunc(targetPrefs);
-    // var storeResponse = await chrome.storage.local.set({ 'preferences': targetPrefs });
-  }
-})
+const updatePreferences = async (prefs?: IPreferences) => {
+    const targetPrefs = prefs?.mode ? prefs : preferences;
+    return await _updateFunc(targetPrefs);
+}
 
-let prefs = computed(() => store.preferences);
-
-watch(prefs, async (newMode, prevMode) => {
+watch(preferences, async (newMode, prevMode) => {
     console.log('new mode', newMode);
 }, {deep: true});
 
-const updatePrefs = async (preferences?: IPreferences) => {
-  console.log(`queuing prefs save`);
-  store.updatePreferences(preferences);
-  return true;
-}
-
 onBeforeMount(async () => {
-  store.preferences = await getCurrentPrefs();
+  preferences.value = await getCurrentPrefs();
+  placeholders.value = await getCurrentPlaceholders();
 });
 
 browser.runtime.onMessage.addListener((request, sender) => {
   if (request['msg'] === 'reloadPreferences') {
     setTimeout(() => {
-      console.log('reloading preferences for options view');
+      console.log('reloading preferences for placeholder view');
       getCurrentPrefs().then(prefs => {
-        store.preferences = prefs;
+        preferences.value = prefs;
       });
     }, 1000);
   }
 });
 
+events.on('reload', evt => {
+  console.log('got emitter event', evt);
+  if (evt == 'placeholders') {
+    getCurrentPlaceholders().then(set => {
+      placeholders.value = set;
+    });
+  } else if (evt == 'preferences') {
+    getCurrentPrefs().then(prefs => {
+      preferences.value = prefs;
+    });
+  }
+});
+
 // provide(userPrefs, prefs);
-provide(updateUserPrefs, updatePrefs);
+provide(updateUserPrefs, updatePreferences);
+provide(eventEmitter, events);
 
 
 </script>
 
-<style scoped>
+<style>
 html {
-  width: 800px;
-  height: 800px;
+  max-width: 80%;
   padding: 1.5rem;
+  margin-left:auto;
+  margin-right:auto;
 }
 </style>

@@ -35,8 +35,7 @@ import { Refresh } from "@vicons/ionicons5";
 import { updateUserPrefs } from '@/options/services';
 import { PlaceholderService } from '@/services/placeholder-service';
 import { LocalPlaceholder } from '@/placeholders';
-import mitt from 'mitt';
-import { ActionEvents } from '../events';
+import { eventEmitter, ActionEvents } from "@/messaging";
 
 const props = defineProps<{
     preferences: Ref<IPreferences>
@@ -50,8 +49,8 @@ const availablePlaceholders: Ref<{categories: string[], allImages: LocalPlacehol
 
 const placeholders = computed(() => availablePlaceholders?.value?.categories?.length ? availablePlaceholders?.value?.categories : []);
 
-const emitter = mitt<ActionEvents>();
-emitter.on('reload', e => {
+const emitter = inject(eventEmitter);
+emitter?.on('reload', e => {
     if (e.toLowerCase() == 'placeholders') {
         setTimeout(() => {
             console.log('reloading placeholders for options view');

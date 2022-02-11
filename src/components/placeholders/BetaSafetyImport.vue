@@ -44,17 +44,17 @@ import { NCard, useNotification, NButton, NAutoComplete, NList, NListItem, NTool
 import { loadPreferencesFromStorage, IPreferences, OperationMode, getAvailablePlaceholders } from '../../preferences';
 import { updateUserPrefs } from '../../options/services';
 import { PlaceholderService } from '@/services/placeholder-service';
-import { LocalPlaceholder } from '@/services/db-client';
+import { LocalPlaceholder } from '@/placeholders';
 import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
 import { humanFileSize } from "@/util";
-import {ActionEvents} from '@/components/events'
+import { eventEmitter, ActionEvents } from "@/messaging";
 import mitt from 'mitt';
 
 const props = defineProps<{
     preferences: Ref<IPreferences>
 }>();
 
-const emitter = mitt<ActionEvents>();
+const emitter = inject(eventEmitter);
 const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
@@ -108,7 +108,7 @@ const importCurrent = async () => {
         duration: 4000,
         closable: true
     });
-    emitter.emit('reload', 'placeholders');
+    emitter?.emit('reload', 'placeholders');
     categoryName.value = '';
     newFiles.value = [];
     // loadPlaceholders().then(ph => {

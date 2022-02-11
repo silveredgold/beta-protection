@@ -62,7 +62,7 @@ const updatePrefs = inject(updateUserPrefs);
 const loaded = computed(() => prefs.value !== {});
 
 watch(prefs, async (newMode, prevMode) => {
-    updatePrefs();
+    updatePrefs?.();
 }, {deep: true});
 
 

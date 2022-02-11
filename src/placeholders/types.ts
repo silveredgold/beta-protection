@@ -9,3 +9,5 @@ export type LocalPlaceholder = {
     // payload?: string;
     handle?: FileSystemFileHandle;
 };
+
+export type PlaceholderSet = { categories: string[], allImages: LocalPlaceholder[] };

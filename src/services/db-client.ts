@@ -73,8 +73,19 @@ export class DbClient {
         // ]);
     }
 
-    removePlaceholder = async (placeholder: LocalPlaceholder) => {
-        await this._db.delete('placeholders', placeholder.id!);
+    removePlaceholder = async (id: number) => {
+        await this._db.delete('placeholders', id);
+    }
+
+    removePlaceholders = async (ids: number[]) => {
+        const tx = this._db.transaction('placeholders', 'readwrite');
+        const txProms = ids.map(pl => {
+            tx.store.delete(pl);
+        });
+        await Promise.all([
+            ...txProms,
+            tx.done
+        ]);
     }
 
     getLocalPlaceholders = async (category?: string) => {

@@ -12,6 +12,12 @@ module.exports = {
       entry: './src/options/main.ts',
       title: 'Options',
     },
+    store: {
+      template: 'public/browser-extension.html',
+      entry: './src/placeholders/main.ts',
+      title: 'Placeholder Store',
+      filename: 'store.html'
+    }
   },
   pluginOptions: {
     browserExtension: {
@@ -39,7 +45,7 @@ module.exports = {
     },
   },
   configureWebpack: {
-    devtool: 'source-map',
+    devtool: 'cheap-module-eval-source-map',
     plugins: [
       // new BundleAnalyzerPlugin()
     ]

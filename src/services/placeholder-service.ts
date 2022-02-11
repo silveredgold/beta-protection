@@ -143,6 +143,20 @@ export class PlaceholderService {
         const blob = getBlob(data, file.type);
         return URL.createObjectURL(blob);
     }
+
+    public static deletePlaceholder = async (placeholder: LocalPlaceholder) => {
+        const db = await DbClient.create();
+        await db.removePlaceholder(placeholder.id!);
+        return true;
+    }
+
+    public static deleteCategory = async (category: string) => {
+        const db = await DbClient.create();
+        const placeholders = await db.getLocalPlaceholders(category);
+        const ids = placeholders.filter(pl => !!pl.id).map(pl => pl.id!);
+        await db.removePlaceholders(ids);
+        return true;
+    }
 }
 
 const getBlob = (arr: ArrayBuffer, type: string) => {

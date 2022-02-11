@@ -54,8 +54,18 @@
             </template>
             While censoring takes place, images will be replaced by a placeholder image randomly selected from the images in any enabled categories. Here is where you add additional placeholders.
           </n-alert>
-          <placeholder-upload :preferences="prefs" class="control-group" />
-          <beta-safety-import :preferences="prefs" class="control-group" />
+          <n-collapse :style="{ marginTop: '1em', marginBottom: '1em', padding: '0.5em'}">
+            <n-collapse-item title="Placeholder Management">
+              <open-store />
+              <template #header-extra>Manage your installed placeholders</template>
+            </n-collapse-item>
+            <n-collapse-item title="Upload and Import">
+              <placeholder-upload :preferences="prefs" class="control-group" />
+              <beta-safety-import :preferences="prefs" class="control-group" />
+              <template #header-extra>Import new placeholders</template>
+            </n-collapse-item>
+          </n-collapse>
+          
           <template #header-extra>Add new placeholders</template>
         </n-collapse-item>
         <n-collapse-item title="Domain Lists" name="domain-options" v-if="prefs">
@@ -74,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme, NPopover, NAlert } from "naive-ui";
+import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme, NPopover, NAlert, NCard } from "naive-ui";
 import { InformationCircleOutline, InformationCircle } from "@vicons/ionicons5";
 import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
@@ -93,11 +103,15 @@ import { getExtensionVersion, themeOverrides } from "../util";
 import ErrorOptions from "@/components/ErrorOptions.vue";
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
+import OpenStore from "@/placeholders/components/OpenStore.vue";
+import { eventEmitter, ActionEvents } from "@/messaging";
 import browser from 'webextension-polyfill';
+import mitt from "mitt";
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 const extensionVersion = getExtensionVersion();
+const events = mitt<ActionEvents>();
 // const notif = useNotification();
 
 // let prefs = ref({} as IPreferences);
@@ -155,6 +169,7 @@ browser.runtime.onMessage.addListener((request, sender) => {
 
 // provide(userPrefs, prefs);
 provide(updateUserPrefs, updatePrefs);
+provide(eventEmitter, events);
 
 
 </script>
