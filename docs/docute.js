@@ -35,6 +35,10 @@ new Docute({
           {
             title: 'Usage',
             link: '/guide/usage'
+          },
+          {
+            title: 'Android',
+            link: '/guide/mobile'
           }
         ]
       }
