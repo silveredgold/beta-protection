@@ -33,14 +33,6 @@ module.exports = {
             'content-script': 'src/content-scripts/content-script.ts'
           },
         },
-      },
-      manifestTransformer: (manifest) => {
-        // if (process.env.NODE_ENV === 'development') {
-        //   manifest.content_security_policy = manifest.content_security_policy.replace('script-src', 'script-src http://localhost:8098');
-        // }
-        
-        
-        return manifest;
       }
     },
   },

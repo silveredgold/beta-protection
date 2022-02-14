@@ -1,10 +1,7 @@
-import { createPreferencesFromBackend, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
-import { IPreferences, rawPreferences } from "@/preferences/types";
-import { PlaceholderService } from "@/services/placeholder-service";
-import { StickerService } from "@/services/sticker-service";
 import Sockette from "sockette";
 import { RuntimePortManager } from "./runtimePort";
 import browser from 'webextension-polyfill';
+import { censoredImageEvent, placeholderStickerEvent, preferencesEvent, SocketContext, SocketEvent } from "./messages";
 
 export class WebSocketClient {
 
@@ -63,7 +60,7 @@ export class WebSocketClient {
 
 
 
-    private sendRuntimeMessage = (requestId: string, tabId: string, obj: object) => {
+    private sendRuntimeMessage = async (requestId: string, tabId: string, obj: object) => {
         if (requestId && this._portManager) {
             this._portManager.sendMessage(obj, requestId, tabId.toString());
         }
@@ -137,80 +134,27 @@ export class WebSocketClient {
         }
     }
 
-    public get messageHandlers() : {[key: string]: (response: any) => void} {
-        return {
-            'censorImage': (response) => this.processCensoredImageResponse(response),
-            'detectPlaceholdersAndStickers': this.processPlaceholderAndStickerResponse,
-            'getUserPreferences': this.processUserPreferences
-        }
+    public get messageEvents() : SocketEvent<any>[] {
+        return [
+            placeholderStickerEvent,
+            preferencesEvent,
+            censoredImageEvent
+        ]
     }
-    
 
     processServerMessage = (response: any) => {
         console.debug(`server response received`, response);
-        const handler = this.messageHandlers[response['requestType']];
-        if (handler !== undefined) {
-            console.log('running handler for server message', response.requestType, response);
-            handler(response);
+        const event = this.messageEvents.find(evt => evt.event === response['requestType']);
+        if (event?.handler !== undefined) {
+            const ctx: SocketContext = {
+                socketClient: this,
+                sendMessage: this.sendRuntimeMessage
+            };
+            console.log('running handler for server message', response.requestType, response, ctx);
+            event.handler(response, ctx);
         } else {
             console.warn('received unmatched server message!', response);
         }
-    }
-
-    processCensoredImageResponse = async (response) => {
-        const prefs = await loadPreferencesFromStorage();
-        let url: string;
-        // console.log(`parsing image response`, response);
-        if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
-            url = response.url;
-        } else {
-            console.log(`error image response`, response);
-            url = prefs.errorMode === 'normal'
-                ? browser.runtime.getURL("images/error_normal.jpg")
-                : browser.runtime.getURL("images/error_simple.png");
-            // we don't have an NSFW error screen yet
-            // ignore that, we do now
-        }
-        const body = {
-            msg: "setSrc", censorURL: url,
-            id: response.id, tabid: response.tabid, type: response.type
-        };
-        this.sendRuntimeMessage(response.ide, response.tabid, body)
-        
-    }
-
-    processPlaceholderAndStickerResponse = (response) => {
-        if (parseInt(response.status) === 200) {
-            console.log(`sticker response:`, response)
-            //TODO: we don't actually need to do this anymore, we don't use the backend placeholders anywhere
-            PlaceholderService.loadBackendPlaceholders(response)
-            StickerService.loadAvailableStickers(response);
-        }
-    }
-
-    processUserPreferences = async (response): Promise<IPreferences> => {
-        const log = (...data: any[]) => {
-            // console.debug(...data);
-            //this is just here to make debugging things easier
-        }
-        const preferences = await loadPreferencesFromStorage();
-        if (parseInt(response.status) === 200) {
-            const rawPrefs = response["preferences"] as rawPreferences;
-            log('raw prefs', rawPrefs);
-            const backendPrefs = createPreferencesFromBackend(rawPrefs);
-            log('backend prefs', backendPrefs);
-            log('loaded prefs', preferences);
-            const mergedPrefs = {
-                ...backendPrefs,
-                ...preferences
-            };
-            log('merged prefs', mergedPrefs);
-            await savePreferencesToStorage(mergedPrefs, true);
-            const newPrefs = await loadPreferencesFromStorage();
-            log('new prefs as stored:', newPrefs);
-            return mergedPrefs;
-        }
-        return preferences;
     }
 
     close = () => {

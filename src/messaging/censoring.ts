@@ -2,15 +2,12 @@ import { CSSManager } from "@/content-scripts/cssManager";
 import { IPreferences, loadPreferencesFromStorage, toRaw } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
 import { getDomain } from "@/util";
-import { Deferred, RuntimeEvent } from "./util";
-
-export const idUrlMap = new Map();
+import { RuntimeEvent } from "./util";
 
 export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
     event: 'censorRequest',
     handler: async (message, sender, ctx) => {
         const img = String(message.imageURL);
-        idUrlMap.set(message.id, img);
         let preferences: IPreferences;
         if (message.prefs !== undefined) {
             preferences = message.prefs as IPreferences;
@@ -25,8 +22,6 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
         const rawPrefs = toRaw(preferences);
         /*console.log(`prefs as sent:`, preferences);
         console.log(`raw prefs sent`, rawPrefs); */
-        const deferred = {id: message.id, task: new Deferred()};
-        pendingMessages.push(deferred);
             ctx.socketClient.sendObj({
                 version: ctx.version,
                 msg: requestType,
@@ -38,7 +33,6 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
                 type: message.type,
                 domain: getDomain(message.domain, preferences)
             });
-        return deferred.task.promise;
     }
 }
 export const MSG_INJECT_CSS: RuntimeEvent<void> = {
@@ -84,5 +78,3 @@ export const MSG_INJECT_SUBLIMINAL_CSS: RuntimeEvent<void> = {
         }
     }
 }
-
-const pendingMessages: {id: string, task: Deferred}[] = [];

@@ -30,17 +30,7 @@ export const MSG_GET_STATISTICS: RuntimeEvent<void> = {
     }
 }
 
-export class Deferred {
-    promise: Promise<any>;
-    reject?: (reason?: any) => void;
-    resolve?: (value: unknown) => void;
-    constructor() {
-      this.promise = new Promise<any>((resolve, reject)=> {
-        this.reject = reject
-        this.resolve = resolve
-      })
-    }
-  }
+
 
 
 export type RuntimeEvent<Type> = {
