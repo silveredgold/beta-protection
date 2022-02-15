@@ -5,7 +5,7 @@ export class StatisticsService {
     private _id: string;
 
     static parseRaw(rawObj: string): StatisticsData {
-        let out: StatisticsData = {};
+        const out: StatisticsData = {};
         const input = rawObj.replace(/^{/, "").replace(/}$/, "");
         const siteObjs = (input ?? "").split(',').map(i => i.trim());
         console.debug('siteObjs', siteObjs);
