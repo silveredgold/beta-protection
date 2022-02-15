@@ -48,10 +48,9 @@ import { LocalPlaceholder } from '@/placeholders';
 import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
 import { humanFileSize } from "@/util";
 import { eventEmitter, ActionEvents } from "@/messaging";
-import mitt from 'mitt';
 
 const props = defineProps<{
-    preferences: Ref<IPreferences>
+    preferences: IPreferences
 }>();
 
 const emitter = inject(eventEmitter);

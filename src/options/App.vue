@@ -9,14 +9,24 @@
           <n-avatar :src="iconSrc" />
         </template>
         <template #extra>
-          <n-popover trigger="click">
-            <template #trigger>
-              <n-button size="small">
-                <n-icon size="30" :component="InformationCircleOutline" />
-              </n-button>
-            </template>
-            <div class="medium-text">v{{extensionVersion}}</div>
-          </n-popover>
+          <n-space item-style="display: flex;" justify="end">
+            <n-popover trigger="hover" placement="bottom">
+              <template #trigger>
+                  <n-button @click="openStatistics">
+                      <n-icon size="30" :component="StatsChart" />
+                  </n-button>
+              </template>
+              Open Statistics
+            </n-popover>
+            <n-popover trigger="click">
+              <template #trigger>
+                <n-button >
+                  <n-icon size="30" :component="InformationCircleOutline" />
+                </n-button>
+              </template>
+              <div class="medium-text">v{{extensionVersion}}</div>
+            </n-popover>
+          </n-space>
         </template>
         <template #footer>To change the censoring mode, use the popup from your extension toolbar!</template>
       </n-page-header>
@@ -85,7 +95,7 @@
 
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme, NPopover, NAlert, NCard } from "naive-ui";
-import { InformationCircleOutline, InformationCircle } from "@vicons/ionicons5";
+import { InformationCircleOutline, InformationCircle, StatsChart } from "@vicons/ionicons5";
 import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
@@ -104,6 +114,7 @@ import ErrorOptions from "@/components/ErrorOptions.vue";
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/placeholders/components/OpenStore.vue";
+import { openStatistics } from "@/components/util";
 import { eventEmitter, ActionEvents } from "@/messaging";
 import browser from 'webextension-polyfill';
 import mitt from "mitt";

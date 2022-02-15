@@ -3,6 +3,7 @@ import { PlaceholderService } from "@/services/placeholder-service"
 import { StickerService } from "@/services/sticker-service"
 import { WebSocketClient } from "./webSocketClient"
 import browser from 'webextension-polyfill';
+import { StatisticsService } from "@/services/statistics-service";
 
 export type SocketEvent<Type> = {
     event: string;
@@ -11,7 +12,7 @@ export type SocketEvent<Type> = {
 
 export type SocketContext = {
     socketClient?: WebSocketClient;
-    sendMessage : (requestId: string, tabId: string, obj: object) => Promise<void>
+    sendMessage : (obj: object, requestId?: string, tabId?: string) => Promise<void>
 }
 
 export const placeholderStickerEvent : SocketEvent<void> = {
@@ -46,7 +47,7 @@ export const censoredImageEvent : SocketEvent<void> = {
             msg: "setSrc", censorURL: url,
             id: response.id, tabid: response.tabid, type: response.type
         };
-        ctx.sendMessage(response.id, response.tabid, body);
+        ctx.sendMessage(body, response.id, response.tabid);
     }
 }
 
@@ -75,5 +76,25 @@ export const preferencesEvent : SocketEvent<IPreferences> = {
             return mergedPrefs;
         }
         return preferences;
+    }
+}
+
+export const statisticsEvent : SocketEvent<void> = {
+    event: 'getStatistics',
+    handler: async (response, ctx) => {
+        if (parseInt(response.status) === 200) {
+            const rawLogs = response["logs"] as string;
+            const stats = StatisticsService.parseRaw(rawLogs);
+            console.log('parsed stats data', stats);
+            ctx.sendMessage({msg: "reloadStatistics", statistics: stats}, "statistics");
+        }
+    }
+}
+
+export const resetStatisticsEvent : SocketEvent<void> = {
+    event: 'resetStatistics',
+    handler: async (response, ctx) => {
+        const success = parseInt(response.status) === 200;
+        ctx.sendMessage({msg: "resetStatistics", reset: success}, "statistics:reset");
     }
 }

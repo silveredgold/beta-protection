@@ -1,7 +1,7 @@
 import Sockette from "sockette";
 import { RuntimePortManager } from "./runtimePort";
 import browser from 'webextension-polyfill';
-import { censoredImageEvent, placeholderStickerEvent, preferencesEvent, SocketContext, SocketEvent } from "./messages";
+import { censoredImageEvent, placeholderStickerEvent, preferencesEvent, resetStatisticsEvent, SocketContext, SocketEvent, statisticsEvent } from "./messages";
 
 export class WebSocketClient {
 
@@ -60,9 +60,9 @@ export class WebSocketClient {
 
 
 
-    private sendRuntimeMessage = async (requestId: string, tabId: string, obj: object) => {
+    private sendRuntimeMessage = async (obj: object, requestId?: string, tabId?: string) => {
         if (requestId && this._portManager) {
-            this._portManager.sendMessage(obj, requestId, tabId.toString());
+            this._portManager.sendMessage(obj, requestId, tabId?.toString());
         }
         if (tabId) {
             const port = this._ports[tabId];
@@ -138,7 +138,9 @@ export class WebSocketClient {
         return [
             placeholderStickerEvent,
             preferencesEvent,
-            censoredImageEvent
+            censoredImageEvent,
+            statisticsEvent,
+            resetStatisticsEvent
         ]
     }
 

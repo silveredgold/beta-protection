@@ -1,4 +1,4 @@
-import { CSSManager } from "@/content-scripts/cssManager";
+import { CSSManager } from "@/services/css-manager";
 import { IPreferences, loadPreferencesFromStorage, OperationMode, SubliminalOptions } from "@/preferences";
 import { DbClient } from "./db-client";
 import browser from 'webextension-polyfill';

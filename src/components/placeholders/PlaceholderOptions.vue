@@ -38,7 +38,7 @@ import { LocalPlaceholder } from '@/placeholders';
 import { eventEmitter, ActionEvents } from "@/messaging";
 
 const props = defineProps<{
-    preferences: Ref<IPreferences>
+    preferences: IPreferences
 }>();
 
 const notif = useNotification();

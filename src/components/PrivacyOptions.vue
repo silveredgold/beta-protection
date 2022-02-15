@@ -28,7 +28,7 @@ import { IPreferences } from '../preferences';
 import { updateUserPrefs } from '../options/services';
 
 const props = defineProps<{
-    preferences: Ref<IPreferences>
+    preferences: IPreferences
 }>();
 
 const enableTitle = false;

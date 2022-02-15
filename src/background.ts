@@ -1,7 +1,6 @@
 import { WebSocketClient } from "./transport/webSocketClient";
 import { cancelRequestsForId, processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
 import { getExtensionVersion } from "./util";
-import { CSSManager } from "./content-scripts/cssManager";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID } from "@/util";
 import browser from "webextension-polyfill";

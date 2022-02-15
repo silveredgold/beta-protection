@@ -155,12 +155,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 export function base64ArrayBuffer(arrayBuffer: ArrayBuffer, mimeType?: string|null) {
   let base64    = ''
-  let encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  const encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
-  let bytes         = new Uint8Array(arrayBuffer)
-  let byteLength    = bytes.byteLength
-  let byteRemainder = byteLength % 3
-  let mainLength    = byteLength - byteRemainder
+  const bytes         = new Uint8Array(arrayBuffer)
+  const byteLength    = bytes.byteLength
+  const byteRemainder = byteLength % 3
+  const mainLength    = byteLength - byteRemainder
 
   let a, b, c, d
   let chunk

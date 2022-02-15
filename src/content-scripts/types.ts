@@ -1,6 +1,5 @@
 import { IPreferences } from "@/preferences/types"
 import { WebSocketClient } from "@/transport/webSocketClient"
-import { CSSManager } from "./cssManager"
 import { PageObserver } from "./observer"
 import { Purifier } from "./purifier"
 import browser from 'webextension-polyfill';

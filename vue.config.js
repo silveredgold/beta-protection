@@ -18,6 +18,12 @@ module.exports = {
       entry: './src/placeholders/main.ts',
       title: 'Placeholder Store',
       filename: 'store.html'
+    },
+    store: {
+      template: 'public/browser-extension.html',
+      entry: './src/views/statistics.ts',
+      title: 'Statistics',
+      filename: 'statistics.html'
     }
   },
   pluginOptions: {
@@ -41,7 +47,7 @@ module.exports = {
     devtool: process.env.NODE_ENV === 'development' ? 'cheap-source-map' : 'source-map',
     plugins: [new CopyPlugin({
       // Use copy plugin to copy *.wasm to output folder.
-      patterns: [{ from: 'node_modules/onnxruntime-web/dist/*.wasm', to: 'wasm/[name].[ext]' }]
+      patterns: [{ from: 'node_modules/onnxruntime-web/dist/*.wasm', to: 'wasm/[name].[ext]', noErrorOnMissing: true }]
     })]
   },
 };

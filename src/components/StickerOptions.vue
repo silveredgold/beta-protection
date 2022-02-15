@@ -27,7 +27,7 @@ import { updateUserPrefs } from '../options/services';
 import { StickerService } from '@/services/sticker-service';
 
 const props = defineProps<{
-    preferences: Ref<IPreferences>
+    preferences: IPreferences
 }>();
 
 const notif = useNotification();

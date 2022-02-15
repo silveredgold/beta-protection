@@ -1,7 +1,7 @@
-import { CSSManager } from "@/content-scripts/cssManager";
+import { CSSManager } from "@/services/css-manager";
 import { IPreferences, loadPreferencesFromStorage, toRaw } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
-import { base64ArrayBuffer, getDomain } from "@/util";
+import { getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
 
 export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
@@ -74,19 +74,5 @@ export const MSG_INJECT_SUBLIMINAL_CSS: RuntimeEvent<void> = {
           await css.removeSubliminal();
           await css.addSubliminal();
         }
-    }
-}
-
-export const MSG_IMAGE_DATA : RuntimeEvent<string> = {
-    event: 'getImageData',
-    handler: async (msg, sender, ctx) => {
-        console.log('fetching path', msg.path);
-        const resp = await fetch(msg.path, {credentials: 'include'});
-        const type = resp.headers.get('content-type')
-        debugger;
-        console.log('getting buffer from bg response', resp.status, type);
-        const buffer = await resp.arrayBuffer();
-        return base64ArrayBuffer(buffer, type);
-        // return dataBuffer.toString('base64')
     }
 }
