@@ -1,4 +1,5 @@
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   pages: {
@@ -38,8 +39,9 @@ module.exports = {
   },
   configureWebpack: {
     devtool: process.env.NODE_ENV === 'development' ? 'cheap-source-map' : 'source-map',
-    plugins: [
-      // new BundleAnalyzerPlugin()
-    ]
+    plugins: [new CopyPlugin({
+      // Use copy plugin to copy *.wasm to output folder.
+      patterns: [{ from: 'node_modules/onnxruntime-web/dist/*.wasm', to: 'wasm/[name].[ext]' }]
+    })]
   },
 };

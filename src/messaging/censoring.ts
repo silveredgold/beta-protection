@@ -1,7 +1,7 @@
 import { CSSManager } from "@/content-scripts/cssManager";
 import { IPreferences, loadPreferencesFromStorage, toRaw } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
-import { getDomain } from "@/util";
+import { base64ArrayBuffer, getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
 
 export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
@@ -20,19 +20,17 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
             requestType = "redoCensor";
         }
         const rawPrefs = toRaw(preferences);
-        /*console.log(`prefs as sent:`, preferences);
-        console.log(`raw prefs sent`, rawPrefs); */
-            ctx.socketClient.sendObj({
-                version: ctx.version,
-                msg: requestType,
-                url: img,
-                tabid: message['tabId'] ?? sender.tab!.id,
-                id: message.id,
-                priority: message.priority,
-                preferences: rawPrefs,
-                type: message.type,
-                domain: getDomain(message.domain, preferences)
-            });
+        ctx.socketClient.sendObj({
+            version: ctx.version,
+            msg: requestType,
+            url: img,
+            tabid: message['tabId'] ?? sender.tab!.id,
+            id: message.id,
+            priority: message.priority,
+            preferences: rawPrefs,
+            type: message.type,
+            domain: getDomain(message.domain, preferences)
+        });
     }
 }
 export const MSG_INJECT_CSS: RuntimeEvent<void> = {
@@ -76,5 +74,19 @@ export const MSG_INJECT_SUBLIMINAL_CSS: RuntimeEvent<void> = {
           await css.removeSubliminal();
           await css.addSubliminal();
         }
+    }
+}
+
+export const MSG_IMAGE_DATA : RuntimeEvent<string> = {
+    event: 'getImageData',
+    handler: async (msg, sender, ctx) => {
+        console.log('fetching path', msg.path);
+        const resp = await fetch(msg.path, {credentials: 'include'});
+        const type = resp.headers.get('content-type')
+        debugger;
+        console.log('getting buffer from bg response', resp.status, type);
+        const buffer = await resp.arrayBuffer();
+        return base64ArrayBuffer(buffer, type);
+        // return dataBuffer.toString('base64')
     }
 }

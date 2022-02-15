@@ -4,7 +4,7 @@
   "homepage_url": "https://github.com/silveredgold/beta-protection/",
   "description": "A Chrome extension companion to the Beta Safety app, censoring NSFW images as you view them.",
   "web_accessible_resources": [{
-    "resources": ["images/*", "*.js", "*.json", "*.jpg", "*.png", "*.gif", "*.mp4"],
+    "resources": ["images/*", "*.js", "*.json", "*.jpg", "*.png", "*.gif", "*.mp4", "*.wasm"],
     "matches": ["<all_urls>"]
   }],
   "default_locale": "en",
@@ -43,12 +43,16 @@
     "open_in_tab": true
   },
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' data: ws:"
+    "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' data: ws: http: https:",
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; child-src 'self';"
   },
   "content_scripts": [{
     "run_at": "document_start",
     "matches": ["<all_urls>"],
     "all_frames": false,
     "js": ["js/content-script.js"]
-  }]
+  }],
+  "sandbox": {
+    "pages": ["ai-runtime.html"]
+  }
 }
