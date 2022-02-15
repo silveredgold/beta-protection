@@ -122,6 +122,25 @@ const buildObserver = (purifier: Purifier) => {
 	return observer;
 }
 
+// const onnxCensorImage = async (img: HTMLImageElement, origSrc: string) => {
+// 	const fetchBuffer = await browser.runtime.sendMessage({msg: 'getImageData', path: origSrc});
+// 	debugger;
+// 	const canvas = document.createElement('canvas');
+// 	canvas.toggleAttribute('crossorigin');
+// 	const context = canvas.getContext('2d');
+// 	canvas.width = img.width;
+// 	canvas.height = img.height;
+// 	context?.drawImage(img, 0, 0 );
+// 	// const myData = context?.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
+// 	debugger;
+// 	const url = canvas.toDataURL();
+// 	const svc = await AIService.create();
+// 	console.log('got svc', svc, fetchBuffer);
+// 	const result = await svc.run(fetchBuffer);
+// 	console.log(result);
+// 	return result!;
+// }
+
 const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => {
 	if(request.msg === CMENU_REDO_CENSOR && lastClickElement) {
 		lastClickElement.classList.add("redoRequest");
@@ -135,6 +154,10 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => 
 		} else {
 			console.debug('running purifier on single element');
 			currentContext?.purifier?.censorImage(lastClickElement as HTMLImageElement, true);
+			// const origSrc = lastClickElement.getAttribute('censor-src') ?? lastClickElement.getAttribute('src');
+			// onnxCensorImage(lastClickElement as HTMLImageElement, origSrc!).then(res => {
+			// 	console.log('ai result', res);
+			// });
 		}
 		
 	}

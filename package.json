@@ -11,17 +11,14 @@
   "dependencies": {
     "@zip.js/zip.js": "^2.4.3",
     "autoprefixer": "^9",
-    "axios": "^0.20.0",
     "core-js": "^3.6.5",
     "idb": "^7.0.0",
     "mitt": "^3.0.0",
     "postcss": "^7",
     "sockette": "^2.0.6",
     "throttle-debounce": "^3.0.1",
-    "vue": "next",
-    "vue-class-component": "next",
-    "vue-property-decorator": "rc",
-    "vue-router": "next"
+    "vue": "latest",
+    "vue-router": "latest"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.177",
@@ -41,6 +38,7 @@
     "@vue/eslint-config-airbnb": "^5.0.2",
     "@vue/eslint-config-typescript": "^7.0.0",
     "babel-eslint": "^10.1.0",
+    "copy-webpack-plugin": "6",
     "crx-webpack-plugin": "^0.1.6",
     "eslint": "^6.7.2",
     "eslint-plugin-import": "^2.20.2",
