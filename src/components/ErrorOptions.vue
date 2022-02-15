@@ -22,7 +22,7 @@ import { loadPreferencesFromStorage, IPreferences, OperationMode } from '../pref
 import { updateUserPrefs } from '../options/services';
 
 const props = defineProps<{
-    preferences: Ref<IPreferences>
+    preferences: IPreferences
 }>();
 
 const notif = useNotification();

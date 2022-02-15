@@ -1,6 +1,6 @@
 <template>
-    <n-card title="Backend Connection Status" size="small">
-        <template #header-extra></template>
+    <n-card size="small">
+        <template v-if="!compact" #header>Backend Connection Status</template>
         <n-result
             :status="connected ? 'success' : 'warning'"
             :title="connected ? 'Connected' : 'Error'"
@@ -19,6 +19,10 @@ import { NCard, NButton, NResult } from "naive-ui";
 import { debounce } from "throttle-debounce";
 import { WebSocketClient } from '@/transport/webSocketClient';
 import browser from 'webextension-polyfill';
+
+const props = defineProps<{
+    compact?: boolean
+}>()
 
 const response = ref<{ status?: number }>({});
 const connected = ref(false);

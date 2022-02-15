@@ -10,15 +10,28 @@
       <n-avatar :src="iconSrc" />
     </template>
     <template #extra>
-      <n-space>
-        <n-button size="small" @click="openSettings">
-            <n-icon size="25" :component="Settings" />
-        </n-button>
+      <n-space item-style="display: flex;" justify="end" :vertical="true">
+        <n-popover trigger="hover" placement="left">
+            <template #trigger>
+                <n-button size="small" @click="openStatistics">
+                    <n-icon size="25" :component="StatsChart" />
+                </n-button>
+            </template>
+            Open Statistics
+        </n-popover>
+        <n-popover trigger="hover" placement="left">
+            <template #trigger>
+                <n-button size="small" @click="openSettings">
+                    <n-icon size="25" :component="Settings" />
+                </n-button>
+            </template>
+            Open Settings
+        </n-popover>
       </n-space>
     </template>
     <!-- <template #footer>Ensure you already have Beta Safety running in the background!</template> -->
   </n-page-header>
-  <connection-status />
+  <connection-status :compact="true" />
   <mode-switch />
   <video-options :preferences="prefs" :compact="true" />
   </n-card>
@@ -29,10 +42,11 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, darkTheme, NGlobalStyle, NConfigProvider, NNotificationProvider, NPageHeader, NAvatar, NSpace, NIcon, GlobalThemeOverrides, NCard } from "naive-ui";
-import { Settings } from "@vicons/ionicons5";
-import VideoOptions from "../components/VideoOptions.vue";
-import ModeSwitch from "../components/ModeSwitch.vue";
+import { NButton, darkTheme, NGlobalStyle, NConfigProvider, NNotificationProvider, NPageHeader, NAvatar, NSpace, NIcon, NPopover, NCard } from "naive-ui";
+import { Settings, StatsChart } from "@vicons/ionicons5";
+import VideoOptions from "@/components/VideoOptions.vue";
+import ModeSwitch from "@/components/ModeSwitch.vue";
+import { openSettings, openStatistics } from "@/components/util"
 import { IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
 import { debounce } from "throttle-debounce";
 import { computed, onBeforeMount, provide, reactive, watch } from "vue";
@@ -43,14 +57,6 @@ import browser from 'webextension-polyfill';
 
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
-// const notif = useNotification();
-const openSettings = () => {
-  // if (browser.runtime.openOptionsPage) {
-    // chrome.runtime.openOptionsPage();
-  // } else {
-    window.open(browser.runtime.getURL('options.html'));
-  // }
-}
 
 // loading
 const getCurrentPrefs = async () => {
@@ -120,6 +126,6 @@ onBeforeMount(async () => {
 <style>
 html {
   width: 500px;
-  height: 500px;
+  height: 540px;
 }
 </style>

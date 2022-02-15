@@ -141,7 +141,7 @@ import { updateUserPrefs, userPrefs } from "../options/services";
 import { toTitleCase } from "@/util";
 
 const props = defineProps<{
-    preferences: Ref<IPreferences>
+    preferences: IPreferences
 }>()
 
 const notif = useNotification();

@@ -18,6 +18,12 @@ module.exports = {
       entry: './src/placeholders/main.ts',
       title: 'Placeholder Store',
       filename: 'store.html'
+    },
+    store: {
+      template: 'public/browser-extension.html',
+      entry: './src/views/statistics.ts',
+      title: 'Statistics',
+      filename: 'statistics.html'
     }
   },
   pluginOptions: {

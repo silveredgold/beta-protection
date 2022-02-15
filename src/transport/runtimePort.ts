@@ -16,7 +16,7 @@ export class RuntimePortManager {
 
     } 
 
-    sendMessage = (msg: object, id: string, src: string) => {
+    sendMessage = (msg: object, id: string, src?: string) => {
         if (this.ports.has(id)) {
             const port = this.ports.get(id);
             console.log('dedicated port transport found, sending message', port, msg)
