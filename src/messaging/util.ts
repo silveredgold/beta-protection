@@ -38,7 +38,6 @@ export const MSG_IMAGE_DATA : RuntimeEvent<string> = {
         console.log('fetching path', msg.path);
         const resp = await fetch(msg.path, {credentials: 'include'});
         const type = resp.headers.get('content-type')
-        debugger;
         console.log('getting buffer from bg response', resp.status, type);
         const buffer = await resp.arrayBuffer();
         return base64ArrayBuffer(buffer, type);
