@@ -206,3 +206,23 @@ export function base64ArrayBuffer(arrayBuffer: ArrayBuffer, mimeType?: string|nu
   }
   return base64
 }
+
+export const setModeBadge = (mode: OperationMode, tabId?: number) => {
+  const modeDetails = mode == OperationMode.Disabled
+    ? {text: '❌', color: 'red', title: 'Disabled'}
+    : mode == OperationMode.Enabled
+      ? {text: '✔', color: 'green', title: 'Enabled'}
+      : {text: '💡', color: 'silver', title: 'On Demand Mode'}
+    
+    try {
+      if (tabId) {
+        browser.action.setBadgeText({ text: modeDetails.text, tabId });
+        browser.action.setBadgeBackgroundColor({color: modeDetails.color, tabId});
+        browser.action.setTitle({title: `Beta Protection - ${modeDetails.title}`, tabId});
+      } else {
+        browser.action.setBadgeText({ text: modeDetails.text });
+        browser.action.setBadgeBackgroundColor({color: modeDetails.color});
+        browser.action.setTitle({title: `Beta Protection - ${modeDetails.title}`});
+      }
+    } catch {}
+}

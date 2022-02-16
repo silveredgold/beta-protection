@@ -94,6 +94,25 @@ export class FileSystemClient {
             }
         }];
     }
+
+    public get jsonFiles(): FilePickerAcceptType[] {
+        return [{
+            description: 'JSON Files',
+            accept: {
+                'text/json': ['.json']
+            }
+        }];
+    }
+
+    public saveTextFile = async (content: string, types?: FilePickerAcceptType[]) => {
+        types = types ?? this.textFiles;
+        const handle = await window.showSaveFilePicker({ types });
+        const writable = await handle.createWritable();
+        // Write the contents of the file to the stream.
+        await writable.write(content);
+        // Close the file and write the contents to disk.
+        await writable.close();
+    }
     
 }
 

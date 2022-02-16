@@ -1,3 +1,10 @@
+export interface IOverride {
+    id: string;
+    key: string;
+    allowedModes: OperationMode[],
+    preferences: Partial<IPreferences>
+}
+
 export interface IPreferences {
     mode: OperationMode;
     exposed: BodyCensorModes;

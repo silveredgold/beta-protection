@@ -45,6 +45,19 @@ export const MSG_IMAGE_DATA : RuntimeEvent<string> = {
     }
 }
 
+export const MSG_UPDATE_PREFS : RuntimeEvent<void> = {
+    event: 'setBackendPreferences',
+    handler: async (msg, sender, ctx) => {
+        const prefs = msg.preferences;
+        ctx.socketClient.send(JSON.stringify({
+            version: ctx.version,
+            msg: "updatePreferences",
+            preferences: prefs
+        }));
+    }
+
+}
+
 
 
 

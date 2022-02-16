@@ -33,7 +33,7 @@ const buildPort = () => {
 		handleMessage(msg, port.sender);
 	});
 	port.onDisconnect.addListener((port) => {
-		console.warn('runtime port disconnected', port);
+		console.log('runtime port disconnected', port);
 		if (currentContext) {
 			currentContext.port = buildPort();
 		}

@@ -134,10 +134,10 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, inject, onMounted, Ref, ref, toRefs, watch } from 'vue';
-import { NCard, NRadioGroup, NRadioButton, useNotification, NTabs, NTab, NTabPane, NSpace, NForm, NFormItem, NInput, NSelect, NInputGroup, NSlider, NThing, NCheckbox } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, CensorType, BodyCensorModes } from '@/preferences';
-import { updateUserPrefs, userPrefs } from "../options/services";
+import { inject, toRefs, watch } from 'vue';
+import { NCard, useNotification, NTabs, NTabPane, NSpace, NForm, NFormItem, NSelect, NInputGroup, NSlider, NThing, NCheckbox } from "naive-ui";
+import { IPreferences, CensorType, BodyCensorModes } from '@/preferences';
+import { updateUserPrefs } from "../options/services";
 import { toTitleCase } from "@/util";
 
 const props = defineProps<{

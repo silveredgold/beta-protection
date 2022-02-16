@@ -4,6 +4,7 @@ import { StickerService } from "@/services/sticker-service"
 import { WebSocketClient } from "./webSocketClient"
 import browser from 'webextension-polyfill';
 import { StatisticsService } from "@/services/statistics-service";
+import { setModeBadge } from "@/util";
 
 export type SocketEvent<Type> = {
     event: string;
@@ -73,6 +74,7 @@ export const preferencesEvent : SocketEvent<IPreferences> = {
             await savePreferencesToStorage(mergedPrefs, true);
             const newPrefs = await loadPreferencesFromStorage();
             log('new prefs as stored:', newPrefs);
+            setModeBadge(newPrefs.mode);
             return mergedPrefs;
         }
         return preferences;
@@ -96,5 +98,13 @@ export const resetStatisticsEvent : SocketEvent<void> = {
     handler: async (response, ctx) => {
         const success = parseInt(response.status) === 200;
         ctx.sendMessage({msg: "resetStatistics", reset: success}, "statistics:reset");
+    }
+}
+
+export const updatePreferencesEvent : SocketEvent<void> = {
+    event: 'updatePreferences',
+    handler: async (response, ctx) => {
+        const success = parseInt(response.status) === 200;
+        ctx.sendMessage({msg: 'updatePreferences', update: success}, "preferences:backend");
     }
 }

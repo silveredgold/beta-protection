@@ -88,13 +88,14 @@
           <template #header-extra>Be careful in here!</template>
         </n-collapse-item>
       </n-collapse>
+      <import-export :preferences="prefs" />
     </n-notification-provider>
     <n-global-style />
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, GlobalThemeOverrides, useOsTheme, NPopover, NAlert, NCard } from "naive-ui";
+import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, NSpace, useOsTheme, NPopover, NAlert } from "naive-ui";
 import { InformationCircleOutline, InformationCircle, StatsChart } from "@vicons/ionicons5";
 import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
@@ -114,6 +115,7 @@ import ErrorOptions from "@/components/ErrorOptions.vue";
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/placeholders/components/OpenStore.vue";
+import ImportExport from "@/components/ImportExport.vue";
 import { openStatistics } from "@/components/util";
 import { eventEmitter, ActionEvents } from "@/messaging";
 import browser from 'webextension-polyfill';

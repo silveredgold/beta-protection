@@ -74,7 +74,6 @@ browser.runtime.onInstalled.addListener((details) => {
 browser.runtime.onStartup.addListener(() => {
   //TODO: we need to do a settings sync here;
   initContextMenus();
-  initExtension();
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
@@ -112,26 +111,21 @@ browser.tabs.onUpdated.addListener((id, change, tab) => {
 
 browser.tabs.onUpdated.addListener(async (id, change, tab) => {
   const sendMsg = async(tabId: number, msg: object) => {
-    trySendEvent
     try {
       await browser.tabs.sendMessage(tabId, msg);
     } catch (e: any) {
       console.log('Failed to send tab update event to tab!', tabId, msg, e);
     }
-    
   }
   if (change.status === 'complete' && tab.id) {
     //caught a page load!
     // console.debug('page load detected, notifying content script!');
     console.debug('sending loaded message');
-    await sendMsg(tab.id, {msg: 'pageChanged:complete'});
-
-    // chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged'})
-    // chrome.runtime.sendMessage({msg: 'pageChanged'})
+    await trySendEvent({msg: 'pageChanged:complete'}, tab.id);
   } else if (change.status === 'loading' && tab.id) {
-    // chrome.tabs.sendMessage(tab.id, {msg: 'pageChanged:loading'});
     console.debug('sending loading message');
-    await sendMsg(tab.id, {msg: 'pageChanged:loading', url: change.url});
+    await trySendEvent({msg: 'pageChanged:loading', url: change.url}, tab.id);
+    // await sendMsg(tab.id, {msg: 'pageChanged:loading', url: change.url});
   }
 });
 
@@ -147,17 +141,35 @@ browser.tabs.onRemoved.addListener((id, removeInfo) => {
 
 /** UTILITY FUNCTIONS BELOW THIS, USED BY EVENTS ABOVE */
 
-function trySendEvent(msg: object) {
-  browser.runtime.sendMessage(msg).then((res) => {
-    console.debug('sent event message', res);
-  }).catch(e => {
-    console.warn("Failed to send preferences reload event. Likely there's just no listeners yet.", e);
-  });
-} 
+// function trySendEvent(msg: object) {
+//   browser.runtime.sendMessage(msg).then((res) => {
+//     console.debug('sent event message', res);
+//   }).catch(e => {
+//     console.warn("Failed to send preferences reload event. Likely there's just no listeners yet.", e);
+//   });
+// }
 
-function initExtension() {
+const trySendEvent = async (msg: object, tabId?: number) => {
+  if (tabId) {
+    try {
+      await browser.tabs.sendMessage(tabId, msg);
+    } catch (e: any) {
+      console.log('Failed to send tab update event to tab!', tabId, msg, e);
+    }
+  } else {
+    try {
+      await browser.runtime.sendMessage(msg);
+    } catch (e: any) {
+      console.warn("Failed to send preferences reload event. Likely there's just no listeners yet.", e);
+    }
+  }
+}
+
+function initExtension(syncPrefs: boolean = true) {
   getClient().then(client => {
-    client.sendObj({version: '0.5.9', msg: "getUserPreferences"});
+    if (syncPrefs) {
+      client.sendObj({version: '0.5.9', msg: "getUserPreferences"});
+    }
     client.sendObj({
       version: '0.5.9',
        msg: "detectPlaceholdersAndStickers"

@@ -2,6 +2,7 @@ import { toTitleCase } from "@/util";
 import { CensorType, IPreferences, OperationMode, rawPreferences } from "./types";
 import clone from "just-clone";
 import browser from 'webextension-polyfill';
+import { MSG_UPDATE_PREFS } from "@/messaging";
 
 
 export async function loadPreferencesFromStorage(): Promise<IPreferences> {
@@ -12,6 +13,36 @@ export async function loadPreferencesFromStorage(): Promise<IPreferences> {
 export async function savePreferencesToStorage(prefs: IPreferences, skipClone: boolean = false): Promise<void> {
     const clonedPrefs = skipClone ? prefs : clone(prefs);
     await browser.storage.local.set({ 'preferences': clonedPrefs });
+}
+
+export async function mergeNewPreferences(prefs: IPreferences): Promise<void> {
+    const clonedPrefs = clone(prefs);
+    
+    const storedPrefs = await loadPreferencesFromStorage();
+    const mergedPrefs = {
+        ...defaultPrefs,
+        ...storedPrefs,
+        ...clonedPrefs
+    };
+    await savePreferencesToStorage(mergedPrefs, true);
+}
+
+export function updateBackendPreferences(prefs: IPreferences) {
+    return new Promise<boolean>((resolve, reject) => {
+        const port = browser.runtime.connect({name: 'preferences:backend'});
+        port.onMessage.addListener((msg, port) => {
+            if (msg.msg == 'updatePreferences') {
+                const success = msg.update as boolean;
+                port.disconnect();
+                resolve(success);
+            } else {
+                reject('wait what');
+                port.disconnect();
+            }
+        });
+        // console.debug('sending request on named port!');
+        port.postMessage({msg: MSG_UPDATE_PREFS.event});
+    });
 }
 
 

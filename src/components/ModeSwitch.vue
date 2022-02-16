@@ -19,11 +19,11 @@
 import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
 import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage } from '../preferences';
-import browser from 'webextension-polyfill';
+import { setModeBadge } from "@/util"
 
 const notif = useNotification();
 const mode: Ref<OperationMode> = ref("" as OperationMode);
-let prefs = reactive(null as IPreferences);
+let prefs = reactive({} as IPreferences);
 const getCurrentMode = async () => {
     var storeResponse = await loadPreferencesFromStorage();
     prefs = storeResponse;
@@ -33,15 +33,7 @@ const getCurrentMode = async () => {
 const updateMode = async () => {
     console.log(`saving new mode ${mode.value}`);
     prefs.mode = mode.value;
-    const modeText = (mode.value as OperationMode) == OperationMode.Disabled
-        ? '❌'
-        : (mode.value as OperationMode) == OperationMode.Enabled
-            ? '✅'
-            : '💡';
-    try {
-        browser.action.setBadgeText({ text: modeText });
-        browser.action.setBadgeBackgroundColor({color: 'silver'});
-    } catch {}
+    setModeBadge(mode.value);
     await savePreferencesToStorage(prefs);
 }
 
