@@ -24,7 +24,7 @@ From here, you can change the most common settings like the censoring mode and v
 
 From the options page, you can directly customize basically any part of the extension. Generally, the options page will explain what each option does so make sure to read the tips as you change things.
 
-### Placeholders
+## Placeholders
 
 When you first install the extension, there will not be any placeholders, so images will be replaced by a simple loading icon while they are being censored. It's generally more fun to have placeholder images appear while censoring is running, so we recommend importing some placeholders to get started.
 
@@ -34,9 +34,21 @@ Alternatively you can use the `Import Folder...` or `Import Single File...` butt
 
 > Make sure you enable any newly added placeholder categories in the _Placeholders and Stickers_ section in the options after you import new placeholders.
 
-### Context Menus
+## Context Menus
 
 On any page, you can right-click to get a few extra options to control the extension. 
 
 - *Enable censoring this tab* will force-enable censoring for the current tab, regardless of whether it otherwise would be. 
 - *Recheck images on this page* will re-run censoring on a censored page, mostly useful if a page still has placeholders left that seem to have failed.
+
+## Advanced
+
+### Subliminals
+
+Beta Protection has recreated the "subliminal messaging" feature from Beta Safety, but leaves it disabled by default. You can turn it on again in the *Danger Zone* section of the Options page, but be warned that it can be quite intrusive and does cause noticeable flashing on the screen.
+
+You can also load in your own custom messages to display in place of the default ones. Click the *Import custom messages...* button to load in a custom message file. The file should be a simple text file with one message per line. Once imported, the subliminal feature will draw from your new custom message list.
+
+### Import and Export
+
+You can also import and export your settings from the controls at the bottom of the Options page. Once you're happy with your setup, we'd recommend exporting to a file and keeping it somewhere handy in case you want to set Beta Protection up again. The export file will only include preferences, not your backend configuration or imported placeholders.

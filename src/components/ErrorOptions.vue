@@ -28,7 +28,7 @@ const props = defineProps<{
 const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
-const updatePrefs = inject(updateUserPrefs);
+const updatePrefs = inject(updateUserPrefs, undefined);
 
 watch(prefs, async (newMode, prevMode) => {
     updatePrefs?.();

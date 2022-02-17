@@ -48,8 +48,9 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	// 	currentContext?.observer?.stop();
 	// 	} catch {}
 	// }
-	const confPrefs = await browser.storage.local.get('preferences');
-	const preferences = confPrefs['preferences'] as IPreferences;
+	const preferences = await loadPreferencesFromStorage();
+	// const confPrefs = await browser.storage.local.get('preferences');
+	// const preferences = confPrefs['preferences'] as IPreferences;
 	const placeholders: any = await browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event});
 	// const newProm = new Promise(resolve => {
 	// 	browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event}, resp => resolve(resp));
@@ -238,6 +239,10 @@ const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 	// console.log('notified of page event', req);
 	if (req.msg === 'pageChanged:complete') {
 		console.log('evt: notified of page change, re-running!');
+		if (currentContext?.purifier?.ready === true && currentContext?.state.activeCensoring) {
+				dbg('censoring enabled, queuing purifier run from handlePageEvent');
+				currentContext.purifier.run();
+		}
 		if (currentContext?.observer && currentContext.state.activeCensoring) {
 			console.log('evt: found available observer, starting!');
 			currentContext.observer.forceStart(document.body);

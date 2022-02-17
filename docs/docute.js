@@ -37,6 +37,10 @@ new Docute({
             link: '/guide/usage'
           },
           {
+            title: 'Overrides',
+            link: '/guide/overrides'
+          },
+          {
             title: 'Android',
             link: '/guide/mobile'
           }

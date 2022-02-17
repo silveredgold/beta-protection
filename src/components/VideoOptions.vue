@@ -12,7 +12,7 @@
             <!-- <p>{{mode}}</p> -->
             Block will hide all videos from view, Blur will display videos but blur the video, Allow leaves videos untouched.
         </template>
-        <n-thing title="Censor Level" description="Higher levels cause more blur" v-if="loaded && !compact">
+        <n-thing title="Censor Level" description="Higher levels cause more blur" v-if="loaded && !compact && prefs.videoCensorMode === 'Blur'">
             <n-slider
                 :min="1"
                 :max="10"
@@ -23,8 +23,8 @@
             />
         </n-thing>
         
-        <template #action>
-                    <n-thing v-if="loaded && !compact">
+        <template #action v-if="loaded && !compact && (prefs.autoAnimate !== undefined)">
+                    <n-thing>
                         <template #header>Animate GIFs</template>
                         <!-- <template #description>Attempt to automatically animate GIFs.</template> -->
                         Attempt to automatically animate GIFs. This is very intensive, can take a very long time, and will not always work at all.
@@ -50,16 +50,15 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    compact: false,
-    preferences: {}
+    compact: false
 });
 
 const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
-const updatePrefs = inject(updateUserPrefs);
+const updatePrefs = inject(updateUserPrefs, undefined);
 
-const loaded = computed(() => prefs.value !== {});
+const loaded = computed(() => prefs.value !== undefined);
 
 watch(prefs, async (newMode, prevMode) => {
     updatePrefs?.();

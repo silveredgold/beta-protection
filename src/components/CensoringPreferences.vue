@@ -152,7 +152,7 @@ const sliderMarks = {
 }
 const { preferences } = toRefs(props);
 const prefs = preferences;
-const updatePrefs = inject(updateUserPrefs);
+const updatePrefs = inject(updateUserPrefs, undefined);
 console.log(`injected prefs: ${JSON.stringify(preferences.value)}`);
 console.log(`injected updater: ${!!updatePrefs}`);
 
@@ -164,7 +164,7 @@ const eyeCensorTypes = [{label: 'Nothing', value: 'nothing'}, {label: 'Black Bar
 
 watch(prefs, async (newMode, prevMode) => {
     console.log(`prefs watch: ${prevMode}->${newMode}`);
-    updatePrefs!();
+    updatePrefs?.();
 }, {deep: true});
 
 </script>

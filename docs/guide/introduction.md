@@ -32,6 +32,10 @@ Some parts of the original extension were a little more complex to set up than t
 
 Plus, Beta Protection allows you to change some settings that Beta Safety didn't expose as options at all, like where your backend is running or what messages the subliminal messages feature would show.
 
+#### Additional features
+
+Beta Protection (at time of writing) supports all the same features as Beta Safety, but includes a few extras of its own. For example, overrides can be used to enforce censoring options, and Beta Protection includes more fine-grained controls for on-demand censoring, among others.
+
 #### Fully open source, and more extensible
 
 **At the time of writing**, Beta Safety is not open source and is difficult to modify even for developers. Beta Protection is fully open-source, published under the GPLv3 license on GitHub. It's also intended to be more scalable and flexible than Beta Safety is.

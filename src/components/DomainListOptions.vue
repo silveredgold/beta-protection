@@ -3,7 +3,7 @@
         <!-- <template #header-extra></template> -->
         <n-tabs type="segment">
             <n-tab-pane name="allow-list" tab="Allowed">
-                <div v-if="prefs">
+                <div>
                     <n-list bordered>
                         <template #header>
                             These sites will <strong>not</strong> be censored, regardless of mode!<br />
@@ -26,7 +26,7 @@
                 </div>
             </n-tab-pane>
             <n-tab-pane name="force-list" tab="Forced">
-                <div v-if="prefs">
+                <div>
                     <n-list bordered>
                         <template #header >
                             These sites will be automatically censored, even in On Demand mode.<br />
@@ -61,15 +61,20 @@ import { loadPreferencesFromStorage, IPreferences, OperationMode, CensorType, Bo
 import { updateUserPrefs, userPrefs } from "../options/services";
 import { toTitleCase } from "../util";
 
+// const props = defineProps<{
+//     preferences: IPreferences
+// }>()
 const props = defineProps<{
-    preferences: IPreferences
-}>()
+    allowList: string[],
+    forceList: string[]
+}>();
 
 const notif = useNotification();
 
-const { preferences } = toRefs(props);
-const prefs = preferences;
+// const { preferences } = toRefs(props);
+// const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
+const { allowList, forceList} = toRefs(props)
 
 const newMatch = ref("");
 const addForced = () => {
@@ -81,12 +86,16 @@ const addAllow = () => {
     newMatch.value = '';
 }
 
-watch(prefs, async (newMode, prevMode) => {
+watch(allowList, async (newMode, prevMode) => {
     updatePrefs!();
 }, { deep: true });
 
-const allowed = computed(() => prefs.value.allowList);
-const forced = computed(() => prefs?.value.forceList);
+watch(forceList, async (newMode, prevMode) => {
+    updatePrefs!();
+}, { deep: true });
+
+const allowed = computed(() => allowList?.value ?? []);
+const forced = computed(() => forceList?.value ?? []);
 
 </script>
 <style>
