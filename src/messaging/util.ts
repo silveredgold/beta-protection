@@ -58,6 +58,16 @@ export const MSG_UPDATE_PREFS : RuntimeEvent<void> = {
 
 }
 
+export const MSG_FORWARDING : RuntimeEvent<void> = {
+    event: 'publishEvent',
+    handler: async (msg, sender, ctx) => {
+        if (msg.event) {
+            const newEvent = {msg: msg.event, ...msg};
+            await browser.runtime.sendMessage(newEvent);
+        }
+    }
+}
+
 
 
 

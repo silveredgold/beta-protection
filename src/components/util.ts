@@ -7,3 +7,7 @@ export const openSettings = () => {
 export const openStatistics = () => {
     window.open(browser.runtime.getURL('statistics.html'));
 }
+
+export const openOverrides = () => {
+    window.open(browser.runtime.getURL('override.html'));
+}

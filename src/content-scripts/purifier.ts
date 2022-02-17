@@ -108,7 +108,11 @@ export class Purifier {
         const elements = document.body.getElementsByTagName("img");
         const bgElements = document.body.getElementsByTagName("*");
         //images first
-        const targetEls = this.discoverImages([...elements]);
+        const elementArr: HTMLImageElement[] = []
+        for (const elem of elements) {
+            elementArr.push(elem);
+        }
+        const targetEls = this.discoverImages(elementArr);
         for (const el of targetEls) {
             this.censorImage(el)
         }
@@ -246,6 +250,7 @@ export class Purifier {
             type: type,
             domain: getDomain(this._domain, this._hideDomains)
         };
+        // console.debug('sending censor request', msg);
         const port = browser.runtime.connect({name: id});
         if (port) {
             // console.log('got named port!')

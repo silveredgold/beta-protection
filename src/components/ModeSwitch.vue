@@ -2,12 +2,11 @@
     <n-card title="Censoring Mode" size="small">
         <!-- <template #header-extra>Backend Host</template> -->
         <div>
-            
             <n-radio-group v-model:value="mode" name="left-size" size="small" style="margin-bottom: 12px;">
-    <n-radio-button value="enabled">Enabled</n-radio-button>
-    <n-radio-button value="onDemand">On Demand</n-radio-button>
-    <n-radio-button value="disabled">Disabled</n-radio-button>
-  </n-radio-group>
+                <n-radio-button :disabled="allowedModes.length > 0 && !allowedModes.includes(OperationMode.Enabled)" value="enabled">Enabled</n-radio-button>
+                <n-radio-button :disabled="allowedModes.length > 0 && !allowedModes.includes(OperationMode.OnDemand)" value="onDemand">On Demand</n-radio-button>
+                <n-radio-button :disabled="allowedModes.length > 0 && !allowedModes.includes(OperationMode.Disabled)" value="disabled">Disabled</n-radio-button>
+            </n-radio-group>
         </div>
         <template #footer>
             <!-- <p>{{mode}}</p> -->
@@ -20,15 +19,23 @@ import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
 import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage } from '../preferences';
 import { setModeBadge } from "@/util"
+import { OverrideService } from '@/services/override-service';
 
 const notif = useNotification();
 const mode: Ref<OperationMode> = ref("" as OperationMode);
 let prefs = reactive({} as IPreferences);
 const getCurrentMode = async () => {
-    var storeResponse = await loadPreferencesFromStorage();
+    let storeResponse = await loadPreferencesFromStorage();
+    let svc = await OverrideService.create();
+    if (svc && svc.active) {
+        console.debug('settings allowed modes', svc.current?.allowedModes);
+        allowedModes.value = svc.current!.allowedModes;
+    }
     prefs = storeResponse;
     mode.value = storeResponse.mode;
 }
+
+const allowedModes: Ref<OperationMode[]> = ref([]);
 
 const updateMode = async () => {
     console.log(`saving new mode ${mode.value}`);

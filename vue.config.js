@@ -19,11 +19,17 @@ module.exports = {
       title: 'Placeholder Store',
       filename: 'store.html'
     },
-    store: {
+    statistics: {
       template: 'public/browser-extension.html',
       entry: './src/views/statistics.ts',
       title: 'Statistics',
       filename: 'statistics.html'
+    },
+    overrides: {
+      template: 'public/browser-extension.html',
+      entry: './src/views/override.ts',
+      title: 'Config Override',
+      filename: 'override.html'
     }
   },
   pluginOptions: {

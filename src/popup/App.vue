@@ -11,7 +11,16 @@
     </template>
     <template #extra>
       <n-space item-style="display: flex;" justify="end" :vertical="true">
-        <n-popover trigger="hover" placement="left">
+        <n-button-group>
+          <n-popover trigger="hover" placement="bottom">
+            <template #trigger>
+                <n-button size="small" @click="openOverrides">
+                    <n-icon size="25" :component="LockClosed" />
+                </n-button>
+            </template>
+            Open Overrides
+        </n-popover>
+        <n-popover trigger="hover" placement="bottom">
             <template #trigger>
                 <n-button size="small" @click="openStatistics">
                     <n-icon size="25" :component="StatsChart" />
@@ -19,7 +28,7 @@
             </template>
             Open Statistics
         </n-popover>
-        <n-popover trigger="hover" placement="left">
+        <n-popover trigger="hover" placement="bottom">
             <template #trigger>
                 <n-button size="small" @click="openSettings">
                     <n-icon size="25" :component="Settings" />
@@ -27,13 +36,16 @@
             </template>
             Open Settings
         </n-popover>
+        </n-button-group>
       </n-space>
     </template>
     <!-- <template #footer>Ensure you already have Beta Safety running in the background!</template> -->
   </n-page-header>
   <connection-status :compact="true" />
   <mode-switch />
-  <video-options :preferences="prefs" :compact="true" />
+  <overridable-option :option="currentOverride?.preferences?.videoCensorMode">
+    <video-options :preferences="prefs" :compact="true" />
+  </overridable-option>
   </n-card>
   </n-notification-provider>
   <n-global-style />
@@ -42,27 +54,32 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, darkTheme, NGlobalStyle, NConfigProvider, NNotificationProvider, NPageHeader, NAvatar, NSpace, NIcon, NPopover, NCard } from "naive-ui";
-import { Settings, StatsChart } from "@vicons/ionicons5";
+import { NButton, NButtonGroup, darkTheme, NGlobalStyle, NConfigProvider, NNotificationProvider, NPageHeader, NAvatar, NSpace, NIcon, NPopover, NCard } from "naive-ui";
+import { Settings, StatsChart, LockClosed } from "@vicons/ionicons5";
 import VideoOptions from "@/components/VideoOptions.vue";
 import ModeSwitch from "@/components/ModeSwitch.vue";
-import { openSettings, openStatistics } from "@/components/util"
-import { IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
+import { openSettings, openStatistics, openOverrides } from "@/components/util"
+import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
 import { debounce } from "throttle-debounce";
-import { computed, onBeforeMount, provide, reactive, watch } from "vue";
+import { computed, onBeforeMount, provide, reactive, ref, Ref, watch } from "vue";
 import { updateUserPrefs } from "@/options/services";
 import ConnectionStatus from "../components/ConnectionStatus.vue";
 import { themeOverrides } from "../util";
 import browser from 'webextension-polyfill';
+import { OverrideService } from "@/services/override-service";
+import { OverridableOption } from "@/components/overrides";
 
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
+
+const currentOverride: Ref<IOverride|undefined> = ref(undefined);
 
 // loading
 const getCurrentPrefs = async () => {
   var storeResponse = await loadPreferencesFromStorage();
   console.log(`popup loaded prefs:`, storeResponse);
-  // prefs = reactive(storeResponse);
+  let overrideService = await OverrideService.create();
+  currentOverride.value = overrideService.current;
   return storeResponse;
 }
 

@@ -12,6 +12,14 @@
           <n-space item-style="display: flex;" justify="end">
             <n-popover trigger="hover" placement="bottom">
               <template #trigger>
+                  <n-button @click="openOverrides">
+                      <n-icon size="30" :component="LockOpen" />
+                  </n-button>
+              </template>
+              Open Overrides
+            </n-popover>
+            <n-popover trigger="hover" placement="bottom">
+              <template #trigger>
                   <n-button @click="openStatistics">
                       <n-icon size="30" :component="StatsChart" />
                   </n-button>
@@ -31,19 +39,25 @@
         <template #footer>To change the censoring mode, use the popup from your extension toolbar!</template>
       </n-page-header>
       <connection-status :style="{marginBottom: '2em'}" />
-      <n-collapse :style="{ marginTop: '1em', marginBottom: '1em', padding: '0.5em'}">
+      <n-collapse :style="{ marginTop: '1em', marginBottom: '1em', padding: '0.5em'}" style="width: unset;">
         <n-collapse-item title="Backend Host" name="backend-host">
           <backend-host class="control-group" />
           <privacy-options :preferences="prefs" class="control-group" />
           <template #header-extra>Set where your backend is running</template>
         </n-collapse-item>
         <n-collapse-item title="Censoring Options" name="censoring-options" v-if="prefs">
-          <censoring-preferences :preferences="prefs" class="control-group" />
-          <error-options :preferences="prefs" class="control-group" />
+          <overridable-option :option="currentOverride?.preferences?.covered" title="Censoring Preferences">
+            <censoring-preferences :preferences="prefs" class="control-group" />
+          </overridable-option>
+          <overridable-option title="Error Display Preferences" :option="currentOverride?.preferences?.errorMode">
+            <error-options :preferences="prefs" class="control-group" />
+          </overridable-option>
           <template #header-extra>Fine tune the censoring</template>
         </n-collapse-item>
         <n-collapse-item title="Video Options" name="video-options" v-if="prefs">
-          <video-options :preferences="prefs" class="control-group" />
+          <overridable-option :option="currentOverride?.preferences?.videoCensorMode">
+            <video-options :preferences="prefs" class="control-group" />
+          </overridable-option>
           <template #header-extra>Choose video behaviour</template>
         </n-collapse-item>
         <n-collapse-item title="Placeholders and Stickers" name="placeholder-options" v-if="prefs">
@@ -79,7 +93,9 @@
           <template #header-extra>Add new placeholders</template>
         </n-collapse-item>
         <n-collapse-item title="Domain Lists" name="domain-options" v-if="prefs">
-          <domain-list-options :preferences="prefs" v-if="prefs" class="control-group" />
+          <overridable-option :option="currentOverride?.preferences?.allowList">
+            <domain-list-options :allow-list="prefs.allowList" :force-list="prefs.forceList" v-if="prefs" class="control-group" />
+          </overridable-option>
           <template #header-extra>Edit your allowed and forced sites</template>
         </n-collapse-item>
         <n-collapse-item title="Danger Zone" name="danger=zone">
@@ -96,16 +112,15 @@
 
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, NSpace, useOsTheme, NPopover, NAlert } from "naive-ui";
-import { InformationCircleOutline, InformationCircle, StatsChart } from "@vicons/ionicons5";
+import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen } from "@vicons/ionicons5";
 import BackendHost from '../components/BackendHost.vue';
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
-import { defaultPrefs, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
+import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
 import { updateUserPrefs, userPrefs } from "./services";
 import CensoringPreferences from "../components/CensoringPreferences.vue";
 import VideoOptions from "../components/VideoOptions.vue";
-import PlaceholderOptions from "../components/placeholders/PlaceholderOptions.vue";
-import {PlaceholderUpload, BetaSafetyImport} from "../components/placeholders";
+import {PlaceholderUpload, BetaSafetyImport, PlaceholderOptions} from "@/components/placeholders";
 import StickerOptions from "../components/StickerOptions.vue";
 import SettingsReset from "../components/SettingsReset.vue";
 import ConnectionStatus from "../components/ConnectionStatus.vue";
@@ -116,10 +131,12 @@ import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/placeholders/components/OpenStore.vue";
 import ImportExport from "@/components/ImportExport.vue";
-import { openStatistics } from "@/components/util";
+import { openStatistics, openOverrides } from "@/components/util";
 import { eventEmitter, ActionEvents } from "@/messaging";
 import browser from 'webextension-polyfill';
 import mitt from "mitt";
+import {OverridableOption} from "@/components/overrides";
+import { OverrideService } from "@/services/override-service";
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
@@ -131,9 +148,13 @@ const events = mitt<ActionEvents>();
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
+const currentOverride: Ref<IOverride|undefined> = ref(undefined);
+
 const getCurrentPrefs = async () => {
-  var storeResponse = await loadPreferencesFromStorage();
+  let storeResponse = await loadPreferencesFromStorage();
   console.log(`options loaded prefs:`, storeResponse);
+  let overrideService = await OverrideService.create();
+  currentOverride.value = overrideService.current;
   // prefs = reactive(storeResponse);
   return storeResponse;
 }

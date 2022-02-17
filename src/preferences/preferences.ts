@@ -3,11 +3,23 @@ import { CensorType, IPreferences, OperationMode, rawPreferences } from "./types
 import clone from "just-clone";
 import browser from 'webextension-polyfill';
 import { MSG_UPDATE_PREFS } from "@/messaging";
+import { OverrideService } from "@/services/override-service";
 
 
 export async function loadPreferencesFromStorage(): Promise<IPreferences> {
-    const result = await browser.storage.local.get('preferences') as IPreferences;
-    return result['preferences'];
+    const result = await browser.storage.local.get('preferences');
+    const storedPrefs = result['preferences'] as IPreferences;
+    const overService = await OverrideService.create();
+    if (overService.active) {
+        const merged: IPreferences = {
+            ...storedPrefs,
+            ...overService.current?.preferences
+        };
+        if (!overService.current!.allowedModes.includes(storedPrefs.mode)) {
+            merged.mode = overService.current!.allowedModes[0];
+        }
+    }
+    return storedPrefs;
 }
 
 export async function savePreferencesToStorage(prefs: IPreferences, skipClone: boolean = false): Promise<void> {
