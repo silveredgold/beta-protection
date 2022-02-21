@@ -1,10 +1,6 @@
-import { generateUUID, isNodeSafe } from "@/util";
+import { generateUUID, isNodeSafe, dbg } from "@/util";
 import { Purifier } from "./purifier";
 import browser from 'webextension-polyfill';
-
-const dbg = (...data: any[]) => {
-    console.debug(...data);
-}
 
 export class PageObserver {
 
@@ -14,7 +10,7 @@ export class PageObserver {
             const observer = new PageObserver(purifier);
             return observer;
         }
-        return undefined;;
+        return undefined;
     }
     private _purifier: Purifier;
     private _observer!: MutationObserver;
@@ -61,7 +57,7 @@ export class PageObserver {
         // processed again if needed.
         mutations.forEach(mutation => {
             if (mutation.type == "childList" && [...mutation.addedNodes].some(n => n.nodeName == "IFRAME")) {
-                console.log('found an iframe! Injecting CSS');
+                dbg('found an iframe! Injecting CSS');
                 for (const iframe of [...mutation.addedNodes].filter(n => n.nodeName === 'IFRAME')) {
                     iframe.addEventListener('load', () => {
                         browser.runtime.sendMessage({'msg': 'injectCSS'});

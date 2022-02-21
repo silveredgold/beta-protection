@@ -2,7 +2,7 @@ import { getAvailablePlaceholders, getEnabledPlaceholders, loadPreferencesFromSt
 import { IPreferences, OperationMode } from "@/preferences/types";
 import { Purifier } from "./purifier";
 import { CensoringState, CensoringContext } from "./types";
-import { getDomain, hashCode, shouldCensor } from "@/util";
+import { getDomain, hashCode, shouldCensor, dbg, dbgLog } from "@/util";
 import { PageObserver } from "./observer";
 import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
 import { MSG_INJECT_SUBLIMINAL } from "@/messaging";
@@ -12,10 +12,6 @@ import { CMENU_RECHECK_PAGE, CMENU_REDO_CENSOR } from "@/events";
 let lastClickElement: HTMLElement|undefined|null;
 const safeList: number[] = [];
 let currentContext: CensoringContext|undefined;
-
-const dbg = (...data: any[]) => {
-	console.debug(...data);
-}
 
 const getCensoringState = async (): Promise<CensoringState> => {
 	
@@ -29,11 +25,11 @@ const getCensoringState = async (): Promise<CensoringState> => {
 const buildPort = () => {
 	const port = browser.runtime.connect();
 	port.onMessage.addListener((msg, port) => {
-		console.log('got runtime port message in content-script', msg);
+		dbgLog('got runtime port message in content-script', msg);
 		handleMessage(msg, port.sender);
 	});
 	port.onDisconnect.addListener((port) => {
-		console.log('runtime port disconnected', port);
+		dbgLog('runtime port disconnected', port);
 		if (currentContext) {
 			currentContext.port = buildPort();
 		}
@@ -69,7 +65,7 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 		purifier,
 		// port
 	};
-	console.debug('built new censoring context', context);
+	dbg('built new censoring context', context);
 	return context;
 }
 
@@ -198,7 +194,7 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => 
 		}
 
 	} else if (request.msg === "enableOnPage") {
-		console.log('forcing censored state to on');
+		console.log('Beta Protection = Forcing censored state to on');
 		currentContext?.observer?.stop();
 		try {
 			const censored = document.querySelectorAll(`[censor-state]`)
@@ -219,16 +215,8 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => 
 	}
 }
 
-const addToSafeList = (url: string) => {
-	dbg('repeat: adding url to safe list', url);
-	const hash = hashCode(url);
-	if (!safeList.includes(hash)) {
-		safeList.push(hash);
-	}
-}
-
 const configureListeners = () => {
-	console.log('evt: wiring up page event listeners');
+	dbgLog('evt: wiring up page event listeners');
 	browser.runtime.onMessage.addListener((req, sender) => {
 		handlePageEvent(req, sender);
 	});
@@ -250,13 +238,13 @@ const configureListeners = () => {
 const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 	// console.log('notified of page event', req);
 	if (req.msg === 'pageChanged:complete') {
-		console.log('evt: notified of page change, re-running!');
+		dbgLog('evt: notified of page change, re-running!');
 		if (currentContext?.purifier?.ready === true && currentContext?.state.activeCensoring) {
 				dbg('censoring enabled, queuing purifier run from handlePageEvent');
 				currentContext.purifier.run();
 		}
 		if (currentContext?.observer && currentContext.state.activeCensoring) {
-			console.log('evt: found available observer, starting!');
+			dbgLog('evt: found available observer, starting!');
 			currentContext.observer.forceStart(document.body);
 		}
 		if ((currentContext?.preferences.subliminal?.enabled ?? false) && currentContext?.state.activeCensoring) {
@@ -266,15 +254,8 @@ const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 			// this method ties it to the page censoring process, for better *and* worse
 			browser.runtime.sendMessage({msg: MSG_INJECT_SUBLIMINAL.event});
 		}
-		// if (currentContext?.port) {
-		// 	console.warn('running port disconnect from pageChanged!');
-		// 	currentContext.port.disconnect();
-		// }
-		// if (currentContext) {
-		// 	currentContext.observer?.stop();
-		// }
 		if (!currentContext) {
-			console.log('page loaded, but censoring not complete. Ignoring loaded event!')
+			console.debug('Beta Protection - Page loaded, but censoring not complete. Ignoring loaded event!')
 		} else {
 			// console.log('evt: page change notification triggering censoring run', window.location.href)
 			// runCensoringAsync(true).then(ctx => {

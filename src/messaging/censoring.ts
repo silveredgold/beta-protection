@@ -1,7 +1,7 @@
 import { CSSManager } from "@/services/css-manager";
 import { IPreferences, loadPreferencesFromStorage, toRaw } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
-import { getDomain } from "@/util";
+import { dbgLog, getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
 
 export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
@@ -16,7 +16,7 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
         }
         let requestType = "censorImage";
         if (preferences.autoAnimate || message.forceCensor) {
-            console.log('forcing to redo message type');
+            dbgLog('forcing to redo message type');
             requestType = "redoCensor";
         }
         const rawPrefs = toRaw(preferences);
@@ -38,7 +38,6 @@ export const MSG_INJECT_CSS: RuntimeEvent<void> = {
     handler: async (request, sender, ctx) => {
         console.debug('CSS injection request', sender)
         const tabId = sender.tab?.id;
-        // console.debug(`got injectCSS for ${tabId}`);
         if (tabId) {
           const prefs = (request.preferences as IPreferences) ?? await loadPreferencesFromStorage();
           const css = new CSSManager(tabId, prefs);

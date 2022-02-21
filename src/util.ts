@@ -141,8 +141,16 @@ export const getDomain = (location: string, prefs?: IPreferences|boolean) => {
     : location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
 }
 
-const dbg = (...data: any[]) => {
-	console.debug(...data);
+export const dbg = (...data: any[]) => {
+  if (__DEBUG__) {
+      console.debug(...data);
+  }
+}
+
+export const dbgLog = (...data: any[]) => {
+  if (__DEBUG__) {
+    console.log(...data);
+  }
 }
 
 /*

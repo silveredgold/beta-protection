@@ -1,4 +1,4 @@
-import { getDomain, hashCode, isValidUrl } from "@/util";
+import { dbg, dbgLog, getDomain, hashCode, isValidUrl } from "@/util";
 import { CensoringState, ImageStyleElement } from "./types";
 import { generateUUID, getRandom } from "@/util";
 import { debounce } from "throttle-debounce";
@@ -27,7 +27,7 @@ export class Purifier {
     }
 
     private queueStart = debounce(1000, () => {
-        console.log('debounce complete, running purifier');
+        dbgLog('debounce complete, running purifier');
         this._backlog = false;
         this._start();
     });
@@ -91,7 +91,6 @@ export class Purifier {
         if (this._placeholders.length && this._placeholders.length > 0) {
             try {
             const random = getRandom(this._placeholders);
-            // console.debug('selecting candidate placeholder', random, random.data?.size ?? -1);
             
             const src = PlaceholderService.toSrc(random);
             placeholder = src ? src : placeholder;
@@ -176,7 +175,7 @@ export class Purifier {
                 if (this.isUnsafe(el)) {
                     const domState = this.getVisibility(el);
                     if (domState.visible) {
-                        console.debug('dom: identified element as visible', el);
+                        dbg('dom: identified element as visible', el);
                         targetEls.push(el);
                     } else {
                         otherEls.push({el, center: domState.center});
@@ -189,8 +188,6 @@ export class Purifier {
             const yDiff = Math.abs(a.center.y)-Math.abs(b.center.y);
             return yDiff == 0 ? a.center.x-b.center.x : yDiff
         });
-        // console.log(otherEls.map(e => e.center.y));
-        // console.log(otherEls.map(e => e.center.x));
         return targetEls.concat(otherEls.map(e => e.el));
     }
 
@@ -218,15 +215,13 @@ export class Purifier {
 
     censorImage = (img: HTMLImageElement, runOnce: boolean = false) => {
         this.flattenSrc(img);
-        // console.debug('censorImage', img, img.complete, img.naturalWidth);
         if (runOnce || (img.complete && img.naturalWidth > 0)) {
             const url = this.normalizeSrcUrl(img);
-            // console.debug('running censorLoadedImage', img, runOnce);
             this.censorLoadedImage(url, img, runOnce ? true : (this._currentState && this._currentState.activeCensoring));
         } else if (!runOnce) {
             this.backlog = true;
         } else {
-            // console.debug('unmatched');
+            // dbgLog('unmatched');
         }
     }
 
@@ -256,10 +251,9 @@ export class Purifier {
                     img.width = img.clientWidth;
                 }
                 if (active) {
-                    console.debug('order: queuing censor', img);
                     const result = this._cache.getCensored({src: imageURL});
                     if (result) {
-                        console.debug('found matching cache result', imageURL);
+                        dbg('found matching cache result', imageURL);
                         img.src = result;
                         img.toggleAttribute('censor-placeholder', false);
                         img.setAttribute('censor-state', 'censored');
@@ -303,17 +297,15 @@ export class Purifier {
         if (false) {
 
         } else {
-            // console.debug('sending censor request', msg);
+            // dbg('sending censor request', msg);
             const port = browser.runtime.connect({name: id});
             if (port) {
-                // console.log('got named port!')
                 port.onMessage.addListener((msg, port) => {
                     handleCensorResult(msg, port, this._cache);
                 });
-                // console.debug('sending request on named port!');
                 port.postMessage(msg);
             } else if (this._port && !this._portFaulted) {
-                console.debug('using existing port for runtime message');
+                dbg('using existing port for runtime message');
                 try {
                     this._port.postMessage(msg);
                 } catch (e: any) {
@@ -344,7 +336,7 @@ export class Purifier {
                         if (this._currentState && this._currentState.activeCensoring) {
                             const result = this._cache.getCensored({src: imageURL});
                             if (result) {
-                                console.debug('found matching cache result', imageURL);
+                                dbgLog('found matching cache result', imageURL);
                                 (img.element as HTMLElement).style.backgroundImage = 'url("' + result + '")';
                                 (img.element as HTMLElement).toggleAttribute('censor-placeholder', false);
                             } else {
@@ -420,7 +412,6 @@ const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: Ima
     if(request.msg === "setSrc" && request.type === "normal") {
 		const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
 		if(requestElement){
-			// console.log(`finalizing purify for ${requestElement}`)
 			requestElement.setAttribute('src', request.censorURL);
 			requestElement.setAttribute('censor-state', 'censored');
 			requestElement.toggleAttribute('censor-placeholder', false);
@@ -428,11 +419,10 @@ const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: Ima
 		}
         port.disconnect();
 	} else if(request.msg === "setSrc" && request.type === "BG") {
-		console.log(`got background setSrc message! ${request.id}`)
+		dbgLog(`got background setSrc message on runtime port! ${request.id}`)
 		const requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
 		if(requestElement) {
 			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
-			// console.log(`finalizing BG purify for ${requestElement}`)
 			requestElement.setAttribute('censor-style', 'censored');
 			requestElement.toggleAttribute('censor-placeholder', false);
 			//TODO: should this remove the CSS classes?

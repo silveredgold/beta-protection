@@ -72,7 +72,9 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with: 
         body: |
-          This download just contains the "unpacked" extension files. You will still need to extract them on your PC and use Load Unpacked in your browser to install Beta Protection.
+          See [the installation docs](https://silveredgold.github.io/beta-protection/#/guide/installation) for full instructions on installing Beta Protection.
+
+          This is an extremely early preview build, and I cannot guarantee that you won't experience bugs.
         files: |
           ./extension/*.zip
           ./crx/*.crx

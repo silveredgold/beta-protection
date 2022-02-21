@@ -118,6 +118,7 @@ import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, co
 import { debounce } from "throttle-debounce";
 import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
 import { updateUserPrefs, userPrefs } from "./services";
+import {dbg, dbgLog} from "@/util";
 import CensoringPreferences from "../components/CensoringPreferences.vue";
 import VideoOptions from "../components/VideoOptions.vue";
 import {PlaceholderUpload, BetaSafetyImport, PlaceholderOptions} from "@/components/placeholders";
@@ -152,7 +153,7 @@ const currentOverride: Ref<IOverride|undefined> = ref(undefined);
 
 const getCurrentPrefs = async () => {
   let storeResponse = await loadPreferencesFromStorage();
-  console.log(`options loaded prefs:`, storeResponse);
+  dbgLog(`options loaded prefs:`, storeResponse);
   let overrideService = await OverrideService.create();
   currentOverride.value = overrideService.current;
   // prefs = reactive(storeResponse);
@@ -160,8 +161,6 @@ const getCurrentPrefs = async () => {
 }
 
 const updateFunc = debounce(1000, async (prefs) => {
-  // console.log(`persisting prefs`, prefs);
-  // console.log(`serialized prefs`, JSON.stringify(prefs));
   await savePreferencesToStorage(prefs);
 })
 
@@ -177,11 +176,11 @@ const store = reactive({
 const prefs = computed(() => store.preferences);
 
 watch(prefs, async (newMode, prevMode) => {
-    console.log('new mode', newMode);
+    dbgLog('new mode', newMode);
 }, {deep: true});
 
 const updatePrefs = async (preferences?: IPreferences) => {
-  console.log(`queuing prefs save`);
+  dbgLog(`queuing prefs save`);
   store.updatePreferences(preferences);
   return true;
 }

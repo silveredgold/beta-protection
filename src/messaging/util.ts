@@ -1,5 +1,5 @@
 import { MessageContext } from "@/events";
-import { base64ArrayBuffer } from "@/util";
+import { base64ArrayBuffer, dbgLog } from "@/util";
 import { Emitter } from "mitt";
 import { InjectionKey } from "vue";
 import browser from 'webextension-polyfill';
@@ -35,10 +35,10 @@ export const MSG_GET_STATISTICS: RuntimeEvent<void> = {
 export const MSG_IMAGE_DATA : RuntimeEvent<string> = {
     event: 'getImageData',
     handler: async (msg, sender, ctx) => {
-        console.log('fetching path', msg.path);
+        dbgLog('fetching path', msg.path);
         const resp = await fetch(msg.path, {credentials: 'include'});
         const type = resp.headers.get('content-type')
-        console.log('getting buffer from bg response', resp.status, type);
+        dbgLog('getting buffer from bg response', resp.status, type);
         const buffer = await resp.arrayBuffer();
         return base64ArrayBuffer(buffer, type);
         // return dataBuffer.toString('base64')

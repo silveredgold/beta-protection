@@ -4,7 +4,9 @@ import { DbClient } from "./db-client";
 import browser from 'webextension-polyfill';
 
 const dbg = (...data: any[]) => {
-    console.log(...data);
+    if (__DEBUG__) {
+        console.log(...data);
+    }
 }
 
 export class SubliminalService {

@@ -2,17 +2,13 @@ import { WebSocketClient } from "./transport/webSocketClient";
 import { cancelRequestsForId, processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
 import { getExtensionVersion } from "./util";
 import { RuntimePortManager } from "./transport/runtimePort";
-import { generateUUID } from "@/util";
+import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
 import { WebSocketRequestClient } from "./transport/webSocketPortClient";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 
 let currentClient: WebSocketClient | null;
-
-const dbg = (...data: any[]) => {
-  // console.debug(...data);
-}
 
 browser.runtime.onConnect.addListener((port) => {
   const portMsgListener = async (msg: any, port: browser.Runtime.Port) => {
@@ -137,17 +133,17 @@ browser.tabs.onUpdated.addListener(async (id, change, tab) => {
   if (change.status === 'complete' && tab.id) {
     //caught a page load!
     // console.debug('page load detected, notifying content script!');
-    console.debug('sending loaded message');
+    dbg('sending loaded message');
     await trySendEvent({msg: 'pageChanged:complete'}, tab.id);
   } else if (change.status === 'loading' && tab.id) {
-    console.debug('sending loading message');
+    dbg('sending loading message');
     await trySendEvent({msg: 'pageChanged:loading', url: change.url}, tab.id);
     // await sendMsg(tab.id, {msg: 'pageChanged:loading', url: change.url});
   }
 });
 
 browser.tabs.onRemoved.addListener((id, removeInfo) => {
-  console.log('tab removed');
+  dbg('tab removed', removeInfo);
   getClient().then(client => {
     portManager.closeForSrc(id.toString());
     cancelRequestsForId(id, client);
