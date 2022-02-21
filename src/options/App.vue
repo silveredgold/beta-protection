@@ -32,7 +32,7 @@
                   <n-icon size="30" :component="InformationCircleOutline" />
                 </n-button>
               </template>
-              <div class="medium-text">v{{extensionVersion}}</div>
+              <extension-info />
             </n-popover>
           </n-space>
         </template>
@@ -126,12 +126,13 @@ import StickerOptions from "../components/StickerOptions.vue";
 import SettingsReset from "../components/SettingsReset.vue";
 import ConnectionStatus from "../components/ConnectionStatus.vue";
 import DomainListOptions from "../components/DomainListOptions.vue";
-import { getExtensionVersion, themeOverrides } from "../util";
+import { themeOverrides } from "../util";
 import ErrorOptions from "@/components/ErrorOptions.vue";
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/placeholders/components/OpenStore.vue";
 import ImportExport from "@/components/ImportExport.vue";
+import ExtensionInfo from "@/components/ExtensionInfo.vue";
 import { openStatistics, openOverrides } from "@/components/util";
 import { eventEmitter, ActionEvents } from "@/messaging";
 import browser from 'webextension-polyfill';
@@ -141,7 +142,6 @@ import { OverrideService } from "@/services/override-service";
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
-const extensionVersion = getExtensionVersion();
 const events = mitt<ActionEvents>();
 // const notif = useNotification();
 

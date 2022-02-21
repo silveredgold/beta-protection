@@ -13,6 +13,14 @@ export function getExtensionVersion(): string {
     return _extensionVersion;
 }
 
+export async function getExtensionId(): Promise<string> {
+  const idResult = await browser.storage.local.get({'installationId': ''});
+  if (idResult['installationId']) {
+    return idResult['installationId'];
+  }
+  return '';
+}
+
 export function isValidUrl(url: string) {
     const http = (url.includes("http://") || url.includes("https://") || url.includes("data:image/") || url.includes("file://"));
     return http;
