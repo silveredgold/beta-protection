@@ -1,14 +1,17 @@
-import { isNodeSafe } from "@/util";
+import { generateUUID, isNodeSafe } from "@/util";
 import { Purifier } from "./purifier";
 import browser from 'webextension-polyfill';
 
+const dbg = (...data: any[]) => {
+    console.debug(...data);
+}
 
 export class PageObserver {
 
-    static create = (purifier: Purifier, safeList: number[]): PageObserver | undefined => {
+    static create = (purifier: Purifier): PageObserver | undefined => {
         if (window.MutationObserver) {
             //yay, setup callback for mutations
-            const observer = new PageObserver(purifier, safeList);
+            const observer = new PageObserver(purifier);
             return observer;
         }
         return undefined;;
@@ -16,18 +19,19 @@ export class PageObserver {
     private _purifier: Purifier;
     private _observer!: MutationObserver;
     runOnMutate: boolean = true;
-    private _hashList: number[];
+    // private _hashList: number[];
     private _element?: Node;
     private _options: MutationObserverInit = {childList: true, subtree: true, attributes: true, attributeOldValue : true, attributeFilter: ['src']};
     private _action: ((mutation: MutationRecord[]) => void) | undefined;
+    private _id: string;
 
     /**
      * thank god arrays are pass-by-ref or this would be a real PITA
      */
-    private constructor(purifier: Purifier, hashList: number[], action?: (mutation: MutationRecord[]) => void) {
+    private constructor(purifier: Purifier, action?: (mutation: MutationRecord[]) => void) {
         this._purifier = purifier;
         this._action = action;
-        this._hashList = hashList;
+        this._id = generateUUID();
         this.init();
     }
 
@@ -35,9 +39,15 @@ export class PageObserver {
         this._observer = new MutationObserver(this._action ?? this._defaultAction);
     }
 
+    private notCensorUpdate(mutation: MutationRecord): boolean {
+        return mutation.type !== "attributes" && mutation.attributeName !== "src" 
+            //&& !!((mutation.target as HTMLElement).getAttribute('censor-id'));
+    }
+
     private _defaultAction = (mutations: MutationRecord[]) => {
-        // console.debug('running default observer action', mutations);
-        if (this.runOnMutate) {
+        dbg('running default observer action', mutations);
+        if (this.runOnMutate && mutations.some(m => this.notCensorUpdate(m))) {
+            dbg('evt: running purifier from observer');
             this._purifier.run()
         }
 
@@ -51,7 +61,7 @@ export class PageObserver {
         // processed again if needed.
         mutations.forEach(mutation => {
             if (mutation.type == "childList" && [...mutation.addedNodes].some(n => n.nodeName == "IFRAME")) {
-                console.warn('found an iframe!');
+                console.log('found an iframe! Injecting CSS');
                 for (const iframe of [...mutation.addedNodes].filter(n => n.nodeName === 'IFRAME')) {
                     iframe.addEventListener('load', () => {
                         browser.runtime.sendMessage({'msg': 'injectCSS'});
@@ -60,9 +70,8 @@ export class PageObserver {
             }
             if (mutation.type === "attributes" && mutation.attributeName === "src") {
                 const target = mutation.target as Element;
-                // let safe = isSafe(mutation.target["src"], this._hashList);
-                const safe = isNodeSafe(mutation.target, this._hashList);
-                console.debug(`mutation running, checking for safe! ${safe}`, mutation.target);
+                const safe = isNodeSafe(mutation.target);
+                dbg(`mutation running, checking for safe! ${safe}`, this._id, mutation.target);
                 if (safe) {
                     // Do nothing since it's safe.
                 } else {

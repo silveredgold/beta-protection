@@ -4,6 +4,7 @@ import { getExtensionVersion } from "./util";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID } from "@/util";
 import browser from "webextension-polyfill";
+import { WebSocketRequestClient } from "./transport/webSocketPortClient";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 
@@ -32,10 +33,26 @@ browser.runtime.onConnect.addListener((port) => {
       return result;
     }
   };
+  const requestPortMsgListener = async (msg: any, port: browser.Runtime.Port) => {
+    const request = msg;
+    dbg('got port message', port.sender?.tab?.id, request)
+    const factory = async () => {
+      const client = await getRequestClient(port.name);
+      const version = getExtensionVersion();
+      return {
+        socketClient: client,
+        version
+      }
+    };
+    const result = await processMessage(request, port.sender!, factory);
+    
+    return result;
+  };
   if (port.name && port.sender?.tab?.id) {
     dbg('resource-specific runtime port opened!', port.name, port.sender.tab.id);
     portManager.addNamedPort(port, port.sender.tab.id.toString());
-    port.onMessage.addListener(portMsgListener);
+    const isRequestPort = /^[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?$/i.test(port.name);
+    port.onMessage.addListener(isRequestPort ? requestPortMsgListener : portMsgListener);
   }
   else if (port?.sender?.tab?.id) {
     //got a valid port from a tab
@@ -167,11 +184,12 @@ const trySendEvent = async (msg: object, tabId?: number) => {
 
 function initExtension(syncPrefs: boolean = true) {
   getClient().then(client => {
+    const eVersion = getExtensionVersion();
     if (syncPrefs) {
-      client.sendObj({version: '0.5.9', msg: "getUserPreferences"});
+      client.sendObj({version: eVersion, msg: "getUserPreferences"});
     }
     client.sendObj({
-      version: '0.5.9',
+      version: eVersion,
        msg: "detectPlaceholdersAndStickers"
     });
     trySendEvent({msg: 'reloadPreferences'});    
@@ -210,4 +228,10 @@ async function getClient() {
     currentClient.usePortManager(portManager);
     return currentClient;
   }
+}
+
+async function getRequestClient(requestId: string) {
+  let reqClient = await WebSocketRequestClient.create(requestId);
+  reqClient.usePortManager(portManager);
+  return reqClient;
 }

@@ -5,6 +5,7 @@ import { WebSocketClient } from "./webSocketClient"
 import browser from 'webextension-polyfill';
 import { StatisticsService } from "@/services/statistics-service";
 import { setModeBadge } from "@/util";
+import { IWebSocketClient } from "@/events";
 
 export type SocketEvent<Type> = {
     event: string;
@@ -12,7 +13,7 @@ export type SocketEvent<Type> = {
 }
 
 export type SocketContext = {
-    socketClient?: WebSocketClient;
+    socketClient?: IWebSocketClient;
     sendMessage : (obj: object, requestId?: string, tabId?: string) => Promise<void>
 }
 

@@ -42,7 +42,7 @@ const events = mitt<ActionEvents>();
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
-let svc: Ref<OverrideService|undefined> = ref(undefined);
+const svc: Ref<OverrideService|undefined> = ref(undefined);
 
 const current: Ref<IOverride|undefined> = ref(undefined);
 

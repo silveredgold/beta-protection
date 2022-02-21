@@ -5,7 +5,7 @@ import { debounce } from "throttle-debounce";
 import { LocalPlaceholder } from "@/placeholders";
 import { PlaceholderService } from "@/services/placeholder-service";
 import browser from 'webextension-polyfill';
-
+import { ImageTracker } from "./image-tracker";
 
 export class Purifier {
     private _currentState: CensoringState;
@@ -13,7 +13,9 @@ export class Purifier {
     private _backlog : boolean = false;
     private _port: browser.Runtime.Port | undefined;
     private _portFaulted: boolean = false;
-    private _safeList: number[];
+
+    private _cache: ImageTracker = new ImageTracker();
+
     public get backlog() : boolean {
         return this._backlog;
     }
@@ -50,7 +52,7 @@ export class Purifier {
     /**
      *
      */
-    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], safeList: number[]) {
+    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], cache?: ImageTracker) {
         // Only update once in a while.
         this._currentState = state;
         this._placeholders = placeholders;
@@ -61,7 +63,9 @@ export class Purifier {
         }
         this._domain = getDomain(location).toLowerCase();
         this._urlTransformers.push(srcUrl => srcUrl.replace(".gifv", ".gif"))
-        this._safeList = safeList;
+        if (cache) {
+            this._cache = cache;
+        }
     }
 
     
@@ -164,16 +168,52 @@ export class Purifier {
 
     private discoverImages = (elements: HTMLImageElement[]): HTMLImageElement[] => {
         const targetEls: HTMLImageElement[] = [];
+        const otherEls: {el: HTMLImageElement, center: {x: number, y: number}}[] = [];
         elements.forEach(el => {
             this.flattenSrc(el);
             if (el.tagName === "IMG" && isValidUrl(el.src)) {
+                // if (this.isUnsafe(el) && !this._safeList.includes(hashCode(el.src))) {
                 if (this.isUnsafe(el)) {
-                    targetEls.push(el);
+                    const domState = this.getVisibility(el);
+                    if (domState.visible) {
+                        console.debug('dom: identified element as visible', el);
+                        targetEls.push(el);
+                    } else {
+                        otherEls.push({el, center: domState.center});
+                    }
                     // this.purifyImage(el);
                 }
             }
         });
-        return targetEls;
+        otherEls.sort((a, b) => {
+            const yDiff = Math.abs(a.center.y)-Math.abs(b.center.y);
+            return yDiff == 0 ? a.center.x-b.center.x : yDiff
+        });
+        // console.log(otherEls.map(e => e.center.y));
+        // console.log(otherEls.map(e => e.center.x));
+        return targetEls.concat(otherEls.map(e => e.el));
+    }
+
+    getVisibility(elem: HTMLElement) {
+        const state = {visible: true, center: {x: 0, y: 0}};
+        if (!(elem instanceof Element)) throw Error('DomUtil: elem is not an element.');
+        const style = getComputedStyle(elem);
+        if (style.display === 'none') state.visible = false;
+        if (style.visibility !== 'visible') state.visible = false;
+        if (elem.offsetWidth + elem.offsetHeight + elem.getBoundingClientRect().height +
+            elem.getBoundingClientRect().width === 0) {
+            state.visible = false;
+        }
+        const elemCenter   = {
+            x: elem.getBoundingClientRect().left + elem.offsetWidth / 2,
+            y: elem.getBoundingClientRect().top + elem.offsetHeight / 2
+        };
+        if (elemCenter.x < 0) state.visible = false;
+        if (elemCenter.x > (document.documentElement.clientWidth || window.innerWidth)) state.visible = false;
+        if (elemCenter.y < 0) state.visible = false;
+        if (elemCenter.y > (document.documentElement.clientHeight || window.innerHeight)) state.visible = false;
+        state.center = elemCenter;
+        return state;
     }
 
     censorImage = (img: HTMLImageElement, runOnce: boolean = false) => {
@@ -216,20 +256,29 @@ export class Purifier {
                     img.width = img.clientWidth;
                 }
                 if (active) {
-                    img.setAttribute('censor-state', 'censoring');
-                    const placeholder = this.getPlaceholderSrc();
-                    // console.log(`got placeholder URL: ${placeholder}`);
-                    const priority = img.getBoundingClientRect().top | 0;
-                    const placeHolderImage = new Image();
-                    placeHolderImage.onload = () => {
-                        img.addEventListener('load', () => {
-                            img.setAttribute('censor-state', 'censored');
-                        }, { once: true });
-                        img.src = placeHolderImage.src;
-                        img.toggleAttribute('censor-placeholder', true);
-                        this.sendCensorRequest(imageURL, uniqueID, "normal", priority);
-                    };
-                    placeHolderImage.setAttribute('src', placeholder);
+                    console.debug('order: queuing censor', img);
+                    const result = this._cache.getCensored({src: imageURL});
+                    if (result) {
+                        console.debug('found matching cache result', imageURL);
+                        img.src = result;
+                        img.toggleAttribute('censor-placeholder', false);
+                        img.setAttribute('censor-state', 'censored');
+                    } else {
+                        img.setAttribute('censor-state', 'censoring');
+                        const placeholder = this.getPlaceholderSrc();
+                        // console.log(`got placeholder URL: ${placeholder}`);
+                        const priority = img.getBoundingClientRect().top | 0;
+                        const placeHolderImage = new Image();
+                        placeHolderImage.onload = () => {
+                            img.addEventListener('load', () => {
+                                img.setAttribute('censor-state', 'censored');
+                            }, { once: true });
+                            img.src = placeHolderImage.src;
+                            img.toggleAttribute('censor-placeholder', true);
+                            this.sendCensorRequest(imageURL, uniqueID, "normal", priority);
+                        };
+                        placeHolderImage.setAttribute('src', placeholder);
+                    }
                 } else {
                     this.setImgExcluded(img, 'disabled');
                 }
@@ -250,26 +299,33 @@ export class Purifier {
             type: type,
             domain: getDomain(this._domain, this._hideDomains)
         };
-        // console.debug('sending censor request', msg);
-        const port = browser.runtime.connect({name: id});
-        if (port) {
-            // console.log('got named port!')
-            port.onMessage.addListener((msg, port) => {
-                handleCensorResult(msg, this._safeList, port);
-            });
-            // console.debug('sending request on named port!');
-            port.postMessage(msg);
-        } else if (this._port && !this._portFaulted) {
-            // console.debug('using existing port for runtime message');
-            try {
-                this._port.postMessage(msg);
-            } catch {
-                this._portFaulted = true;
+        this._cache.trackImage(id, imageUrl);
+        if (false) {
+
+        } else {
+            // console.debug('sending censor request', msg);
+            const port = browser.runtime.connect({name: id});
+            if (port) {
+                // console.log('got named port!')
+                port.onMessage.addListener((msg, port) => {
+                    handleCensorResult(msg, port, this._cache);
+                });
+                // console.debug('sending request on named port!');
+                port.postMessage(msg);
+            } else if (this._port && !this._portFaulted) {
+                console.debug('using existing port for runtime message');
+                try {
+                    this._port.postMessage(msg);
+                } catch (e: any) {
+                    console.warn('pipe: port faulted!', e);
+                    this._portFaulted = true;
+                    browser.runtime.sendMessage(msg);
+                }
+            } else {
+                // console.debug('using runtime for message');
+                console.warn('pipe: falling back to global on purifier!');
                 browser.runtime.sendMessage(msg);
             }
-        } else {
-            // console.debug('using runtime for message');
-            browser.runtime.sendMessage(msg);
         }
         // this.messageQueue.push(id);
     }
@@ -286,11 +342,19 @@ export class Purifier {
                         const uniqueID = generateUUID();
                         img.element.setAttribute('censor-id', uniqueID);
                         if (this._currentState && this._currentState.activeCensoring) {
-                            const placeholder = this.getPlaceholderSrc();
-                            try {
-                                (img.element as HTMLElement).style.backgroundImage = 'url("' + placeholder + '")';
-                            } catch { }
-                            this.sendCensorRequest(imageURL, uniqueID, "BG", 1);
+                            const result = this._cache.getCensored({src: imageURL});
+                            if (result) {
+                                console.debug('found matching cache result', imageURL);
+                                (img.element as HTMLElement).style.backgroundImage = 'url("' + result + '")';
+                                (img.element as HTMLElement).toggleAttribute('censor-placeholder', false);
+                            } else {
+                                const placeholder = this.getPlaceholderSrc();
+                                try {
+                                    (img.element as HTMLElement).style.backgroundImage = 'url("' + placeholder + '")';
+                                    (img.element as HTMLElement).toggleAttribute('censor-placeholder', true);
+                                } catch { }
+                                this.sendCensorRequest(imageURL, uniqueID, "BG", 1);
+                            }
                         }
                         img.element.setAttribute('censor-style', 'censored');
                     } else {
@@ -326,7 +390,8 @@ export class Purifier {
 
     private isUnsafe = (el: Element, mode: "normal"|"bg" = "normal") => {
         const elState = mode === "normal" ? el.getAttribute('censor-state') : el.getAttribute('censor-style');
-        return this.isUnsafeState(elState);
+        const state = this.isUnsafeState(elState);
+        return state;
     }
 
     private isUnsafeState = (elState: string | null) => {
@@ -351,7 +416,7 @@ export class Purifier {
 }
 
 
-const handleCensorResult = (request: any, safeList: number[], port: browser.Runtime.Port) => {
+const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: ImageTracker) => {
     if(request.msg === "setSrc" && request.type === "normal") {
 		const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
 		if(requestElement){
@@ -359,7 +424,7 @@ const handleCensorResult = (request: any, safeList: number[], port: browser.Runt
 			requestElement.setAttribute('src', request.censorURL);
 			requestElement.setAttribute('censor-state', 'censored');
 			requestElement.toggleAttribute('censor-placeholder', false);
-			safeList.push(hashCode(request.censorURL));
+            cache.updateImage(request.id, request.censorURL);
 		}
         port.disconnect();
 	} else if(request.msg === "setSrc" && request.type === "BG") {
@@ -371,7 +436,7 @@ const handleCensorResult = (request: any, safeList: number[], port: browser.Runt
 			requestElement.setAttribute('censor-style', 'censored');
 			requestElement.toggleAttribute('censor-placeholder', false);
 			//TODO: should this remove the CSS classes?
-			safeList.push(hashCode(request.censorURL));
+            cache.updateImage(request.id, request.censorURL);
             port.disconnect();
 		}
 	}

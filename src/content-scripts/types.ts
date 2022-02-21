@@ -14,7 +14,7 @@ export type CensoringContext = {
     socketClient?: WebSocketClient,
     purifier: Purifier,
     observer?: PageObserver,
-    port: browser.Runtime.Port
+    port?: browser.Runtime.Port
 };
 
 export type ImageStyleElement = {

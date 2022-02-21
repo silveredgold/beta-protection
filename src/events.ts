@@ -41,9 +41,15 @@ export function processContextClick(info: browser.Menus.OnClickData, tab: browse
 }
 
 export type MessageContext = {
-    socketClient: WebSocketClient,
+    socketClient: IWebSocketClient,
     version: string;
 };
+
+export interface IWebSocketClient  {
+    sendObj: (message: object, callback?: () => any|void) => void;
+    send: (message: string, callback?: any) => void;
+    close: () => void
+}
 
 export async function processMessage(message: any, sender: browser.Runtime.MessageSender, ctxFactory: () => Promise<MessageContext>) {
     console.log('background processing msg', message, knownMessages.map(e => e.event));

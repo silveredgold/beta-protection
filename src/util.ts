@@ -36,7 +36,7 @@ export const themeOverrides: GlobalThemeOverrides = { common: { fontWeightStrong
 //   return isChrome || inList;
 // }
 
-export function isNodeSafe(node: Node, safeList: number[]) {
+export function isNodeSafe(node: Node, safeList?: number[]) {
   const plSrc = node["placeholder-name"] as string;
   const url = node["src"] as string;
   let safeSrc = true;
@@ -45,7 +45,7 @@ export function isNodeSafe(node: Node, safeList: number[]) {
     safeSrc = filename.toLowerCase() == plSrc.toLowerCase();
   }
   const isChrome = url && url.includes("extension://"); //edge doesn't use a prefix
-  const inList = safeList.includes(hashCode(url));
+  const inList = safeList && safeList.length > 0 ? safeList.includes(hashCode(url)) : true;
   return safeSrc || isChrome || inList;
 }
 

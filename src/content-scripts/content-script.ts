@@ -59,15 +59,15 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	// console.debug('got placeholder response maybe?', placeholders)
 	//TODO; not how that works
 	// preferences!.enabledPlaceholders = placeholders.categories;
-	const port = buildPort();
-	const purifier = new Purifier(state, preferences!.videoCensorMode, window.location, placeholders.allImages, safeList);
+	// const port = buildPort();
+	const purifier = new Purifier(state, preferences!.videoCensorMode, window.location, placeholders.allImages);
 	purifier.hideDomains = preferences.hideDomains ?? false;
-	purifier.port = port;
+	// purifier.port = port;
 	const context: CensoringContext = {
 		state,
 		preferences,
 		purifier,
-		port
+		// port
 	};
 	console.debug('built new censoring context', context);
 	return context;
@@ -86,7 +86,8 @@ const injectStyles = async (context: CensoringContext): Promise<CensoringContext
 	if(context.state.activeCensoring){
 		console.log("Beta Protection - Censoring Enabled!");
 		const msg = {msg: 'injectCSS', preferences: context.preferences};
-		_sendMessage(msg, context);
+		// _sendMessage(msg, context);
+		browser.runtime.sendMessage(msg);
 	} else {
 		console.log("Beta Protection - Not censoring current page.");
 	}    
@@ -112,14 +113,15 @@ const prepareEvents = async (context: CensoringContext, runImmediately: boolean 
 	// I guess images would be visible while loading?
 	// do a run on loading, then start the observer on completed?
 	//prepareEvents is the one that watches for the DOM status
-	if (context.state.activeCensoring) {
+	if (context.state.activeCensoring && document.body) {
 		dbg('censoring enabled, queuing purifier run from prepareEvents');
 		context.purifier.run();
 	}
 }
 
 const buildObserver = (purifier: Purifier) => {
-	const observer = PageObserver.create(purifier, safeList);
+	const observer = PageObserver.create(purifier);
+	if (observer) {observer.runOnMutate = true;}
 	return observer;
 }
 
@@ -163,27 +165,29 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => 
 		
 	}
 	// Results for censor requests here. Set the image in the appropriate element.
-	if(request.msg === "setSrc" && request.type === "normal") {
-		const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
-		if(requestElement){
-			// console.log(`finalizing purify for ${requestElement}`)
-			requestElement.setAttribute('src', request.censorURL);
-			requestElement.setAttribute('censor-state', 'censored');
-			requestElement.toggleAttribute('censor-placeholder', false);
-			safeList.push(hashCode(request.censorURL));
-		}
-	} else if(request.msg === "setSrc" && request.type === "BG") {
-		dbg(`got background setSrc message! ${request.id}`)
-		const requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
-		if(requestElement) {
-			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
-			// console.log(`finalizing BG purify for ${requestElement}`)
-			requestElement.setAttribute('censor-style', 'censored');
-			requestElement.toggleAttribute('censor-placeholder', false);
-			//TODO: should this remove the CSS classes?
-			safeList.push(hashCode(request.censorURL));
-		}
-	} else if (request.msg === CMENU_RECHECK_PAGE) {
+	// if(request.msg === "setSrc" && request.type === "normal") {
+	// 	console.warn('global set-src on content script');
+	// 	const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
+	// 	if(requestElement){
+	// 		// console.log(`finalizing purify for ${requestElement}`)
+	// 		requestElement.setAttribute('src', request.censorURL);
+	// 		requestElement.setAttribute('censor-state', 'censored');
+	// 		requestElement.toggleAttribute('censor-placeholder', false);
+	// 	}
+	// }
+	// } else if(request.msg === "setSrc" && request.type === "BG") {
+	// 	dbg(`got background setSrc message! ${request.id}`)
+	// 	const requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
+	// 	if(requestElement) {
+	// 		(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
+	// 		// console.log(`finalizing BG purify for ${requestElement}`)
+	// 		requestElement.setAttribute('censor-style', 'censored');
+	// 		requestElement.toggleAttribute('censor-placeholder', false);
+	// 		//TODO: should this remove the CSS classes?
+	// 		addToSafeList(request.censorURL);
+	// 	}
+	// } else if (request.msg === CMENU_RECHECK_PAGE) {
+	if (request.msg === CMENU_RECHECK_PAGE) {
 		dbg('rechecking page');
 		const censored = document.querySelectorAll(`img[censor-placeholder]`);
 		for (const placeholder of censored) {
@@ -212,6 +216,14 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => 
 			currentContext = ctx;
 			currentContext.observer?.start(document.body);
 		})
+	}
+}
+
+const addToSafeList = (url: string) => {
+	dbg('repeat: adding url to safe list', url);
+	const hash = hashCode(url);
+	if (!safeList.includes(hash)) {
+		safeList.push(hash);
 	}
 }
 

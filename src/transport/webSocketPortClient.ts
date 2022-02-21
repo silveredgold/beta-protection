@@ -1,11 +1,11 @@
-import Sockette from "sockette";
 import { RuntimePortManager } from "./runtimePort";
+import Sockette from "sockette";
 import browser from 'webextension-polyfill';
 import { censoredImageEvent, placeholderStickerEvent, preferencesEvent, resetStatisticsEvent, SocketContext, SocketEvent, statisticsEvent } from "./messages";
 
-export class WebSocketClient {
+export class WebSocketRequestClient {
 
-    static create = async (host?: string): Promise<WebSocketClient> => {
+    static create = async (requestId: string, host?: string): Promise<WebSocketRequestClient> => {
         console.trace('creating new socket client!');
         if (!host) {
             const configHost = await browser.storage.local.get('backendHost');
@@ -14,20 +14,25 @@ export class WebSocketClient {
                 host = configHost['backendHost'];
             }
         }
-        return new WebSocketClient(host);
+        return new WebSocketRequestClient(requestId, host);
     }
+    private _sockets: Map<string, WebSocket> = new Map();
     private _ports: { [tabId: number]: browser.Runtime.Port | undefined; } = {};
     private _portManager?: RuntimePortManager;
+    private _requestId: string;
+    private host: string;
     /**
      *
      */
-    private constructor(host?: string) {
-        this.webSocket = this.connectTo(host);
+    private constructor(requestId: string, host?: string) {
+        // this.webSocket = this.connectTo(host);
+        this._requestId = requestId;
+        this.host = host ?? this.defaultHost
     }
 
     private messageQueue: any[] = [];
 
-    private webSocket?: Sockette;
+    private webSocket?: WebSocket;
 
     defaultHost = "ws://localhost:8090/ws"
 
@@ -39,7 +44,7 @@ export class WebSocketClient {
         this._ports = ports;
     }
 
-    usePortManager = (mgr: RuntimePortManager): WebSocketClient => {
+    usePortManager = (mgr: RuntimePortManager): WebSocketRequestClient => {
         this._portManager = mgr;
         return this;
     }
@@ -47,16 +52,66 @@ export class WebSocketClient {
     send = (message: string, callback?: any) => {
         //sockette means the socket is never not ready
         // that doesn't mean it can't error out though
-
-        try {
-            this.webSocket?.send(message)
-            if (typeof callback !== 'undefined') {
-                callback();
+        if (this._requestId) {
+            try {
+                let socket = this.webSocket;
+                if (socket) {
+                    socket.send(message);
+                } else {
+                    socket = this.getRequestSocket(this._requestId);
+                    this.webSocket = socket;
+                    socket?.send(message)
+                }
+                
+                if (typeof callback !== 'undefined') {
+                    callback();
+                }
+            } catch {
+                this.messageQueue.push(message);
             }
-        } catch {
-            this.messageQueue.push(message);
+        } else {
+            console.warn('no request id set on client!');
         }
     };
+
+    getRequestSocket = (requestId: string) => {
+        const host = this.host;
+        try {
+            const onOpen = () => {
+                while (this.messageQueue.length > 0) {
+                    socket.send(this.messageQueue.pop());
+                }
+             };
+            const onClose = (e) => {
+                if (e.code !== 4999 && e.code !== 1000) {
+                    console.error('Request socket is closed.', e, e.code, e.reason, e.wasClean);
+                    browser.runtime.sendMessage({msg: 'socketClosed'});
+                    
+                    // setTimeout(() => {
+                    //     this.connectTo(host);
+                    // }, 5000);
+                }
+            };
+            const onError = function (err) {
+                console.error('Request socket encountered error: ', err.message, err.toString(), 'Closing socket');
+                // webSocket.close();
+            };
+            const socket = new WebSocket(host);
+            socket.onopen = onOpen;
+            socket.onclose = onClose;
+            socket.onmessage = (event) => {
+                const response = JSON.parse(event.data);
+                this.processServerMessage(response)?.then(() => {
+                    socket.close(1000);
+                });
+            };
+            socket.onerror = onError;
+            this._sockets.set(requestId, socket);
+            return socket;
+        } catch (e: any) {
+            console.warn("Failed to connect to WebSocket! Cannot connect to the target endpoint.",  e.toString(), e);
+        }
+    }
 
 
 
@@ -82,59 +137,6 @@ export class WebSocketClient {
         // return this.webSocket?.readyState === 1;
         return true;
     }
-    
-
-    private connectTo = (host?: string): Sockette | undefined => {
-        host ??= this.defaultHost;
-        try {
-            const onOpen = () => {
-                while (this.messageQueue.length > 0) {
-                    webSocket.send(this.messageQueue.pop());
-                }
-             };
-             const onMessage = (event) => {
-                const response = JSON.parse(event.data);
-                this.processServerMessage(response);
-            };
-            const onClose = (e) => {
-                if (e.code !== 4999) {
-                    console.error('Socket is closed.', e);
-                    browser.runtime.sendMessage({msg: 'socketClosed'});
-                    
-                    // setTimeout(() => {
-                    //     this.connectTo(host);
-                    // }, 5000);
-                }
-            };
-            const onError = function (err) {
-                console.error('Socket encountered error: ', err.message, 'Closing socket');
-                // webSocket.close();
-            };
-            const webSocket = new Sockette(host, {
-                timeout: 60,
-                maxAttempts: 10,
-                onopen: onOpen,
-                onmessage: onMessage,
-                onreconnect: (e) => {
-                    console.warn('reconnecting socket!');
-                    browser.runtime.sendMessage({msg: 'socketReconnect'});
-                    while (this.messageQueue.length > 0) {
-                        webSocket.send(this.messageQueue.pop());
-                    }
-                },
-                onmaximum: (e) => console.error('Socket reconnection failed!', e),
-                onclose: onClose,
-                onerror: onError
-            });
-            // webSocket.onopen = onOpen
-            // webSocket.onmessage = onMessage
-            // webSocket.onclose = onClose;
-            // webSocket.onerror = onError;
-            return webSocket;
-        } catch (e: any) {
-            console.warn("Failed to connect to WebSocket! Cannot connect to the target endpoint.",  e.toString(), e);
-        }
-    }
 
     public get messageEvents() : SocketEvent<any>[] {
         return [
@@ -151,11 +153,11 @@ export class WebSocketClient {
         const event = this.messageEvents.find(evt => evt.event === response['requestType']);
         if (event?.handler !== undefined) {
             const ctx: SocketContext = {
-                socketClient: this,
+                // socketClient: this,
                 sendMessage: this.sendRuntimeMessage
             };
             console.log('running handler for server message', response.requestType, response, ctx);
-            event.handler(response, ctx);
+            return event.handler(response, ctx);
         } else {
             console.warn('received unmatched server message!', response);
         }
