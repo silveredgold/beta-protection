@@ -123,7 +123,8 @@ const importOverride = async () => {
         notif.create({
             type: result?.code == 200 ? 'success' : 'error',
             title: result?.code == 200 ? 'Successfully Imported!' : 'Failed to Import!',
-            content: result?.message ?? ''
+            content: result?.message ?? '',
+            duration: 6000
         });
     }
     onUpdate();
@@ -136,7 +137,8 @@ const disableCurrent = async () => {
         notif.create({
             type: result?.code == 200 ? 'success' : 'error',
             title: result?.code == 200 ? 'Successfully Disabled!' : 'Failed to Disable!',
-            content: result?.message ?? ''
+            content: result?.message ?? '',
+            duration: 6000
         });
     }
     unlockKey.value = '';

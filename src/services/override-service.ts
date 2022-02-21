@@ -1,5 +1,5 @@
 import { IOverride, IPreferences, OperationMode } from "@/preferences";
-import { generateUUID } from "@/util";
+import { generateUUID, hashCode } from "@/util";
 import { AES, enc } from "crypto-js";
 import { FileSystemClient } from "@/services/fs-client";
 import browser from 'webextension-polyfill';
@@ -45,7 +45,8 @@ export class OverrideService {
             key,
             id: overrideId,
             allowedModes,
-            preferences: prefs
+            preferences: prefs,
+            hash: hashCode(JSON.stringify(prefs))
         };
         return override;
     }
@@ -66,6 +67,10 @@ export class OverrideService {
             const text = await file.file.text();
             const override = JSON.parse(text) as IOverride;
             if (override?.id && override.allowedModes && override.allowedModes.length > 0) {
+                const importHash = hashCode(JSON.stringify(override.preferences));
+                if (override.hash != importHash) {
+                    return {success: false, code: 422, message: 'Override has been modified!'}
+                }
                 override.activatedTime = new Date().getTime();
                 this._current = override;
                 browser.storage.local.set({ 'override': override });

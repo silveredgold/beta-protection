@@ -25,8 +25,8 @@ const notif = useNotification();
 const mode: Ref<OperationMode> = ref("" as OperationMode);
 let prefs = reactive({} as IPreferences);
 const getCurrentMode = async () => {
-    let storeResponse = await loadPreferencesFromStorage();
-    let svc = await OverrideService.create();
+    const storeResponse = await loadPreferencesFromStorage();
+    const svc = await OverrideService.create();
     if (svc && svc.active) {
         console.debug('settings allowed modes', svc.current?.allowedModes);
         allowedModes.value = svc.current!.allowedModes;

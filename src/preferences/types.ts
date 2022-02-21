@@ -1,10 +1,11 @@
 export interface IOverride {
     id: string;
     key: string;
-    allowedModes: OperationMode[],
-    preferences: Partial<IPreferences>,
-    activatedTime?: number,
-    minimumTime?: number
+    allowedModes: OperationMode[];
+    hash?: number;
+    preferences: Partial<IPreferences>;
+    activatedTime?: number;
+    minimumTime?: number;
 }
 
 export interface IPreferences {

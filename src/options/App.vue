@@ -152,9 +152,9 @@ const iconSrc = browser.runtime.getURL('/images/icon.png');
 const currentOverride: Ref<IOverride|undefined> = ref(undefined);
 
 const getCurrentPrefs = async () => {
-  let storeResponse = await loadPreferencesFromStorage();
+  const storeResponse = await loadPreferencesFromStorage();
   dbgLog(`options loaded prefs:`, storeResponse);
-  let overrideService = await OverrideService.create();
+  const overrideService = await OverrideService.create();
   currentOverride.value = overrideService.current;
   // prefs = reactive(storeResponse);
   return storeResponse;

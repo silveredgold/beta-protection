@@ -78,7 +78,7 @@ const currentOverride: Ref<IOverride|undefined> = ref(undefined);
 const getCurrentPrefs = async () => {
   var storeResponse = await loadPreferencesFromStorage();
   console.log(`popup loaded prefs:`, storeResponse);
-  let overrideService = await OverrideService.create();
+  const overrideService = await OverrideService.create();
   currentOverride.value = overrideService.current;
   return storeResponse;
 }

@@ -227,7 +227,7 @@ async function getClient() {
 }
 
 async function getRequestClient(requestId: string) {
-  let reqClient = await WebSocketRequestClient.create(requestId);
+  const reqClient = await WebSocketRequestClient.create(requestId);
   reqClient.usePortManager(portManager);
   return reqClient;
 }
