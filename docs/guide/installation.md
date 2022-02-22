@@ -33,3 +33,12 @@ Ensure the Developer mode toggle at the top-right of the page is enabled and you
 
 Finally, drag and drop the CRX file you downloaded in the last step into the Extensions window in Chrome. Chrome should prompt you to install Beta Protection, so accept the prompt and Beta Protection should appear in your Extensions list!
 
+### Troubleshooting
+
+#### *This extension is not listed in the (...) Store* error
+
+If you see an error message similar to the below, your browser is blocking extension packages not from an approved Web Store from loading. The easiest way to avoid this is to load the extension "unpacked" (this is how Beta Safety installs, if you're more familiar with that).
+
+1. Download the ZIP file from the GitHub Releases page (rather than the `.crx` file), and extract it somewhere
+2. From your browser's Manage Extensions page (with Developer Mode on), find the *Load Unpacked* option
+3. Click it, and select the folder where you unpacked the ZIP file. Beta Protection should appear in your Extensions list.

@@ -68,7 +68,7 @@ export class OverrideService {
             const override = JSON.parse(text) as IOverride;
             if (override?.id && override.allowedModes && override.allowedModes.length > 0) {
                 const importHash = hashCode(JSON.stringify(override.preferences));
-                if (override.hash != importHash) {
+                if (override.hash && override.hash != importHash) {
                     return {success: false, code: 422, message: 'Override has been modified!'}
                 }
                 override.activatedTime = new Date().getTime();
