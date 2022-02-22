@@ -37,7 +37,6 @@
 import { NDataTable, NAlert, NIcon, useNotification, DataTableColumns, NButton, NCard, NSpace, NGrid, NGridItem } from "naive-ui";
 import { InformationCircle, Open } from "@vicons/ionicons5";
 import { computed, inject, reactive, Ref, toRefs } from "vue";
-import browser from 'webextension-polyfill';
 import { eventEmitter, ActionEvents } from "@/messaging";
 import { openSettings } from "@/components/util";
 import {StatisticsData, StatisticsService} from "@/services/statistics-service";

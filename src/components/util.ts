@@ -11,3 +11,5 @@ export const openStatistics = () => {
 export const openOverrides = () => {
     window.open(browser.runtime.getURL('override.html'));
 }
+
+export type AssetSource = (path: string) => string;

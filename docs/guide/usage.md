@@ -28,7 +28,7 @@ From the options page, you can directly customize basically any part of the exte
 
 When you first install the extension, there will not be any placeholders, so images will be replaced by a simple loading icon while they are being censored. It's generally more fun to have placeholder images appear while censoring is running, so we recommend importing some placeholders to get started.
 
-The easiest option is to import the placeholders from Beta Safety. From the Beta Protection options page, open the Placeholder Store section, click `Import from Beta Safety...` and choose the `placeholders` folder from your Beta Safety folder (usually in `browser-extension/images/placeholders`) and Beta Protection will import all the placeholders from that folder.
+The easiest option is to import the placeholders from Beta Safety. From the Beta Protection options page, open the Placeholder Store section, click `Import from Beta Safety...` and choose the `placeholders` folder from your Beta Safety folder (usually in `browser-extension/images`) and Beta Protection will import all the placeholders from that folder.
 
 Alternatively you can use the `Import Folder...` or `Import Single File...` buttons to import placeholder images directly.
 
@@ -52,3 +52,6 @@ You can also load in your own custom messages to display in place of the default
 ### Import and Export
 
 You can also import and export your settings from the controls at the bottom of the Options page. Once you're happy with your setup, we'd recommend exporting to a file and keeping it somewhere handy in case you want to set Beta Protection up again. The export file will only include preferences, not your backend configuration or imported placeholders.
+
+> You might also be interested in the Overrides feature, if you want a more advanced method of enforcing censoring settings, for yourself or other users.
+

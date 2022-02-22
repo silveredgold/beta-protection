@@ -77,7 +77,6 @@ import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NInpu
 import { computed, inject, reactive, ref, Ref, toRefs, watch } from 'vue';
 import { openSettings } from "@/components/util";
 import { eventEmitter } from "@/messaging";
-import browser from 'webextension-polyfill';
 import { dbg } from '@/util';
 
 const props = defineProps<{
@@ -109,13 +108,13 @@ const active = ref(service.active);
 
 const unlockKey: Ref<string> = ref('');
 
-browser.runtime.onMessage.addListener((msg, sender) => {
+emitter?.on('reload', (evt) => {
     dbg('reloading override details from event');
-    if (msg.msg === 'reloadOverride') {
+    if (evt == 'override') {
         active.value = service.active;
         timeRemaining.value = service.getTimeRemaining();
     }
-})
+});
 
 const onUpdate = async () => {
     // active.value = service.active;

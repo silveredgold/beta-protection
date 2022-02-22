@@ -47,23 +47,24 @@ import { Settings, Refresh, AddCircle } from "@vicons/ionicons5";
 import { computed, inject, Ref, toRefs } from "vue";
 import browser from 'webextension-polyfill';
 import { eventEmitter, ActionEvents } from "@/messaging";
-import { openSettings } from "@/components/util";
+import { AssetSource, openSettings } from "@/components/util";
 import {StatisticsData} from "@/services/statistics-service";
 
 const props = defineProps<{
-    statistics: StatisticsData
+    statistics: StatisticsData,
+    assetSource: AssetSource
 }>();
 
 const emitter = inject(eventEmitter);
 const notif = useNotification();
-const { statistics } = toRefs(props);
+const { statistics, assetSource } = toRefs(props);
 
 const enabled = computed(() => statistics.value && Object.keys(statistics.value).length > 0);
 const safeCount = computed(() => Object.values(statistics.value).reduce((a, b) => a = a + b.safe, 0));
 const softcoreCount = computed(() => Object.values(statistics.value).reduce((a, b) => a = a + b.softcore, 0));
 const hardcoreCount = computed(() => Object.values(statistics.value).reduce((a, b) => a = a + b.hardcore, 0));
 
-const iconSrc = browser.runtime.getURL('/images/icon.png');
+const iconSrc = assetSource.value('/images/icon.png');
 
 const refresh = () => {
     emitter?.emit('reload', 'statistics');

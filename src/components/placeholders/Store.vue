@@ -43,7 +43,6 @@ import { computed, inject, ref, toRefs } from "vue";
 import { IPreferences } from "@/preferences";
 import { PlaceholderSet } from "@/placeholders";
 import { CategoryList, PlaceholderList } from "@/components/placeholders"
-import browser from 'webextension-polyfill';
 import { eventEmitter } from "@/messaging";
 import { PlaceholderService } from "@/services/placeholder-service";
 

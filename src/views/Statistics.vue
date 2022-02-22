@@ -5,7 +5,7 @@
           <template #fallback>
             Loading...
           </template>
-            <statistics-header v-if="statistics" :statistics="statistics" />
+            <statistics-header v-if="statistics" :statistics="statistics" :asset-source="assetSrc" />
       </Suspense>
       <Suspense>
           <template #fallback>
@@ -28,12 +28,15 @@ import { eventEmitter, ActionEvents } from "@/messaging";
 import { StatisticsData, StatisticsService } from "@/services/statistics-service";
 import StatisticsHeader from "@/components/StatisticsHeader.vue";
 import StatisticsDetail from "@/components/StatisticsDetail.vue";
+import { AssetSource } from "@/components/util";
 
 const events = mitt<ActionEvents>();
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
 const statistics: Ref<StatisticsData> = ref({} as StatisticsData);
+
+const assetSrc: AssetSource = (path) =>  browser.runtime.getURL(path);
 
 onBeforeMount(async () => {
   await getCurrentStatistics();
