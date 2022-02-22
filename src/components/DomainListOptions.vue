@@ -55,15 +55,10 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, computed, ComputedRef, defineComponent, inject, onMounted, Ref, ref, toRefs, watch } from 'vue';
+import { computed, inject, ref, toRefs, watch } from 'vue';
 import { NCard, NList, NListItem, useNotification, NTabs, NTab, NTabPane, NSpace, NInput, NInputGroupLabel, NInputGroup, NButton } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, CensorType, BodyCensorModes } from '../preferences';
-import { updateUserPrefs, userPrefs } from "../options/services";
-import { toTitleCase } from "../util";
+import { updateUserPrefs, userPrefs } from "@/options/services";
 
-// const props = defineProps<{
-//     preferences: IPreferences
-// }>()
 const props = defineProps<{
     allowList: string[],
     forceList: string[]

@@ -1,3 +1,4 @@
+import { dbgLog } from '@/util';
 import browser from 'webextension-polyfill';
 
 export class RuntimePortManager {
@@ -19,14 +20,14 @@ export class RuntimePortManager {
     sendMessage = (msg: object, id: string, src?: string) => {
         if (this.ports.has(id)) {
             const port = this.ports.get(id);
-            console.log('dedicated port transport found, sending message', port, msg)
+            dbgLog('dedicated port transport found, sending message', port, msg)
             port?.port.postMessage(msg);
 
         } else if (src) {
-            console.log('no dedicated port found, falling back to tabs', src, msg);
+            dbgLog('no dedicated port found, falling back to tabs', src, msg);
             browser.tabs.sendMessage(parseInt(src), msg);
         } else {
-            console.log('no dedicated port found, falling back to runtime', msg);
+            dbgLog('no dedicated port found, falling back to runtime', msg);
             browser.runtime.sendMessage(msg);
         }
     }

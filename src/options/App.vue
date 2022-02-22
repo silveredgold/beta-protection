@@ -71,7 +71,7 @@
           <sticker-options :preferences="prefs" v-if="prefs" class="control-group" />
           <template #header-extra>Choose your placeholders and stickers</template>
         </n-collapse-item>
-        <n-collapse-item title="Placeholder Store" name="placeholder-store" v-if="prefs">
+        <n-collapse-item title="Placeholder Management" name="placeholder-store" v-if="prefs">
           <n-alert title="About Placeholders" type="default" closable>
             <template #icon>
               <n-icon :component="InformationCircle" />
@@ -79,7 +79,7 @@
             While censoring takes place, images will be replaced by a placeholder image randomly selected from the images in any enabled categories. Here is where you add additional placeholders.
           </n-alert>
           <n-collapse :style="{ marginTop: '1em', marginBottom: '1em', padding: '0.5em'}">
-            <n-collapse-item title="Placeholder Management">
+            <n-collapse-item title="Placeholder Store">
               <open-store />
               <template #header-extra>Manage your installed placeholders</template>
             </n-collapse-item>
@@ -90,7 +90,7 @@
             </n-collapse-item>
           </n-collapse>
           
-          <template #header-extra>Add new placeholders</template>
+          <template #header-extra>Add and remove placeholders</template>
         </n-collapse-item>
         <n-collapse-item title="Domain Lists" name="domain-options" v-if="prefs">
           <overridable-option :option="currentOverride?.preferences?.allowList">
@@ -113,24 +113,23 @@
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, NSpace, useOsTheme, NPopover, NAlert } from "naive-ui";
 import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen } from "@vicons/ionicons5";
-import BackendHost from '../components/BackendHost.vue';
-import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
+import BackendHost from '@/components/BackendHost.vue';
+import { provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
-import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '../preferences';
+import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
 import { updateUserPrefs, userPrefs } from "./services";
-import {dbg, dbgLog} from "@/util";
-import CensoringPreferences from "../components/CensoringPreferences.vue";
-import VideoOptions from "../components/VideoOptions.vue";
+import { themeOverrides, dbgLog } from "@/util";
+import CensoringPreferences from "@/components/CensoringPreferences.vue";
+import VideoOptions from "@/components/VideoOptions.vue";
 import {PlaceholderUpload, BetaSafetyImport, PlaceholderOptions} from "@/components/placeholders";
-import StickerOptions from "../components/StickerOptions.vue";
-import SettingsReset from "../components/SettingsReset.vue";
-import ConnectionStatus from "../components/ConnectionStatus.vue";
-import DomainListOptions from "../components/DomainListOptions.vue";
-import { themeOverrides } from "../util";
+import StickerOptions from "@/components/StickerOptions.vue";
+import SettingsReset from "@/components/SettingsReset.vue";
+import ConnectionStatus from "@/components/ConnectionStatus.vue";
+import DomainListOptions from "@/components/DomainListOptions.vue";
 import ErrorOptions from "@/components/ErrorOptions.vue";
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
-import OpenStore from "@/placeholders/components/OpenStore.vue";
+import OpenStore from "@/components/placeholders/OpenStore.vue";
 import ImportExport from "@/components/ImportExport.vue";
 import ExtensionInfo from "@/components/ExtensionInfo.vue";
 import { openStatistics, openOverrides } from "@/components/util";
@@ -144,8 +143,6 @@ const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 const events = mitt<ActionEvents>();
 // const notif = useNotification();
-
-// let prefs = ref({} as IPreferences);
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
@@ -200,13 +197,11 @@ browser.runtime.onMessage.addListener((request, sender) => {
   }
 });
 
-// provide(userPrefs, prefs);
 provide(updateUserPrefs, updatePrefs);
 provide(eventEmitter, events);
 
 
 </script>
-
 <style>
 html {
   max-width: 800px;

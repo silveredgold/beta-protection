@@ -71,13 +71,14 @@
 </template>
 <script setup lang="ts">
 import { IOverride } from '@/preferences';
-import { hasDurationPassed, OverrideService } from '@/services/override-service';
+import { OverrideService } from '@/services/override-service';
 import { LockClosedSharp, Open, HelpCircleOutline } from "@vicons/ionicons5";
 import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NInput, NInputGroup, NInputGroupLabel, NIcon, NAlert, NPopover, NThing, NTime } from "naive-ui";
 import { computed, inject, reactive, ref, Ref, toRefs, watch } from 'vue';
 import { openSettings } from "@/components/util";
 import { eventEmitter } from "@/messaging";
 import browser from 'webextension-polyfill';
+import { dbg } from '@/util';
 
 const props = defineProps<{
     override: IOverride | undefined
@@ -103,22 +104,29 @@ const serviceReady = computed(() => service !== undefined);
 const getId = () => {
     return service?.current?.id ?? "Unknown";
 }
-// const active = computed(() => service?.active ?? false);
+
 const active = ref(service.active);
 
 const unlockKey: Ref<string> = ref('');
 
+browser.runtime.onMessage.addListener((msg, sender) => {
+    dbg('reloading override details from event');
+    if (msg.msg === 'reloadOverride') {
+        active.value = service.active;
+        timeRemaining.value = service.getTimeRemaining();
+    }
+})
+
 const onUpdate = async () => {
-    active.value = service.active;
-    emitter?.emit('reload', 'overrides');
-    emitter?.emit('reload', 'preferences');
-    timeRemaining.value = service.getTimeRemaining();
-    await browser.runtime.sendMessage({msg: 'publishEvent', event: 'reloadPreferences'});
+    // active.value = service.active;
+    // emitter?.emit('reload', 'overrides');
+    // emitter?.emit('reload', 'preferences');
+    // timeRemaining.value = service.getTimeRemaining();
 }
 
 const importOverride = async () => {
     const result = await service?.importOverride();
-    console.log(result);
+    dbg('import result', result);
     if (notif) {
         notif.create({
             type: result?.code == 200 ? 'success' : 'error',
@@ -132,7 +140,6 @@ const importOverride = async () => {
 
 const disableCurrent = async () => {
     const result = await service.tryDisable(unlockKey.value);
-    console.log(result);
     if (notif) {
         notif.create({
             type: result?.code == 200 ? 'success' : 'error',
@@ -146,6 +153,3 @@ const disableCurrent = async () => {
 }
 
 </script>
-
-<style>
-</style>

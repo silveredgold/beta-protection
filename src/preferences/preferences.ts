@@ -52,7 +52,6 @@ export function updateBackendPreferences(prefs: IPreferences) {
                 port.disconnect();
             }
         });
-        // console.debug('sending request on named port!');
         port.postMessage({msg: MSG_UPDATE_PREFS.event});
     });
 }

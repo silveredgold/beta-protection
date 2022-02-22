@@ -74,7 +74,6 @@ export class OverrideService {
                 override.activatedTime = new Date().getTime();
                 this._current = override;
                 browser.storage.local.set({ 'override': override });
-                console.log('from service', this.active);
                 return {success: true, code: 200, message: 'Override loaded and saved!'};
             }
             return {success: false, code: 400, message: 'Override is not in a valid format!'};
@@ -99,7 +98,6 @@ export class OverrideService {
             if (candidate === id) {
                 await browser.storage.local.remove('override');
                 this._current = undefined;
-                console.log('from service', this.active);
                 return {success: true, code: 200, message: 'Override successfully disabled!'};
             } else {
                 return {success: false, code: 403, message: 'Unlock key did not match!'};

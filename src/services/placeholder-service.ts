@@ -1,5 +1,5 @@
 import { LocalPlaceholder } from "@/placeholders";
-import { hashCode } from "@/util";
+import { dbg, hashCode } from "@/util";
 import { DbClient } from "./db-client";
 import { LoadedFileHandle } from "./fs-client";
 import browser from 'webextension-polyfill';
@@ -19,7 +19,7 @@ export class PlaceholderService {
         const db = await DbClient.create();
         const placeholders = await db.getLocalPlaceholders();
         const categories = [...new Set(placeholders.map(pl => pl.category))];
-        console.debug('mapping', placeholders, categories);
+        dbg('mapping', placeholders, categories);
         return categories;
     }
 
@@ -43,7 +43,6 @@ export class PlaceholderService {
         });
         const response = await browser.storage.local.get(query);
         const foundAssets = response['backendAssets'] as { [key: string]: string[] };
-        // console.log('got query response', response);
         for (const category of categories) {
             relPaths.push(...foundAssets[category]);
         }
@@ -78,8 +77,7 @@ export class PlaceholderService {
         if (categories && categories.length > 0) {
             result = result.filter(f => categories.includes(f.category));
         }
-        console.debug('pulled local results', result);
-        console.debug('sizes: ', result.map(f => f.data?.size ?? -1));
+        dbg('pulled local results', result, result.map(f => f.data?.size ?? -1));
         return result;
     }
 

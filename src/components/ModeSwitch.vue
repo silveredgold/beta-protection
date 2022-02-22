@@ -15,10 +15,10 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch } from 'vue';
+import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage } from '../preferences';
-import { setModeBadge } from "@/util"
+import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage } from '@/preferences';
+import { dbg, setModeBadge } from "@/util"
 import { OverrideService } from '@/services/override-service';
 
 const notif = useNotification();
@@ -28,7 +28,7 @@ const getCurrentMode = async () => {
     const storeResponse = await loadPreferencesFromStorage();
     const svc = await OverrideService.create();
     if (svc && svc.active) {
-        console.debug('settings allowed modes', svc.current?.allowedModes);
+        dbg('settings allowed modes', svc.current?.allowedModes);
         allowedModes.value = svc.current!.allowedModes;
     }
     prefs = storeResponse;
@@ -38,7 +38,7 @@ const getCurrentMode = async () => {
 const allowedModes: Ref<OperationMode[]> = ref([]);
 
 const updateMode = async () => {
-    console.log(`saving new mode ${mode.value}`);
+    dbg(`saving new mode ${mode.value}`);
     prefs.mode = mode.value;
     setModeBadge(mode.value);
     await savePreferencesToStorage(prefs);
@@ -57,11 +57,5 @@ watch(mode, async (newMode, prevMode) => {
         });
     }
 });
-
-// return {
-//     host,
-//     getCurrentHost,
-//     saveHost
-// }
 
 </script>

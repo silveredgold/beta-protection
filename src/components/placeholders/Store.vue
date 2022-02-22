@@ -11,7 +11,6 @@
             <!-- <placeholder-upload :preferences="preferences" /> -->
         </n-layout-sider>
         <n-layout bordered :native-scrollbar="false">
-            <!-- <n-layout-header>{{selectedCategory}}</n-layout-header> -->
             <n-layout-header style="display: flex; justify-content: flex-end;" content-style="padding: 6px;" bordered v-if="selectedPlaceholders && selectedPlaceholders.length > 0">
                 <n-space style="margin: 6px 1.5em;">
                 <n-checkbox v-model:checked="showInline">Inline Previews</n-checkbox>
@@ -40,16 +39,12 @@
 </template>
 <script setup lang="ts">
 import { NTooltip, NButton, NSpace, NLayout, useNotification, NEmpty, NLayoutContent, NLayoutSider, NLayoutFooter, NLayoutHeader, NCheckbox } from "naive-ui";
-import { Settings } from "@vicons/ionicons5";
-import { computed, inject, ref, Ref, toRefs, watch } from "vue";
+import { computed, inject, ref, toRefs } from "vue";
 import { IPreferences } from "@/preferences";
-import { LocalPlaceholder, PlaceholderSet } from "..";
+import { PlaceholderSet } from "@/placeholders";
+import { CategoryList, PlaceholderList } from "@/components/placeholders"
 import browser from 'webextension-polyfill';
-import mitt from 'mitt';
-import { eventEmitter, ActionEvents } from "@/messaging";
-import CategoryList from "./CategoryList.vue";
-import PlaceholderList from "./PlaceholderList.vue";
-import PlaceholderUpload from "@/components/placeholders/PlaceholderUpload.vue"
+import { eventEmitter } from "@/messaging";
 import { PlaceholderService } from "@/services/placeholder-service";
 
 const props = defineProps<{
@@ -63,13 +58,8 @@ const { preferences, placeholders } = toRefs(props);
 
 const selectedCategory = ref('');
 const showInline = ref(false);
-// const selectedPlaceholders = ref([] as LocalPlaceholder[])
+
 const selectedPlaceholders = computed(() => placeholders.value.allImages.filter(i => i.category == selectedCategory.value));
-
-
-// watch(selectedCategory, async (newCat) => {
-//     selectedPlaceholders.value = placeholders.value.allImages.filter(i => i.category == newCat);
-// });
 
 const onRemoved = () => {
     emitter?.emit('reload', 'placeholders');
@@ -77,7 +67,6 @@ const onRemoved = () => {
 
 const deleteCategory = (category: string) => {
     PlaceholderService.deleteCategory(category).then(() => {
-        console.debug('emitting placeholder reload event');
         emitter?.emit('reload', 'placeholders');
     });
     selectedCategory.value = '';

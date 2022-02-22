@@ -4,7 +4,7 @@ import { StickerService } from "@/services/sticker-service"
 import { WebSocketClient } from "./webSocketClient"
 import browser from 'webextension-polyfill';
 import { StatisticsService } from "@/services/statistics-service";
-import { setModeBadge } from "@/util";
+import { setModeBadge, dbg } from "@/util";
 import { IWebSocketClient } from "@/events";
 
 export type SocketEvent<Type> = {
@@ -21,7 +21,6 @@ export const placeholderStickerEvent : SocketEvent<void> = {
     event: 'detectPlaceholdersAndStickers',
     handler: async (response, ctx) => {
         if (parseInt(response.status) === 200) {
-            console.log(`sticker response:`, response)
             //TODO: we don't actually need to do this anymore, we don't use the backend placeholders anywhere
             PlaceholderService.loadBackendPlaceholders(response)
             StickerService.loadAvailableStickers(response);
@@ -34,7 +33,6 @@ export const censoredImageEvent : SocketEvent<void> = {
     handler: async (response, ctx) => {
         const prefs = await loadPreferencesFromStorage();
         let url: string;
-        // console.log(`parsing image response`, response);
         if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
             url = response.url;
         } else {
@@ -59,6 +57,7 @@ export const preferencesEvent : SocketEvent<IPreferences> = {
         const log = (...data: any[]) => {
             // console.debug(...data);
             //this is just here to make debugging things easier
+            // this is so chatty, even using dbg would be annoying
         }
         const preferences = await loadPreferencesFromStorage();
         if (parseInt(response.status) === 200) {
@@ -88,7 +87,7 @@ export const statisticsEvent : SocketEvent<void> = {
         if (parseInt(response.status) === 200) {
             const rawLogs = response["logs"] as string;
             const stats = StatisticsService.parseRaw(rawLogs);
-            console.log('parsed stats data', stats);
+            dbg('parsed stats data', stats);
             ctx.sendMessage({msg: "reloadStatistics", statistics: stats}, "statistics");
         }
     }

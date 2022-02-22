@@ -51,7 +51,7 @@ import { IPreferences } from "@/preferences";
 import { NList, NListItem, NButton, NSpace, NPopover, NIcon, NThing, NImage } from "naive-ui";
 import { CheckmarkCircleOutline, Images, TrashBin } from "@vicons/ionicons5";
 import { computed, ref, toRefs } from "vue";
-import { LocalPlaceholder, PlaceholderSet } from "../types";
+import { LocalPlaceholder, PlaceholderSet } from "@/placeholders/types";
 import { PlaceholderService } from "@/services/placeholder-service";
 
 interface Props {

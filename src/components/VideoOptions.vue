@@ -1,6 +1,5 @@
 <template>
-<n-card title="Video Censoring Preferences" size="small">
-        <!-- <template #header-extra>Backend Host</template> -->
+    <n-card title="Video Censoring Preferences" size="small">
         <n-thing title="Censor Mode" v-if="loaded">
             <n-radio-group v-model:value="prefs.videoCensorMode" name="left-size" size="small" style="margin-bottom: 12px;">
             <template v-for="opt in ['Block', 'Blur', 'Allow']" v-bind:key="opt">
@@ -9,7 +8,6 @@
             </n-radio-group>
         </n-thing>
         <template #footer>
-            <!-- <p>{{mode}}</p> -->
             Block will hide all videos from view, Blur will display videos but blur the video, Allow leaves videos untouched.
         </template>
         <n-thing title="Censor Level" description="Higher levels cause more blur" v-if="loaded && !compact && prefs.videoCensorMode === 'Blur'">
@@ -37,13 +35,12 @@
                     </n-thing>
         </template>
     </n-card>
-
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject } from 'vue';
+import { watch, computed, toRefs, inject } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification, NThing, NSpace, NCheckbox, NSlider } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode } from '../preferences';
-import { updateUserPrefs } from '../options/services';
+import { IPreferences } from '@/preferences';
+import { updateUserPrefs } from '@/options/services';
 interface Props {
     preferences: IPreferences,
     compact: boolean
@@ -64,9 +61,4 @@ watch(prefs, async (newMode, prevMode) => {
     updatePrefs?.();
 }, {deep: true});
 
-
-
-
 </script>
-<style>
-</style>

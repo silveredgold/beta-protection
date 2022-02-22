@@ -16,10 +16,10 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject } from 'vue';
+import { watch, toRefs, inject } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode } from '../preferences';
-import { updateUserPrefs } from '../options/services';
+import { IPreferences } from '@/preferences';
+import { updateUserPrefs } from '@/options/services';
 
 const props = defineProps<{
     preferences: IPreferences
@@ -34,9 +34,4 @@ watch(prefs, async (newMode, prevMode) => {
     updatePrefs?.();
 }, {deep: true});
 
-
-
-
 </script>
-<style>
-</style>

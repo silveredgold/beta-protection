@@ -1,6 +1,5 @@
 <template>
-<n-card title="Placeholder Preferences" size="small">
-        <!-- <template #header-extra>Backend Host</template> -->
+    <n-card title="Placeholder Preferences" size="small">
         <div>
             <n-thing 
                 content-indented 
@@ -22,20 +21,19 @@
             </n-list>
         </div>
         <template #footer>
-            <!-- <p>{{mode}}</p> -->
             While censoring takes place, images will be replaced by a placeholder randomly selected from the above categories.
         </template>
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
+import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup, NButton, NIcon } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, getAvailablePlaceholders } from '@/preferences';
+import { IPreferences, getAvailablePlaceholders } from '@/preferences';
 import { Refresh } from "@vicons/ionicons5";
 import { updateUserPrefs } from '@/options/services';
-import { PlaceholderService } from '@/services/placeholder-service';
 import { LocalPlaceholder } from '@/placeholders';
-import { eventEmitter, ActionEvents } from "@/messaging";
+import { eventEmitter } from "@/messaging";
+import { dbg } from '@/util';
 
 const props = defineProps<{
     preferences: IPreferences
@@ -53,7 +51,7 @@ const emitter = inject(eventEmitter);
 emitter?.on('reload', e => {
     if (e.toLowerCase() == 'placeholders') {
         setTimeout(() => {
-            console.log('reloading placeholders for options view');
+            console.log('Reloading placeholders for options view');
             loadPlaceholders().then(ph => {
                 availablePlaceholders.value = ph;
             });
@@ -77,7 +75,6 @@ const getCount = (category: string): number => {
         return img?.category === category
     });
     if (matchingAssets && matchingAssets.length > 0) {
-        // console.log('matching assets', matchingAssets);
         currentCount = matchingAssets.length;
     }
     return currentCount;
@@ -99,11 +96,8 @@ const refreshPlaceholders = () => {
 
 const loadPlaceholders = async () => {
     const holders = await getAvailablePlaceholders();
-    console.log('got placeholder DB', holders);
+    dbg('got placeholder DB', holders);
     return holders;
 }
 
-
 </script>
-<style>
-</style>

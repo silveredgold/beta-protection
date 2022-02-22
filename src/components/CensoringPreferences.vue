@@ -137,8 +137,8 @@
 import { inject, toRefs, watch } from 'vue';
 import { NCard, useNotification, NTabs, NTabPane, NSpace, NForm, NFormItem, NSelect, NInputGroup, NSlider, NThing, NCheckbox } from "naive-ui";
 import { IPreferences, CensorType, BodyCensorModes } from '@/preferences';
-import { updateUserPrefs } from "../options/services";
-import { toTitleCase } from "@/util";
+import { updateUserPrefs } from "@/options/services";
+import { dbg, toTitleCase } from "@/util";
 
 const props = defineProps<{
     preferences: IPreferences
@@ -153,8 +153,8 @@ const sliderMarks = {
 const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs, undefined);
-console.log(`injected prefs: ${JSON.stringify(preferences.value)}`);
-console.log(`injected updater: ${!!updatePrefs}`);
+dbg(`injected prefs: ${JSON.stringify(preferences.value)}`);
+dbg(`injected updater: ${!!updatePrefs}`);
 
 const rawCensorTypes = [{
     label: "Nothing", value: "nothing"
@@ -163,7 +163,7 @@ const rawCensorTypes = [{
 const eyeCensorTypes = [{label: 'Nothing', value: 'nothing'}, {label: 'Black Bars', value: 'Box'}, {label: 'Sticker', value: 'Sticker'}];
 
 watch(prefs, async (newMode, prevMode) => {
-    console.log(`prefs watch: ${prevMode}->${newMode}`);
+    // console.log(`prefs watch: ${prevMode}->${newMode}`);
     updatePrefs?.();
 }, {deep: true});
 

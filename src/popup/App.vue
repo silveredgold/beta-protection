@@ -58,13 +58,13 @@ import { NButton, NButtonGroup, darkTheme, NGlobalStyle, NConfigProvider, NNotif
 import { Settings, StatsChart, LockClosed } from "@vicons/ionicons5";
 import VideoOptions from "@/components/VideoOptions.vue";
 import ModeSwitch from "@/components/ModeSwitch.vue";
-import { openSettings, openStatistics, openOverrides } from "@/components/util"
+import { openSettings, openStatistics, openOverrides } from "@/components/util";
 import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
 import { debounce } from "throttle-debounce";
 import { computed, onBeforeMount, provide, reactive, ref, Ref, watch } from "vue";
 import { updateUserPrefs } from "@/options/services";
-import ConnectionStatus from "../components/ConnectionStatus.vue";
-import { themeOverrides } from "../util";
+import ConnectionStatus from "@/components/ConnectionStatus.vue";
+import { dbg, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import { OverrideService } from "@/services/override-service";
 import { OverridableOption } from "@/components/overrides";
@@ -77,7 +77,7 @@ const currentOverride: Ref<IOverride|undefined> = ref(undefined);
 // loading
 const getCurrentPrefs = async () => {
   var storeResponse = await loadPreferencesFromStorage();
-  console.log(`popup loaded prefs:`, storeResponse);
+  dbg(`popup loaded prefs:`, storeResponse);
   const overrideService = await OverrideService.create();
   currentOverride.value = overrideService.current;
   return storeResponse;
@@ -85,7 +85,7 @@ const getCurrentPrefs = async () => {
 
 // store bullshit
 const updateFunc = debounce(1000, async (prefs) => {
-  console.log(`persisting prefs`, prefs);
+  dbg(`persisting prefs`, prefs);
   await savePreferencesToStorage(prefs);
   return true;
   // const n = notif?.create({
@@ -109,7 +109,7 @@ const store = reactive({
 const prefs = computed(() => store.preferences);
 
 watch(prefs, async (newMode, prevMode) => {
-    console.log('new mode', newMode);
+    
 }, {deep: true});
 
 const updatePrefs = async (preferences: IPreferences | undefined) => {
@@ -124,7 +124,7 @@ provide(updateUserPrefs, updatePrefs);
 browser.runtime.onMessage.addListener((request, sender) => {
   if (request['msg'] === 'reloadPreferences') {
     setTimeout(() => {
-      console.log('reloading preferences for options view');
+      dbg('reloading preferences for options view');
       getCurrentPrefs().then(prefs => {
         store.preferences = prefs;
       });

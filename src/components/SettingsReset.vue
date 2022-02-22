@@ -10,35 +10,23 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject } from 'vue';
+import { inject } from 'vue';
 import { NCard, useNotification, NButton } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, defaultPrefs } from '../preferences';
-import { updateUserPrefs } from '../options/services';
+import { defaultPrefs } from '@/preferences';
+import { updateUserPrefs } from '@/options/services';
 import browser from 'webextension-polyfill';
 
-// const props = defineProps<{
-//     preferences: Ref<IPreferences>
-// }>();
 
 const notif = useNotification();
-// let { preferences } = toRefs(props);
-// const prefs = preferences;
-const updatePrefs = inject(updateUserPrefs);
 
-// watch(prefs, async (newMode, prevMode) => {
-//     updatePrefs();
-// }, {deep: true});
+const updatePrefs = inject(updateUserPrefs);
 
 
 const resetToDefault = async () => {
-  updatePrefs!(defaultPrefs).then(() => {
+  updatePrefs?.(defaultPrefs).then(() => {
       browser.runtime.sendMessage({msg: 'reloadPreferences'});
   });
 
 }
 
-
-
 </script>
-<style>
-</style>

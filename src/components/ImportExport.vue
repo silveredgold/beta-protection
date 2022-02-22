@@ -4,6 +4,9 @@
             <n-grid-item>
                 <n-thing title="Export Settings" v-if="loaded">
                     Export your preferences (does not include backend configuration).
+                    <template #footer>
+                          <n-text type="warning">This will include the effects of any active overrides!</n-text>&nbsp;
+                    </template>
                     <template #action>
                         <n-space item-style="display: flex;" justify="end" >
                             <n-button @click="exportToBackend" icon-placement="right">
@@ -24,7 +27,7 @@
             </n-grid-item>
             <n-grid-item>
                 <n-thing title="Import Settings" v-if="loaded">
-                    Import your preferences from a previously exported file.
+                    Import your Beta Protection preferences from a previously exported file.
                     <template #footer>
                           <n-text type="warning">This will overwrite your current preferences!</n-text>&nbsp;
                     </template>
@@ -50,10 +53,11 @@
 import { watch, computed, toRefs, inject } from 'vue';
 import { NCard, useNotification, NThing, NGrid, NGridItem, NSpace, NButton, NText, NIcon, NPopover } from "naive-ui";
 import { HelpCircleOutline } from "@vicons/ionicons5";
-import { IPreferences, mergeNewPreferences, updateBackendPreferences } from '../preferences';
-import { updateUserPrefs } from '../options/services';
+import { IPreferences, mergeNewPreferences, updateBackendPreferences } from '@/preferences';
+import { updateUserPrefs } from '@/options/services';
 import { FileSystemClient } from '@/services/fs-client';
 import { eventEmitter } from '@/messaging';
+import { dbg } from '@/util';
 interface Props {
     preferences: IPreferences,
     compact?: boolean
@@ -79,7 +83,7 @@ const importPrefs = async () => {
     const result = await fs.getFile(fs.jsonFiles);
     const content = await result.file.text();
     const newPrefs = JSON.parse(content) as IPreferences;
-    console.log('imported new preferences', newPrefs);
+    dbg('imported new preferences', newPrefs);
     if (newPrefs && newPrefs.exposed) {
         await mergeNewPreferences(newPrefs);
         emitter?.emit('reload', 'preferences');
@@ -109,7 +113,7 @@ const exportPrefs = async () => {
 
 const exportToBackend = async () => {
     const result = await updateBackendPreferences(preferences.value);
-    console.log('notified backend to update preferences', result);
+    dbg('notified backend to update preferences', result);
     if (result) {
         notif?.create({
             type: 'success',

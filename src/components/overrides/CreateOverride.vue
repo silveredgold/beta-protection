@@ -129,29 +129,19 @@
     </template>
     </n-card>
     <!-- <pre>{{JSON.stringify(overridePreferences, null, 2)}}</pre> -->
-
 </template>
 
 <script setup lang="ts">
 import { defaultPrefs, IOverride, IPreferences, OperationMode } from '@/preferences';
 import { OverrideService } from '@/services/override-service';
-import { overrideService } from '@/views/override';
 import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NCheckbox, NCheckboxGroup, NSteps, NStep, NInputNumber, NThing, NInput, NInputGroup, NInputGroupLabel, NIcon, NAlert } from "naive-ui"; 
 import { LockClosedSharp, SaveOutline, Time, InformationCircleOutline } from "@vicons/ionicons5";
 import { computed, inject, Ref, ref, toRefs } from 'vue';
 import CensoringPreferences from '@/components/CensoringPreferences.vue';
 import VideoOptions from "@/components/VideoOptions.vue";
 import DomainListOptions from '@/components/DomainListOptions.vue';
-import ErrorOptions from '../ErrorOptions.vue';
+import ErrorOptions from '@/components/ErrorOptions.vue';
 import { Duration } from "luxon";
-
-// const props = defineProps<{
-//     override: IOverride|undefined
-// }>();
-
-// const {override} = toRefs(props);
-
-// const ready = computed(() => override?.value !== undefined);
 
 const currentStep = ref(1);
 const currentStepStatus: Ref<"wait" | "error" | "finish" | "process"> = ref('process');
@@ -161,7 +151,6 @@ const readyToBuild = computed(() => !!unlockKey.value && allowedModes.value?.len
 
 const allowList: Ref<string[]> = ref([]);
 const forceList: Ref<string[]> = ref([]);
-const errorMode: Ref<"subtle"|"normal"|undefined> = ref(undefined);
 
 const unlockKey: Ref<string> = ref('');
 const currentOverride: Ref<IOverride|undefined> = ref(undefined);
@@ -173,7 +162,6 @@ const handleButtonClick = () => {
 };
 
 const onUpdateIncludedOptions = (value: (string | number)[]) => {
-    console.log('updated included options', includedOptions?.value, value)
     if (!value.includes('video')) {
         overridePreferences.value.videoCensorLevel = undefined;
         overridePreferences.value.videoCensorMode = undefined;
@@ -208,11 +196,7 @@ const overridePreferences: Ref<Partial<IPreferences>> = ref({
     covered: defaultPrefs.covered,
     exposed: defaultPrefs.exposed,
     otherCensoring: defaultPrefs.otherCensoring,
-    obfuscateImages: false,
-    
-})
+    obfuscateImages: false
+});
 
 </script>
-
-<style>
-</style>

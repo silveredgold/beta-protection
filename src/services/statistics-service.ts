@@ -8,7 +8,6 @@ export class StatisticsService {
         const out: StatisticsData = {};
         const input = rawObj.replace(/^{/, "").replace(/}$/, "");
         const siteObjs = (input ?? "").split(',').map(i => i.trim());
-        console.debug('siteObjs', siteObjs);
         for (const site of siteObjs.filter(v => !!v)) {
             const siteName = site.split('=')[0];
             const [safe, hardcore, softcore] = site.split('=')[1].split(';');
@@ -34,7 +33,6 @@ export class StatisticsService {
                     reject('wait what');
                 }
             });
-            // console.debug('sending request on named port!');
             port.postMessage({msg: MSG_GET_STATISTICS.event});
         });
     }
@@ -52,7 +50,6 @@ export class StatisticsService {
                     port.disconnect();
                 }
             });
-            // console.debug('sending request on named port!');
             port.postMessage({msg: MSG_RESET_STATISTICS.event});
         });
     }

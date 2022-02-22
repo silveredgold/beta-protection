@@ -19,9 +19,9 @@
 </template>
 
 <script setup lang="ts">
-import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, GlobalThemeOverrides, useOsTheme } from "naive-ui";
-import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch, Suspense } from 'vue';
-import { themeOverrides } from "../util";
+import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, useOsTheme } from "naive-ui";
+import { provide, Ref, ref, onBeforeMount, computed, Suspense } from 'vue';
+import { themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import mitt from 'mitt';
 import { eventEmitter, ActionEvents } from "@/messaging";

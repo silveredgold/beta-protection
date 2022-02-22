@@ -1,10 +1,11 @@
 
 import PlaceholderUpload from "./PlaceholderUpload.vue";
-export {PlaceholderUpload};
-
 import BetaSafetyImport from "./BetaSafetyImport.vue";
-export {BetaSafetyImport};
-
-
 import PlaceholderOptions from "./PlaceholderOptions.vue";
-export {PlaceholderOptions};
+import CategoryList from "./CategoryList.vue";
+import OpenStore from "./OpenStore.vue"
+import PlaceholderList from "./PlaceholderList.vue";
+import Store from "./Store.vue";
+
+
+export { CategoryList, PlaceholderOptions, BetaSafetyImport, PlaceholderUpload, OpenStore, PlaceholderList, Store }

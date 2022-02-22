@@ -31,7 +31,7 @@ import { IPreferences } from "@/preferences";
 import { NList, NListItem, NButton, NSpace, NCheckbox, NIcon, NThing } from "naive-ui";
 import { CheckmarkCircleOutline, RemoveCircleOutline, ChevronForwardCircleOutline } from "@vicons/ionicons5";
 import { computed, toRefs } from "vue";
-import { PlaceholderSet } from "../types";
+import { PlaceholderSet } from "@/placeholders";
 
 interface Props {
     preferences: IPreferences,

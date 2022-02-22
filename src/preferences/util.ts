@@ -2,6 +2,7 @@ import { LocalPlaceholder } from "@/placeholders";
 import { PlaceholderService } from "@/services/placeholder-service";
 import { StickerService } from "@/services/sticker-service";
 import { IPreferences, loadPreferencesFromStorage } from ".";
+import { dbg } from "@/util";
 
 export async function getAvailableStickers() {
     const cats = await StickerService.getAvailable();
@@ -20,10 +21,8 @@ export async function getAvailablePlaceholders(): Promise<{categories: string[],
 
 export async function getEnabledPlaceholders(prefs?: IPreferences): Promise<{categories: string[], allImages: LocalPlaceholder[]}> {
     const enabledCategories = await getEnabledPlaceholderCategories(prefs);
-    // console.log('getting assets for enabled categories', enabledCategories);
     const enabledPlaceholders = await PlaceholderService.getLocalPlaceholders(enabledCategories);
-    console.debug('returning results', enabledCategories, enabledPlaceholders);
-    // console.log('got enabled assets', enabledPlaceholders);
+    dbg('returning results', enabledCategories, enabledPlaceholders);
     return {
         allImages: enabledPlaceholders,
         categories: enabledCategories

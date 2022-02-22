@@ -20,18 +20,14 @@ export class FileSystemClient {
     getFiles = async (filter?: (file: File) => boolean): Promise<{dir: string, files: LoadedFileHandle[]}> => {
         const dirHandle = await window.showDirectoryPicker();
         const promises: Promise<{handle: FileSystemFileHandle, file: File}>[] = [];
-        // console.log('got dir handle', dirHandle);
         for await (const entry of dirHandle.values()) {
             if (entry.kind !== 'file') {
                 break;
             }
-            // console.log('building promise for file', entry);
             promises.push(entry.getFile().then((file) => {return {handle: entry, file}}));
         }
         const result = await Promise.all(promises);
-        // console.log('awaited results', result);
         const results = result.filter(r => filter ? filter(r.file) : true);
-        // console.log('filtered results', results);
         return {dir: dirHandle.name, files: results};
     }
 
@@ -51,7 +47,6 @@ export class FileSystemClient {
                     if (entry.kind !== 'file') {
                         break;
                     }
-                    // console.log('building promise for file', entry);
                     promises.push(entry.getFile().then((file) => {return {handle: entry, file}}));
                 }
                 const result = await Promise.all(promises);

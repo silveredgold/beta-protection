@@ -12,36 +12,27 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, computed, defineComponent, onBeforeMount, onMounted, ref } from 'vue';
+import { onBeforeMount, ref } from 'vue';
 import { NCard, NButton, NInput } from "naive-ui";
 import { debounce } from "throttle-debounce";
 import browser from 'webextension-polyfill';
+import { dbg } from '@/util';
 
 const updateFunc = debounce(1000, async (host: string) => {
-  console.log(`persisting host`, JSON.stringify(host));
-  var storeResponse = await browser.storage.local.set({'backendHost': host});
+  dbg(`persisting host`, JSON.stringify(host));
+  await browser.storage.local.set({'backendHost': host});
   browser.runtime.sendMessage({msg: 'reloadSocket'});
-//   await savePreferencesToStorage(prefs);
 })
 
 const currentHost = ref("");
 const getCurrentHost = async () => {
     var storeResponse = await browser.storage.local.get({'backendHost': ''});
     const currentStoredHost = storeResponse['backendHost'] ?? "";
-    console.log('setting ref value', currentStoredHost);
     return currentStoredHost;
 }
 
-const host = computed({
-    get: () => currentHost?.value ?? '',
-    set: val => {
-        console.log(`queuing host ${val}`);
-        updateFunc(val);
-    }
-})
-
 const saveHost = async () => {
-    console.log(`queuing host ${currentHost.value}`);
+    dbg(`queuing host ${currentHost.value}`);
     updateFunc(currentHost.value);
 }
 
@@ -50,11 +41,5 @@ onBeforeMount(() => {
         currentHost.value = host;
     })
 });
-
-// return {
-//     host,
-//     getCurrentHost,
-//     saveHost
-// }
 
 </script>

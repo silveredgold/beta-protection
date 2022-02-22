@@ -14,10 +14,8 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, computed, defineComponent, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeMount, ref } from 'vue';
 import { NCard, NButton, NResult } from "naive-ui";
-import { debounce } from "throttle-debounce";
-import { WebSocketClient } from '@/transport/webSocketClient';
 import browser from 'webextension-polyfill';
 
 const props = defineProps<{
@@ -29,7 +27,6 @@ const connected = ref(false);
 const validResponse = computed(() => response?.value?.status === 200);
 const buildSocket = async () => {
     const configHost = await browser.storage.local.get('backendHost');
-    // console.log(`pulled host config: ${JSON.stringify(configHost)}`);
     const host = configHost['backendHost'];
     try {
         const webSocket = new WebSocket(host);
@@ -38,14 +35,14 @@ const buildSocket = async () => {
             webSocket.close();
         };
         webSocket.onclose = (e) => {
-            if (e.code !== 4999) {
+            if (e.code !== 1000) {
                 console.log('Socket is closed unexpectedly', e);
             }
         };
 
         webSocket.onerror = function (err) {
             //console.error('Socket encountered error: ', err.message, 'Closing socket');
-            webSocket.close(4998, err.toString());
+            webSocket.close(1000, err.toString());
         };
         return webSocket;
     } catch (e: any) {

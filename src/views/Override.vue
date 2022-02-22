@@ -28,11 +28,10 @@
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, GlobalThemeOverrides, useOsTheme, NTabs, NTabPane } from "naive-ui";
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch, Suspense } from 'vue';
-import { themeOverrides } from "../util";
+import { dbg, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import mitt from 'mitt';
 import { eventEmitter, ActionEvents } from "@/messaging";
-import { StatisticsData, StatisticsService } from "@/services/statistics-service";
 import {OverrideDetails, CreateOverride} from "@/components/overrides"
 import { OverrideService } from "@/services/override-service";
 import { IOverride } from "@/preferences";
@@ -52,29 +51,29 @@ onBeforeMount(async () => {
 
 const onUpdate = async () => {
     const service = await OverrideService.create();
-    console.log('onUpdate', service);
+    dbg('onUpdate', service);
     svc.value = service;
     current.value = service.current;
 }
 
-
-
-// browser.runtime.onMessage.addListener((request, sender) => {
-//   if (request['msg'] === 'reloadStatistics' && request['statistics']) {
-//     statistics.value = request.statistics as StatisticsData
+// events.on('reload', evt => {
+//   console.log('got emitter event', evt);
+//   if (evt == 'override' && svc) {
+//     svc?.value?.reload();
 //   }
 // });
 
-events.on('reload', evt => {
-  console.log('got emitter event', evt);
-  if (evt == 'override' && svc) {
-    svc?.value?.reload();
-  }
-});
-
-// provide()
 provide(eventEmitter, events);
 provide(overrideService, computed(() => svc.value) as unknown);
+
+browser.runtime.onMessage.addListener((msg, sender) => {
+    if (msg.msg == 'storageChange:local' && msg.keys && msg.keys.includes('override')) {
+        events.emit('reload', 'override');
+    }
+    if (msg.msg == 'reloadOverride') {
+        svc?.value?.reload();
+    }
+});
 
 </script>
 

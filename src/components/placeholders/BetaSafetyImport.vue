@@ -39,31 +39,27 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
-import { NCard, useNotification, NButton, NAutoComplete, NList, NListItem, NTooltip, NThing, NGrid, NGridItem, NGi, NTree, TreeOption } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, getAvailablePlaceholders } from '../../preferences';
-import { updateUserPrefs } from '../../options/services';
+import { Ref, ref, watch, computed, toRefs, inject } from 'vue';
+import { NCard, useNotification, NButton, NTooltip, NThing, NTree, TreeOption } from "naive-ui";
+import { IPreferences } from '@/preferences';
+import { updateUserPrefs } from '@/options/services';
 import { PlaceholderService } from '@/services/placeholder-service';
-import { LocalPlaceholder } from '@/placeholders';
 import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
-import { humanFileSize } from "@/util";
-import { eventEmitter, ActionEvents } from "@/messaging";
+import { dbg, humanFileSize } from "@/util";
+import { eventEmitter } from "@/messaging";
 
 const props = defineProps<{
     preferences: IPreferences
 }>();
 
-const emitter = inject(eventEmitter);
+const emitter = inject(eventEmitter, undefined);
 const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 
-// const placeholders: Ref<LocalPlaceholder[]> = ref([]);
 const newFiles: Ref<{ name: string, files: LoadedFileHandle[] }[]> = ref([]);
 const categoryName = ref('');
-
-
 
 const importData = computed((): TreeOption[] => {
     return newFiles.value.map(nfv => {
@@ -86,7 +82,7 @@ const uniqueCategories = computed(() => [...new Set(newFiles.value.map(f => f.na
 const openDir = async () => {
     const fs = new FileSystemClient();
     const result = await fs.getDirectoriesandFiles((file) => file.type.startsWith("image/"));
-    console.log('loaded files', result);
+    dbg('loaded files', result);
     const results = Object.keys(result).map(k => {
         return {
             name: k,
@@ -110,9 +106,6 @@ const importCurrent = async () => {
     emitter?.emit('reload', 'placeholders');
     categoryName.value = '';
     newFiles.value = [];
-    // loadPlaceholders().then(ph => {
-    //     placeholders.value = ph;
-    // });
 }
 
 const cancelImport = () => {
@@ -120,13 +113,8 @@ const cancelImport = () => {
     newFiles.value = [];
 }
 
-
-
 watch(prefs, async (newMode, prevMode) => {
-    updatePrefs!();
+    updatePrefs?.();
 }, { deep: true });
 
-
 </script>
-<style>
-</style>

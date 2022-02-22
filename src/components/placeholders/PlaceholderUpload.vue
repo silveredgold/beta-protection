@@ -57,20 +57,19 @@
             </n-grid>
         </n-card>
         <template #footer>
-            <!-- <p>{{mode}}</p> -->
             Beta Protection stores the placeholders in your browser's storage, so you can move/delete the imported files afterwards.
         </template>
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
-import { NCard, useNotification, NButton, NAutoComplete, NList, NListItem, NTooltip, NThing, NGrid, NGridItem, NGi } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, getAvailablePlaceholders } from '../../preferences';
-import { updateUserPrefs } from '../../options/services';
+import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
+import { NCard, useNotification, NButton, NAutoComplete, NTooltip, NThing, NGrid, NGi } from "naive-ui";
+import { IPreferences } from '@/preferences';
+import { updateUserPrefs } from '@/options/services';
 import { PlaceholderService } from '@/services/placeholder-service';
 import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
-import { humanFileSize } from "@/util";
-import { eventEmitter, ActionEvents } from "@/messaging";
+import { dbg, humanFileSize } from "@/util";
+import { eventEmitter } from "@/messaging";
 import { LocalPlaceholder } from '@/placeholders';
 
 const props = defineProps<{
@@ -86,8 +85,6 @@ const updatePrefs = inject(updateUserPrefs);
 const placeholders: Ref<LocalPlaceholder[]> = ref([]);
 const newFiles: Ref<LoadedFileHandle[]> = ref([]);
 const categoryName = ref('');
-
-// const placeholders = computed(() => availablePlaceholders?.value?.categories?.length ? availablePlaceholders?.value?.categories : []);
 
 const categories = computed(() => [...new Set(placeholders.value.map(pl => pl.category))]);
 const categoryOptions = computed(() => categories.value.filter(cat => cat.toLowerCase().includes(categoryName.value.toLowerCase())).map(cat => {
@@ -109,20 +106,10 @@ const enabled = computed({
     }
 });
 
-// const getCount = (category: string): number => {
-//     let currentCount = 0;
-//     let matchingAssets = placeholders.value.filter(pl => pl.category == category);
-//     if (matchingAssets && matchingAssets.length > 0) {
-//         // console.log('matching assets', matchingAssets);
-//         currentCount = matchingAssets.length;
-//     }
-//     return currentCount;
-// }
-
 const openDir = async () => {
     const fs = new FileSystemClient();
     const result = await fs.getFiles((file) => file.type.startsWith("image/"));
-    console.log('loaded files', result);
+    dbg('loaded files', result);
     newFiles.value = result.files;
     categoryName.value = result.dir;
 
@@ -131,7 +118,7 @@ const openDir = async () => {
 const openFile = async () => {
     const fs = new FileSystemClient();
     const result = await fs.getFile(fs.imageTypes);
-    console.log('loaded files', result);
+    dbg('loaded files', result);
     newFiles.value = [result];
 }
 
@@ -172,7 +159,4 @@ const loadPlaceholders = async () => {
     return holders;
 }
 
-
 </script>
-<style>
-</style>

@@ -123,16 +123,8 @@ browser.tabs.onUpdated.addListener((id, change, tab) => {
 });
 
 browser.tabs.onUpdated.addListener(async (id, change, tab) => {
-  const sendMsg = async(tabId: number, msg: object) => {
-    try {
-      await browser.tabs.sendMessage(tabId, msg);
-    } catch (e: any) {
-      console.log('Failed to send tab update event to tab!', tabId, msg, e);
-    }
-  }
   if (change.status === 'complete' && tab.id) {
     //caught a page load!
-    // console.debug('page load detected, notifying content script!');
     dbg('sending loaded message');
     await trySendEvent({msg: 'pageChanged:complete'}, tab.id);
   } else if (change.status === 'loading' && tab.id) {
@@ -148,6 +140,18 @@ browser.tabs.onRemoved.addListener((id, removeInfo) => {
     portManager.closeForSrc(id.toString());
     cancelRequestsForId(id, client);
   });
+});
+
+browser.storage.onChanged.addListener((changes, area) => {
+  const keys = Object.keys(changes);
+  if (area === 'local') {
+    console.log('change: storage', area, changes);
+    if (keys.includes('override') || keys.includes('preferences')) {
+      browser.runtime.sendMessage({msg: `reloadPreferences`});
+      browser.runtime.sendMessage({msg: 'reloadOverride'})
+    }
+  }
+  browser.runtime.sendMessage({msg: `storageChange:${area}`, keys, changes});
 });
 
 
@@ -198,21 +202,27 @@ function initContextMenus() {
     title: "Censor this image",
     contexts: ["image"],
   }, () => {
-    console.log('context menu created', browser.runtime.lastError);
+    if (browser.runtime.lastError) {
+      console.warn('error creating context menu', CMENU_REDO_CENSOR, browser.runtime.lastError);
+    }
   });
   browser.contextMenus.create({
     id: CMENU_RECHECK_PAGE,
     title: "Recheck images on this page",
     contexts: ["page"],
   }, () => {
-    console.log('recheck menu created', browser.runtime.lastError);
+    if (browser.runtime.lastError) {
+      console.warn('error creating context menu', CMENU_RECHECK_PAGE, browser.runtime.lastError);
+    }
   });
   browser.contextMenus.create({
     id: CMENU_ENABLE_ONCE,
     title: "Enable censoring this tab",
     contexts: ["page"]
   }, () => {
-    console.log('force-enable menu created', browser.runtime.lastError);
+    if (browser.runtime.lastError) {
+      console.warn('error creating context menu', CMENU_ENABLE_ONCE, browser.runtime.lastError);
+    }
   });
 }
 

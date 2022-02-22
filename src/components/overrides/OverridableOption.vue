@@ -6,9 +6,9 @@
     </Suspense>
   </template>
 </template>
-<script setup lang="ts">import { computed, toRefs } from 'vue';
+<script setup lang="ts">
+import { computed, toRefs } from 'vue';
 import LockedOption from './LockedOption.vue';
-
 
 interface Props {
   locked?: boolean|undefined,

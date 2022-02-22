@@ -50,12 +50,13 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
+import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, NThing, NSpace, NCheckbox, useNotification, NInputGroup, NInputGroupLabel, NInputNumber, NButton, NTooltip } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode } from '../preferences';
-import { updateUserPrefs } from '../options/services';
-import { SubliminalMessage, SubliminalService } from '@/services/subliminal-service';
-import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
+import { IPreferences } from '@/preferences';
+import { updateUserPrefs } from '@/options/services';
+import { SubliminalService } from '@/services/subliminal-service';
+import { FileSystemClient } from "@/services/fs-client";
+import { dbg } from '@/util';
 
 interface Props {
     preferences?: IPreferences,
@@ -95,12 +96,12 @@ const loadMessages = async () => {
 const openMessageFile = async () => {
     const file = await openFile();
     const contents = await file.file.text();
-    console.log('got contents', contents);
+    dbg('got contents', contents);
     const records = SubliminalService.loadFromText(contents);
-    console.log('got records', records);
+    dbg('got records', records);
     await svc.loadMessages(records);
     const msgs = await loadMessages();
-    console.log('got messages', msgs);
+    dbg('got messages', msgs);
     messages.value = msgs;
     const n = notif?.create({
           content: `Imported ${msgs.length} messages`,
@@ -112,11 +113,8 @@ const openMessageFile = async () => {
 const openFile = async () => {
     const fs = new FileSystemClient();
     const result = await fs.getFile(fs.textFiles);
-    console.log('loaded files', result);
+    dbg('loaded files', result);
     return result;
 }
 
-
 </script>
-<style>
-</style>

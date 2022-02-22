@@ -227,7 +227,6 @@ const configureListeners = () => {
 
 	// Receive message from the background script here.
 	browser.runtime.onMessage.addListener(function(request, sender) {
-		// console.log(`content-script onMessage listener!`);
 		handleMessage(request, sender);
 	});
 

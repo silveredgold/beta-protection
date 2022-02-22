@@ -20,10 +20,10 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { ComponentOptions, defineComponent, onMounted, reactive, Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
+import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, getAvailablePlaceholders } from '../preferences';
-import { updateUserPrefs } from '../options/services';
+import { IPreferences } from '@/preferences';
+import { updateUserPrefs } from '@/options/services';
 import { StickerService } from '@/services/sticker-service';
 
 const props = defineProps<{
@@ -72,5 +72,3 @@ const loadStickers = async () => {
 
 
 </script>
-<style>
-</style>

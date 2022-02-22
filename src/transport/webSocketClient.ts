@@ -2,6 +2,7 @@ import Sockette from "sockette";
 import { RuntimePortManager } from "./runtimePort";
 import browser from 'webextension-polyfill';
 import { censoredImageEvent, placeholderStickerEvent, preferencesEvent, resetStatisticsEvent, SocketContext, SocketEvent, statisticsEvent } from "./messages";
+import { dbg } from "@/util";
 
 export class WebSocketClient {
 
@@ -9,7 +10,6 @@ export class WebSocketClient {
         console.trace('creating new socket client!');
         if (!host) {
             const configHost = await browser.storage.local.get('backendHost');
-            // console.log(`pulled host config: ${JSON.stringify(configHost)}`);
             if (configHost['backendHost']) {
                 host = configHost['backendHost'];
             }
@@ -147,14 +147,13 @@ export class WebSocketClient {
     }
 
     processServerMessage = (response: any) => {
-        console.debug(`server response received`, response);
         const event = this.messageEvents.find(evt => evt.event === response['requestType']);
         if (event?.handler !== undefined) {
             const ctx: SocketContext = {
                 socketClient: this,
                 sendMessage: this.sendRuntimeMessage
             };
-            console.log('running handler for server message', response.requestType, response, ctx);
+            dbg('running handler for server message', response.requestType, response, ctx);
             event.handler(response, ctx);
         } else {
             console.warn('received unmatched server message!', response);

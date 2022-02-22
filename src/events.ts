@@ -1,7 +1,7 @@
 import { MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATISTICS, MSG_STATUS, MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_INJECT_SUBLIMINAL, MSG_IMAGE_DATA, MSG_FORWARDING } from "./messaging";
-import { loadPreferencesFromStorage, toRaw } from "./preferences";
-import { WebSocketClient } from "./transport/webSocketClient";
-import { getDomain, getExtensionVersion } from "./util";
+import { loadPreferencesFromStorage, toRaw } from "@/preferences";
+import { WebSocketClient } from "@/transport/webSocketClient";
+import { dbg, dbgLog, getDomain, getExtensionVersion } from "@/util";
 import browser from 'webextension-polyfill';
 
 export const CMENU_REDO_CENSOR = "BSNG_REDO_CENSOR";
@@ -14,7 +14,7 @@ const knownMessages = [MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG
 
 export function processContextClick(info: browser.Menus.OnClickData, tab: browser.Tabs.Tab|undefined, client: WebSocketClient) {
     const eVersion = getExtensionVersion();
-    console.log('prcessing context click event', info, tab);
+    dbgLog('prcessing context click event', info, tab);
     if (tab && info.menuItemId === CMENU_REDO_CENSOR) {
         browser.tabs.sendMessage(tab.id!, {msg: CMENU_REDO_CENSOR}).then(value => {
             if (value.id) {
@@ -52,14 +52,14 @@ export interface IWebSocketClient  {
 }
 
 export async function processMessage(message: any, sender: browser.Runtime.MessageSender, ctxFactory: () => Promise<MessageContext>) {
-    console.log('background processing msg', message, knownMessages.map(e => e.event));
+    dbgLog('background processing msg', message, knownMessages.map(e => e.event));
     let msgHandlerFound = false;
     let ctx: MessageContext;
     for (const msg of knownMessages) {
         if (message.msg === msg.event) {
             msgHandlerFound = true;
             ctx ??= await ctxFactory();
-            console.debug('found matching event handler', msg);
+            dbg('found matching event handler', msg);
             const result = await msg.handler(message, sender, ctx);
             return result;
         }
