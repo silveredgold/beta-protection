@@ -29,7 +29,7 @@ export class WebSocketClient {
 
     private webSocket?: Sockette;
 
-    defaultHost = "ws://localhost:8090/ws"
+    static defaultHost = "ws://localhost:8090/ws"
 
     sendObj = (message: object, callback?: () => any|void) => {
         this.send(JSON.stringify(message), callback);
@@ -85,7 +85,7 @@ export class WebSocketClient {
     
 
     private connectTo = (host?: string): Sockette | undefined => {
-        host ??= this.defaultHost;
+        host ??= WebSocketClient.defaultHost;
         try {
             const onOpen = () => {
                 while (this.messageQueue.length > 0) {

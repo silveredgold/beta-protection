@@ -35,9 +35,19 @@ Finally, drag and drop the CRX file you downloaded in the last step into the Ext
 
 ### Troubleshooting
 
+#### *Backend and browser versioning appear out of sync*
+
+You can (in general) safely ignore that warning. It's generated as Beta Safety doesn't expect anything other than its own extension to talk to it, and it thinks you might be using an ancient version of Beta Safety or something like that.
+
 #### *This extension is not listed in the (...) Store* error
 
 If you see an error message similar to the below, your browser is blocking extension packages not from an approved Web Store from loading. The easiest way to avoid this is to load the extension "unpacked" (this is how Beta Safety installs, if you're more familiar with that).
+
+<ImageZoom 
+  src="/beta-protection/assets/brave-warning.png" 
+  :border="true" 
+  width="200"
+/>
 
 1. Download the ZIP file from the GitHub Releases page (rather than the `.crx` file), and extract it somewhere
 2. From your browser's Manage Extensions page (with Developer Mode on), find the *Load Unpacked* option

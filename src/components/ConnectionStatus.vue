@@ -17,6 +17,7 @@
 import { computed, onBeforeMount, ref } from 'vue';
 import { NCard, NButton, NResult } from "naive-ui";
 import browser from 'webextension-polyfill';
+import { WebSocketClient } from '@/transport/webSocketClient';
 
 const props = defineProps<{
     compact?: boolean
@@ -29,7 +30,7 @@ const buildSocket = async () => {
     const configHost = await browser.storage.local.get('backendHost');
     const host = configHost['backendHost'];
     try {
-        const webSocket = new WebSocket(host);
+        const webSocket = new WebSocket(host ?? WebSocketClient.defaultHost);
         webSocket.onopen = () => {
             connected.value = true;
             webSocket.close();
