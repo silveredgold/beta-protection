@@ -147,7 +147,7 @@ export class Purifier {
                 const urlMatch = /[:,\s]\s*url\s*\(\s*(?:'(\S*?)'|"(\S*?)"|((?:\\\s|\\\)|\\\"|\\\'|\S)*?))\s*\)/gi
                 const match = urlMatch.exec(bg.background);
                 if (match) {
-                    bg.imageUrl = match[1]
+                    bg.imageUrl = match.slice(1).find(m => !!m)
                 }
             }
             return bg;
@@ -325,35 +325,36 @@ export class Purifier {
     private censorStyleImage = (img: ImageStyleElement) => {
         if (img.imageUrl) {
             const imageURL = this.normalizeUrl(img.imageUrl);
-            if (isValidUrl(imageURL) && !imageURL.includes(".svg")) {
-                const image = new Image();
+            if (isValidUrl(imageURL) && !imageURL.includes(".svg") && this.isUnsafe(img.element, "bg")) {
+                // const image = new Image();
 
                 // just in case it is not already loaded
-                image.addEventListener('on', () => {
-                    if (image.width * image.height > 15000 && image.width > 100 && image.height > 100) {
-                        const uniqueID = generateUUID();
-                        img.element.setAttribute('censor-id', uniqueID);
-                        if (this._currentState && this._currentState.activeCensoring) {
-                            const result = this._cache.getCensored({src: imageURL});
-                            if (result) {
-                                dbgLog('found matching cache result', imageURL);
-                                (img.element as HTMLElement).style.backgroundImage = 'url("' + result + '")';
-                                (img.element as HTMLElement).toggleAttribute('censor-placeholder', false);
-                            } else {
-                                const placeholder = this.getPlaceholderSrc();
-                                try {
-                                    (img.element as HTMLElement).style.backgroundImage = 'url("' + placeholder + '")';
-                                    (img.element as HTMLElement).toggleAttribute('censor-placeholder', true);
-                                } catch { }
-                                this.sendCensorRequest(imageURL, uniqueID, "BG", 1);
-                            }
-                        }
-                        img.element.setAttribute('censor-style', 'censored');
+                // image.addEventListener('load', () => {
+                //     if (image.width * image.height > 15000 && image.width > 100 && image.height > 100) {
+                        
+                //     } else {
+                //         this.setExcluded(img.element, 'size');
+                //     }
+                // }, { once: true });
+                // image.src = imageURL;
+                const uniqueID = generateUUID();
+                img.element.setAttribute('censor-id', uniqueID);
+                if (this._currentState && this._currentState.activeCensoring) {
+                    const result = this._cache.getCensored({src: imageURL});
+                    if (result) {
+                        dbgLog('found matching cache result', imageURL);
+                        (img.element as HTMLElement).style.backgroundImage = 'url("' + result + '")';
+                        (img.element as HTMLElement).toggleAttribute('censor-placeholder', false);
                     } else {
-                        this.setExcluded(img.element, 'size');
+                        const placeholder = this.getPlaceholderSrc();
+                        try {
+                            (img.element as HTMLElement).style.backgroundImage = 'url("' + placeholder + '")';
+                            (img.element as HTMLElement).toggleAttribute('censor-placeholder', true);
+                        } catch { }
+                        this.sendCensorRequest(imageURL, uniqueID, "BG", 1);
                     }
-                }, { once: true });
-                image.src = imageURL;
+                }
+                img.element.setAttribute('censor-style', 'censored');
             }
         } else {
             this.setExcluded(img.element, 'unmatched_url');
@@ -419,8 +420,8 @@ const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: Ima
 		}
         port.disconnect();
 	} else if(request.msg === "setSrc" && request.type === "BG") {
-		dbgLog(`got background setSrc message on runtime port! ${request.id}`)
-		const requestElement = document.querySelector(`[censor-id="${request.id}"]'`)
+		dbgLog(`got background setSrc message on runtime port! ${request.id}`);
+		const requestElement = document.querySelector(`[censor-id="${request.id}"]`);
 		if(requestElement) {
 			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
 			requestElement.setAttribute('censor-style', 'censored');
