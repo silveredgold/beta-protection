@@ -52,3 +52,19 @@ If you see an error message similar to the below, your browser is blocking exten
 1. Download the ZIP file from the GitHub Releases page (rather than the `.crx` file), and extract it somewhere
 2. From your browser's Manage Extensions page (with Developer Mode on), find the *Load Unpacked* option
 3. Click it, and select the folder where you unpacked the ZIP file. Beta Protection should appear in your Extensions list.
+
+
+### Permissions
+
+As a result of Chrome's very granular extension API and the complexity of Beta Protection, there's actually quite a few permissions required. In the interest of transparency, here's a rundown of the permissions requested and they're used for:
+
+- `activeTab`: Requred to manipulate the active tab, to replace images on the page with placeholders and censored images
+- `contextMenus`:As the name implies, required to show the Beta Protection context menus
+- `storage`: Required to access Chrome's extension storage, used to store your extension preferences mostly.
+- `scripting`: Chrome requires this permission so we can inject styles and scripts into tabs. This is used for two things:
+  - Styling: Since page lifecycles are complicated, the short version is that we add some global CSS styles to hide uncensored images while we process them
+  - Subliminals: If you have subliminal messages enabled, the styles and logic for them are injected into each tab
+- `notifications`: Only used for the update checker, to notify you when there's an update available. This is needed since Chrome only auto-updates extensions from the Chrome Web Store, not locally installed ones
+- `alarms`: Due to changes in the Chrome extension API, this is now the only way to reliably perform tasks on a regular basis, so Beta Protection uses them for a few "utility" tasks.
+
+> As always, if you're worried about what Beta Protection is doing or how it works, you can always check the full source [on GitHub](https://github.com/silveredgold/beta-protection).

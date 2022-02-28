@@ -52,12 +52,18 @@ module.exports = {
   },
   configureWebpack: {
     devtool: process.env.NODE_ENV === 'development' ? 'cheap-source-map' : 'source-map',
+    resolve: {
+      alias: {
+        "#": '@silveredgold/beta-shared'
+      }
+    },
     plugins: [new CopyPlugin({
       // Use copy plugin to copy *.wasm to output folder.
       patterns: [{ from: 'node_modules/onnxruntime-web/dist/*.wasm', to: 'wasm/[name].[ext]', noErrorOnMissing: true }]
     }),
     new DefinePlugin({
-      __DEBUG__: JSON.stringify(process.env.NODE_ENV === 'development')
+      __DEBUG__: JSON.stringify(process.env.NODE_ENV === 'development'),
+      __REPO_URL__: JSON.stringify('https://github.com/silveredgold/beta-protection/')
     })
     ]
   },

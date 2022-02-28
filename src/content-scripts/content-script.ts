@@ -1,5 +1,4 @@
-import { getAvailablePlaceholders, getEnabledPlaceholders, loadPreferencesFromStorage } from "@/preferences";
-import { IPreferences, OperationMode } from "@/preferences/types";
+import { loadPreferencesFromStorage } from "@/preferences";
 import { Purifier } from "./purifier";
 import { CensoringState, CensoringContext } from "./types";
 import { getDomain, hashCode, shouldCensor, dbg, dbgLog } from "@/util";

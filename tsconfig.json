@@ -16,11 +16,15 @@
     "baseUrl": ".",
     "types": [
       "webpack-env",
-      "naive-ui/volar"
+      "naive-ui/volar",
+      "chrome"
     ],
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "#/*": [
+        "node_modules/@silveredgold/beta-shared/*"
       ]
     },
     "lib": [

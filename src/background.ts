@@ -5,6 +5,7 @@ import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
 import { WebSocketRequestClient } from "./transport/webSocketPortClient";
+import { UpdateService } from "./services/update-service";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 
@@ -82,11 +83,13 @@ browser.runtime.onInstalled.addListener((details) => {
   }
   initExtension();
   initContextMenus();
+  initAlarms();
 });
 
 browser.runtime.onStartup.addListener(() => {
   //TODO: we need to do a settings sync here;
   initContextMenus();
+  initAlarms();
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
@@ -153,6 +156,23 @@ browser.storage.onChanged.addListener((changes, area) => {
   }
   browser.runtime.sendMessage({msg: `storageChange:${area}`, keys, changes});
 });
+
+browser.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === 'BP_UPDATE_CHECK') {
+    console.log('running background update check!', Date.now().toString());
+    UpdateService.checkForUpdates();
+  }
+});
+
+browser.notifications.onButtonClicked.addListener((id, idx) => {
+  UpdateService.handleNotification(id, idx);
+});
+
+browser.notifications.onClicked.addListener(id => {
+  UpdateService.handleNotification(id);
+});
+
+
 
 
 
@@ -223,6 +243,13 @@ function initContextMenus() {
     if (browser.runtime.lastError) {
       console.warn('error creating context menu', CMENU_ENABLE_ONCE, browser.runtime.lastError);
     }
+  });
+}
+
+function initAlarms() {
+  browser.alarms.create('BP_UPDATE_CHECK', {
+    delayInMinutes: 1,
+    periodInMinutes: 720
   });
 }
 
