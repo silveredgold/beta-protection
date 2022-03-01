@@ -31,6 +31,7 @@ export const placeholderStickerEvent : SocketEvent<void> = {
 export const censoredImageEvent : SocketEvent<void> = {
     event: 'censorImage',
     handler: async (response, ctx) => {
+        let errorMsg: string|undefined;
         const prefs = await loadPreferencesFromStorage();
         let url: string;
         if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
@@ -40,12 +41,14 @@ export const censoredImageEvent : SocketEvent<void> = {
             url = prefs.errorMode === 'normal'
                 ? browser.runtime.getURL("images/error_normal.jpg")
                 : browser.runtime.getURL("images/error_simple.png");
+            errorMsg = response.url;
             // we don't have an NSFW error screen yet
             // ignore that, we do now
         }
         const body = {
             msg: "setSrc", censorURL: url,
-            id: response.id, tabid: response.tabid, type: response.type
+            id: response.id, tabid: response.tabid, 
+            type: response.type, error: errorMsg
         };
         ctx.sendMessage(body, response.id, response.tabid);
     }

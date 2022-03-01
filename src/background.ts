@@ -4,7 +4,6 @@ import { getExtensionVersion } from "./util";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
-import { WebSocketRequestClient } from "./transport/webSocketPortClient";
 import { UpdateService } from "./services/update-service";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
@@ -264,7 +263,7 @@ async function getClient() {
 }
 
 async function getRequestClient(requestId: string) {
-  const reqClient = await WebSocketRequestClient.create(requestId);
+  const reqClient = await WebSocketClient.createForRequest(requestId);
   reqClient.usePortManager(portManager);
   return reqClient;
 }

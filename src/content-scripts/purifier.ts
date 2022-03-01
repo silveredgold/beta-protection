@@ -413,6 +413,9 @@ const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: Ima
     if(request.msg === "setSrc" && request.type === "normal") {
 		const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
 		if(requestElement){
+            if (request.error) {
+                console.log('BP - Error response from censoring request!', request.error, request.id);
+            }
 			requestElement.setAttribute('src', request.censorURL);
 			requestElement.setAttribute('censor-state', 'censored');
 			requestElement.toggleAttribute('censor-placeholder', false);
@@ -423,6 +426,9 @@ const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: Ima
 		dbgLog(`got background setSrc message on runtime port! ${request.id}`);
 		const requestElement = document.querySelector(`[censor-id="${request.id}"]`);
 		if(requestElement) {
+            if (request.error) {
+                console.log('BP - Error response from censoring request!', request.error, request.id);
+            }
 			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
 			requestElement.setAttribute('censor-style', 'censored');
 			requestElement.toggleAttribute('censor-placeholder', false);
