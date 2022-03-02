@@ -7,6 +7,14 @@
                     <n-form :model="prefs.otherCensoring" label-placement="left" :label-width="120">
                         <n-form-item label="Female Eyes" path="femaleEyes">
                             <n-input-group class="censor-input-group">
+                                <n-popover trigger="hover" placement="bottom">
+                                    <template #trigger>
+                                        <n-icon style="margin-top: auto; margin-bottom: auto;" :component="HelpCircleOutline" :size="20" />
+                                    </template>
+                                    <n-thing title="Experimental Feature!" style="max-width: 20rem;">
+                                        Eye detection is not a part of the NudeNet model so not all backends may support it! Additionally, the accuracy or performance may be worse than other supported parts.
+                                    </n-thing>
+                                </n-popover>
                                 <n-select
                                         v-model:value="prefs.otherCensoring.femaleEyes"
                                         :options="eyeCensorTypes"
@@ -135,7 +143,8 @@
 </template>
 <script setup lang="ts">
 import { inject, toRefs, watch } from 'vue';
-import { NCard, useNotification, NTabs, NTabPane, NSpace, NForm, NFormItem, NSelect, NInputGroup, NSlider, NThing, NCheckbox } from "naive-ui";
+import { NCard, useNotification, NTabs, NTabPane, NSpace, NForm, NFormItem, NSelect, NInputGroup, NSlider, NThing, NCheckbox, NPopover, NIcon } from "naive-ui";
+import { HelpCircleOutline } from "@vicons/ionicons5";
 import { IPreferences, CensorType, BodyCensorModes } from '@/preferences';
 import { updateUserPrefs } from "@/options/services";
 import { dbg, toTitleCase } from "@/util";

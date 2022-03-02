@@ -44,7 +44,7 @@ export const themeOverrides: GlobalThemeOverrides = { common: { fontWeightStrong
 //   return isChrome || inList;
 // }
 
-export function isNodeSafe(node: Node, safeList?: number[]) {
+export function isNodeExcluded(node: Node, safeList?: number[]) {
   const plSrc = node["placeholder-name"] as string;
   const url = node["src"] as string;
   let safeSrc = true;
@@ -55,6 +55,23 @@ export function isNodeSafe(node: Node, safeList?: number[]) {
   const isChrome = url && url.includes("extension://"); //edge doesn't use a prefix
   const inList = safeList && safeList.length > 0 ? safeList.includes(hashCode(url)) : true;
   return safeSrc || isChrome || inList;
+}
+
+export function isNodeSafe(node: Node) {
+  const conditions: boolean[] = [];
+  const plSrc = node["placeholder-name"] as string;
+  const url = node["src"] as string;
+  const origSrc = node["censor-src"] as string;
+  const state = node["censor-state"] ?? node["censor-style"];
+  if (plSrc) {
+    const filename = (url.split('/').pop() ?? '').split('#')[0].split('?')[0];
+    conditions.push(filename.toLowerCase() == plSrc.toLowerCase());
+  }
+  if (state === 'censored' && origSrc) {
+    conditions.push(url !== origSrc);
+    conditions.push(url.startsWith('data:'))
+  }
+  return conditions.every(c => c);
 }
 
 export function hashCode(str: string) {

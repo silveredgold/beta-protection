@@ -1,5 +1,5 @@
-import { IPreferences } from "@/preferences/types"
-import { WebSocketClient } from "@/transport/webSocketClient"
+import { IPreferences } from "@/preferences"
+import { ICensorBackend } from "@/transport";
 import { PageObserver } from "./observer"
 import { Purifier } from "./purifier"
 import browser from 'webextension-polyfill';
@@ -11,7 +11,7 @@ export type CensoringState = {
 export type CensoringContext = {
     state: CensoringState,
     preferences: IPreferences,
-    socketClient?: WebSocketClient,
+    backendClient?: ICensorBackend,
     purifier: Purifier,
     observer?: PageObserver,
     port?: browser.Runtime.Port

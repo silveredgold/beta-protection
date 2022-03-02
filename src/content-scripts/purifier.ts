@@ -116,8 +116,9 @@ export class Purifier {
             elementArr.push(elem);
         }
         const targetEls = this.discoverImages(elementArr);
-        for (const el of targetEls) {
-            this.censorImage(el)
+
+        for (const [idx, el] of targetEls.entries()) {
+            this.censorImage(el, false, targetEls.length - idx);
         }
         // then backgrounds
         const targetBacks = this.discoverStyleImages([...bgElements]);
@@ -213,7 +214,7 @@ export class Purifier {
         return state;
     }
 
-    censorImage = (img: HTMLImageElement, runOnce: boolean = false) => {
+    censorImage = (img: HTMLImageElement, runOnce: boolean, priority?: number) => {
         this.flattenSrc(img);
         if (runOnce || (img.complete && img.naturalWidth > 0)) {
             const url = this.normalizeSrcUrl(img);
@@ -241,10 +242,10 @@ export class Purifier {
         return srcUrl;
     }
 
-    private censorLoadedImage = (imageURL: string, img: HTMLImageElement, active: boolean) => {
+    private censorLoadedImage = (imageURL: string, img: HTMLImageElement, active: boolean, priority?: number) => {
         if (this.isUnsafe(img) && this._ready) {
             if (img.width * img.height > 15000 && img.width > 100 && img.height > 100 && !imageURL.includes(".svg")) {
-                const uniqueID = generateUUID();
+                const uniqueID = img.getAttribute('censor-id') ?? generateUUID();
                 img.setAttribute('censor-id', uniqueID);
                 img.setAttribute('censor-src', imageURL);
                 if (img.clientWidth > 0) {
@@ -261,7 +262,9 @@ export class Purifier {
                         img.setAttribute('censor-state', 'censoring');
                         const placeholder = this.getPlaceholderSrc();
                         // console.log(`got placeholder URL: ${placeholder}`);
-                        const priority = img.getBoundingClientRect().top | 0;
+                        // const priority = img.getBoundingClientRect().top | 0;
+                        priority ??= 0;
+                        // const priority = Math.abs(this.getVisibility(img).center.y);
                         const placeHolderImage = new Image();
                         placeHolderImage.onload = () => {
                             img.addEventListener('load', () => {
@@ -269,7 +272,7 @@ export class Purifier {
                             }, { once: true });
                             img.src = placeHolderImage.src;
                             img.toggleAttribute('censor-placeholder', true);
-                            this.sendCensorRequest(imageURL, uniqueID, "normal", priority);
+                            this.sendCensorRequest(imageURL, uniqueID, priority);
                         };
                         placeHolderImage.setAttribute('src', placeholder);
                     }
@@ -284,13 +287,12 @@ export class Purifier {
         }
     }
 
-    private sendCensorRequest = (imageUrl: string, id: string, type: "BG"|"normal", priority?: number) => {
+    private sendCensorRequest = (imageUrl: string, id: string, priority?: number) => {
         const msg = {
             msg: 'censorRequest',
             imageURL: imageUrl,
             id: id,
             priority: priority ?? 1,
-            type: type,
             domain: getDomain(this._domain, this._hideDomains)
         };
         this._cache.trackImage(id, imageUrl);
@@ -325,7 +327,7 @@ export class Purifier {
     private censorStyleImage = (img: ImageStyleElement) => {
         if (img.imageUrl) {
             const imageURL = this.normalizeUrl(img.imageUrl);
-            if (isValidUrl(imageURL) && !imageURL.includes(".svg") && this.isUnsafe(img.element, "bg")) {
+            if (isValidUrl(imageURL) && !imageURL.includes(".svg") && this.isUnsafe(img.element)) {
                 // const image = new Image();
 
                 // just in case it is not already loaded
@@ -351,7 +353,7 @@ export class Purifier {
                             (img.element as HTMLElement).style.backgroundImage = 'url("' + placeholder + '")';
                             (img.element as HTMLElement).toggleAttribute('censor-placeholder', true);
                         } catch { }
-                        this.sendCensorRequest(imageURL, uniqueID, "BG", 1);
+                        this.sendCensorRequest(imageURL, uniqueID, 1);
                     }
                 }
                 img.element.setAttribute('censor-style', 'censored');
@@ -381,10 +383,14 @@ export class Purifier {
         }
     }
 
-    private isUnsafe = (el: Element, mode: "normal"|"bg" = "normal") => {
-        const elState = mode === "normal" ? el.getAttribute('censor-state') : el.getAttribute('censor-style');
+    private isUnsafe = (el: Element) => {
+        let replaced = false;
+        const elState = el.tagName == "IMG" ? el.getAttribute('censor-state') : el.getAttribute('censor-style');
+        if (el.getAttribute('censor-id') && el.getAttribute('src')) {
+            replaced = !el.getAttribute('src')!.startsWith('data:image');
+        }
         const state = this.isUnsafeState(elState);
-        return state;
+        return state || replaced;
     }
 
     private isUnsafeState = (elState: string | null) => {
@@ -410,32 +416,31 @@ export class Purifier {
 
 
 const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: ImageTracker) => {
-    if(request.msg === "setSrc" && request.type === "normal") {
+    //TODO: this doesn't need to be separated. Just check the tag name on the element returned by the selector
+    if(request.msg === "setSrc") {
+        if (request.error) {
+            console.log('BP - Error response from censoring request!', request.error, request.id);
+        }
 		const requestElement = document.querySelector(`[censor-id="${request.id}"]`)
 		if(requestElement){
-            if (request.error) {
-                console.log('BP - Error response from censoring request!', request.error, request.id);
+            if (requestElement.tagName === "IMG") {
+                if (request.error) {
+                    console.log('BP - Error response from censoring request!', request.error, request.id);
+                }
+                requestElement.setAttribute('src', request.censorURL);
+                requestElement.removeAttribute('srcset');
+                requestElement.setAttribute('censor-state', 'censored');
+                requestElement.toggleAttribute('censor-placeholder', false);
+                
+            } else {
+                (requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
+                requestElement.setAttribute('censor-style', 'censored');
+                requestElement.toggleAttribute('censor-placeholder', false);
             }
-			requestElement.setAttribute('src', request.censorURL);
-			requestElement.setAttribute('censor-state', 'censored');
-			requestElement.toggleAttribute('censor-placeholder', false);
             cache.updateImage(request.id, request.censorURL);
-		}
+		} else {
+            dbgLog('failed to locate censoring target element by ID', request.id);
+        }
         port.disconnect();
-	} else if(request.msg === "setSrc" && request.type === "BG") {
-		dbgLog(`got background setSrc message on runtime port! ${request.id}`);
-		const requestElement = document.querySelector(`[censor-id="${request.id}"]`);
-		if(requestElement) {
-            if (request.error) {
-                console.log('BP - Error response from censoring request!', request.error, request.id);
-            }
-			(requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
-			requestElement.setAttribute('censor-style', 'censored');
-			requestElement.toggleAttribute('censor-placeholder', false);
-			//TODO: should this remove the CSS classes?
-            cache.updateImage(request.id, request.censorURL);
-            port.disconnect();
-		}
-	}
-
+    }
 }

@@ -1,14 +1,16 @@
-import { WebSocketClient } from "./transport/webSocketClient";
-import { cancelRequestsForId, processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
+import { processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
 import { getExtensionVersion } from "./util";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
 import { UpdateService } from "./services/update-service";
+import { IBackendProvider, ICensorBackend } from "./transport";
+import { BetaSafetyProvider } from "./transport/beta-safety";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
+export const backendProvider: IBackendProvider<ICensorBackend> = new BetaSafetyProvider()
 
-let currentClient: WebSocketClient | null;
+let currentClient: ICensorBackend | null;
 
 browser.runtime.onConnect.addListener((port) => {
   const portMsgListener = async (msg: any, port: browser.Runtime.Port) => {
@@ -21,7 +23,7 @@ browser.runtime.onConnect.addListener((port) => {
         const client = await getClient();
         const version = getExtensionVersion();
         return {
-          socketClient: client,
+          backendClient: client,
           version
         }
       };
@@ -36,7 +38,7 @@ browser.runtime.onConnect.addListener((port) => {
       const client = await getRequestClient(port.name);
       const version = getExtensionVersion();
       return {
-        socketClient: client,
+        backendClient: client,
         version
       }
     };
@@ -108,7 +110,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
       const client = await getClient();
       const version = getExtensionVersion();
       return {
-        socketClient: client,
+        backendClient: client,
         version
       }
     };
@@ -120,7 +122,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
 browser.tabs.onUpdated.addListener((id, change, tab) => {
   dbg('tab updated: cancelling requests', change, tab);
   getClient().then(client => {
-    cancelRequestsForId(id, client);
+    client.cancelRequests({srcId: id.toString()});
   });
 });
 
@@ -140,7 +142,7 @@ browser.tabs.onRemoved.addListener((id, removeInfo) => {
   dbg('tab removed', removeInfo);
   getClient().then(client => {
     portManager.closeForSrc(id.toString());
-    cancelRequestsForId(id, client);
+    client.cancelRequests({srcId: id.toString()});
   });
 });
 
@@ -205,13 +207,11 @@ function initExtension(syncPrefs: boolean = true) {
   getClient().then(client => {
     const eVersion = getExtensionVersion();
     if (syncPrefs) {
-      client.sendObj({version: eVersion, msg: "getUserPreferences"});
+      client.getRemotePreferences().then(() => {
+        trySendEvent({msg: 'reloadPreferences'});
+      });
     }
-    client.sendObj({
-      version: eVersion,
-       msg: "detectPlaceholdersAndStickers"
-    });
-    trySendEvent({msg: 'reloadPreferences'});    
+    client.getAvailableAssets('stickers');
   });
 }
 
@@ -252,18 +252,16 @@ function initAlarms() {
   });
 }
 
-async function getClient() {
-  if (currentClient?.ready) {
+async function getClient(): Promise<ICensorBackend> {
+  if (currentClient) {
     return currentClient;
   } else {
-    currentClient = await WebSocketClient.create();
-    currentClient.usePortManager(portManager);
+    currentClient = await backendProvider.getClient(portManager);
     return currentClient;
   }
 }
 
 async function getRequestClient(requestId: string) {
-  const reqClient = await WebSocketClient.createForRequest(requestId);
-  reqClient.usePortManager(portManager);
+  const reqClient = await backendProvider.getRequestClient(requestId, portManager);
   return reqClient;
 }

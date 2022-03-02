@@ -1,11 +1,12 @@
 import { createPreferencesFromBackend, IPreferences, loadPreferencesFromStorage, rawPreferences, savePreferencesToStorage } from "@/preferences"
 import { PlaceholderService } from "@/services/placeholder-service"
 import { StickerService } from "@/services/sticker-service"
-import { WebSocketClient } from "./webSocketClient"
 import browser from 'webextension-polyfill';
 import { StatisticsService } from "@/services/statistics-service";
 import { setModeBadge, dbg } from "@/util";
 import { IWebSocketClient } from "@/events";
+
+// this file should be unnecessary now, retaining for compatibility and testing.
 
 export type SocketEvent<Type> = {
     event: string;

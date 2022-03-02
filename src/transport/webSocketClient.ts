@@ -4,9 +4,11 @@ import browser from 'webextension-polyfill';
 import { censoredImageEvent, placeholderStickerEvent, preferencesEvent, resetStatisticsEvent, SocketContext, SocketEvent, statisticsEvent } from "./messages";
 import { dbg } from "@/util";
 
+// this file should be unnecessary now, retaining for compatibility and testing.
+
 export class WebSocketClient {
 
-    static create = async (host?: string): Promise<WebSocketClient> => {
+    static createBase = async (host?: string): Promise<WebSocketClient> => {
         console.trace('creating new socket client!');
         if (!host) {
             const configHost = await browser.storage.local.get('backendHost');
@@ -17,7 +19,7 @@ export class WebSocketClient {
         return new WebSocketClient(undefined, host);
     }
 
-    static createForRequest = async (requestId: string, host?: string): Promise<WebSocketClient> => {
+    static createForRequestBase = async (requestId: string, host?: string): Promise<WebSocketClient> => {
         if (__DEBUG__) {
             console.trace('creating new socket client!');
         }
@@ -32,15 +34,14 @@ export class WebSocketClient {
 
     private _ports: { [tabId: number]: browser.Runtime.Port | undefined; } = {};
     private _portManager?: RuntimePortManager;
-    private _requestId?: string;
+    protected _requestId?: string;
     private host: string;
     /**
      *
      */
-    private constructor(requestId?: string, host?: string) {
-        this.webSocket = this.connectTo(host);
+    protected constructor(requestId?: string, host?: string) {
         this.host = host ?? WebSocketClient.defaultHost;
-        this.webSocket = this.connectTo(host);
+        this.webSocket = this.connectTo(this.host);
         this._requestId = requestId;
     }
 
@@ -50,7 +51,7 @@ export class WebSocketClient {
 
     static defaultHost = "ws://localhost:8090/ws"
 
-    sendObj = (message: object, callback?: () => any|void) => {
+    protected sendObj = (message: object, callback?: () => any|void) => {
         this.send(JSON.stringify(message), callback);
     }
 
@@ -63,7 +64,7 @@ export class WebSocketClient {
         return this;
     }
 
-    send = (message: string, callback?: any) => {
+    private send = (message: string, callback?: any) => {
         //sockette means the socket is never not ready
         // that doesn't mean it can't error out though
         try {

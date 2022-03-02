@@ -14,22 +14,21 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
         } else {
             preferences = await loadPreferencesFromStorage();
         }
-        let requestType = "censorImage";
-        if (preferences.autoAnimate || message.forceCensor) {
-            dbgLog('forcing to redo message type');
-            requestType = "redoCensor";
-        }
+        const forced = preferences.autoAnimate || message.forceCensor;
         const rawPrefs = toRaw(preferences);
-        ctx.socketClient.sendObj({
-            version: ctx.version,
-            msg: requestType,
-            url: img,
-            tabid: message['tabId'] ?? sender.tab!.id,
+        ctx.backendClient.censorImage({
             id: message.id,
-            priority: message.priority,
-            preferences: rawPrefs,
-            type: message.type,
-            domain: getDomain(message.domain, preferences)
+            force: forced,
+            preferences,
+            srcId: message['tabId'] ?? sender.tab!.id,
+            url: img,
+            requestData: {
+                type: message.type,
+                priority: message.priority
+            },
+            context: {
+                domain: getDomain(message.domain, preferences)
+            }
         });
     }
 }

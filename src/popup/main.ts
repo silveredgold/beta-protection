@@ -4,5 +4,6 @@ import App from './App.vue';
 import 'vfonts/Lato.css'
 // Monospace Font
 import 'vfonts/FiraCode.css'
+import { backendProviderPlugin } from '@/plugin-backend';
 
-createApp(App).mount("#app");
+createApp(App).use(backendProviderPlugin).mount('#app')

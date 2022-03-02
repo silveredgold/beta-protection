@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@octokit/request": "^5.6.3",
-    "@silveredgold/beta-shared": "^0.0.1-alpha5",
+    "@silveredgold/beta-shared": "^0.0.1-alpha8",
     "@zip.js/zip.js": "^2.4.3",
     "autoprefixer": "^9",
     "core-js": "^3.6.5",

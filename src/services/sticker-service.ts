@@ -2,7 +2,9 @@ import browser from 'webextension-polyfill';
 
 export class StickerService {
     public static loadAvailableStickers = async (message: any) => {
-        const stickerCategories = message['stickers'] as string[];
+        const stickerCategories = message['stickers'] === undefined
+            ? message as string[]
+            : message['stickers'] as string[];
         await browser.storage.local.set({'stickers': stickerCategories});
     }
 
