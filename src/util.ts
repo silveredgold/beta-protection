@@ -178,6 +178,18 @@ export const dbgLog = (...data: any[]) => {
   }
 }
 
+export const dbgTime = (label: string, id?: string) => {
+  if (__DEBUG__) {
+    console.time(id ? `${label}:${id}` : label);
+  }
+}
+
+export const dbgTimeEnd = (label: string, id?: string) => {
+  if (__DEBUG__) {
+    console.timeEnd(id ? `${label}:${id}` : label);
+  }
+}
+
 /*
 MIT LICENSE
 Copyright 2011 Jon Leighton

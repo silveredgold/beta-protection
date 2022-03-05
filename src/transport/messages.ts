@@ -1,4 +1,5 @@
-import { createPreferencesFromBackend, IPreferences, loadPreferencesFromStorage, rawPreferences, savePreferencesToStorage } from "@/preferences"
+import { IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences"
+import { createPreferencesFromBackend, BetaSafetyPreferences } from "@silveredgold/beta-shared/preferences/beta-safety";
 import { PlaceholderService } from "@/services/placeholder-service"
 import { StickerService } from "@/services/sticker-service"
 import browser from 'webextension-polyfill';
@@ -65,7 +66,7 @@ export const preferencesEvent : SocketEvent<IPreferences> = {
         }
         const preferences = await loadPreferencesFromStorage();
         if (parseInt(response.status) === 200) {
-            const rawPrefs = response["preferences"] as rawPreferences;
+            const rawPrefs = response["preferences"] as BetaSafetyPreferences;
             log('raw prefs', rawPrefs);
             const backendPrefs = createPreferencesFromBackend(rawPrefs);
             log('backend prefs', backendPrefs);

@@ -1,4 +1,4 @@
-import { dbg, dbgLog, getDomain, hashCode, isValidUrl } from "@/util";
+import { dbg, dbgLog, dbgTime, dbgTimeEnd, getDomain, hashCode, isValidUrl } from "@/util";
 import { CensoringState, ImageStyleElement } from "./types";
 import { generateUUID, getRandom } from "@/util";
 import { debounce } from "throttle-debounce";
@@ -287,7 +287,16 @@ export class Purifier {
         }
     }
 
-    private sendCensorRequest = (imageUrl: string, id: string, priority?: number) => {
+    private sendCensorRequest = async (imageSrc: string, id: string, priority?: number) => {
+        dbgTime('purifier:loadImageData', id);
+        let imageUrl: string = imageSrc;
+        try {
+            imageUrl = await toDataURL(imageSrc, "image/jpeg");
+        } catch (e) {
+            console.log('failed to get image data', e);
+            imageUrl = imageSrc;
+        }
+        dbgTimeEnd('purifier:loadImageData', id);
         const msg = {
             msg: 'censorRequest',
             imageURL: imageUrl,
@@ -443,4 +452,31 @@ const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: Ima
         }
         port.disconnect();
     }
+}
+
+function toDataURL(src: string, outputFormat?: string) {
+    return new Promise<string>((resolve, reject) => {
+        // const timeout = setTimeout(() => {
+        //     reject('timeout while reading image data');
+        // }, 2500);
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function () {
+            const canvas = document.createElement('CANVAS') as HTMLCanvasElement;
+            const ctx = canvas.getContext('2d');
+            let dataURL;
+            canvas.height = img.naturalHeight;
+            canvas.width = img.naturalWidth;
+            ctx?.drawImage(img, 0, 0);
+            dataURL = canvas.toDataURL(outputFormat);
+            // clearTimeout(timeout);
+            resolve(dataURL);
+        };
+        img.src = src;
+        //this is for cache busting to force load(), but doesn't seem entirely necessary
+        // if (img.complete || img.complete === undefined) {
+        //   img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+        //   img.src = src;
+        // }
+    });
 }

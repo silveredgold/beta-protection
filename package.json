@@ -9,8 +9,10 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@microsoft/signalr": "^6.0.2",
     "@octokit/request": "^5.6.3",
-    "@silveredgold/beta-shared": "^0.0.1-alpha8",
+    "@silveredgold/beta-censor-client": "^0.0.0-alpha1",
+    "@silveredgold/beta-shared": "0.0.1-alpha11",
     "@zip.js/zip.js": "^2.4.3",
     "autoprefixer": "^9",
     "core-js": "^3.6.5",

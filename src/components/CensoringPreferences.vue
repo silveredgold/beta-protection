@@ -145,7 +145,7 @@
 import { inject, toRefs, watch } from 'vue';
 import { NCard, useNotification, NTabs, NTabPane, NSpace, NForm, NFormItem, NSelect, NInputGroup, NSlider, NThing, NCheckbox, NPopover, NIcon } from "naive-ui";
 import { HelpCircleOutline } from "@vicons/ionicons5";
-import { IPreferences, CensorType, BodyCensorModes } from '@/preferences';
+import { IPreferences, CensorType, BodyCensorModes, getCensorTypes } from '@/preferences';
 import { updateUserPrefs } from "@/options/services";
 import { dbg, toTitleCase } from "@/util";
 
@@ -165,11 +165,9 @@ const updatePrefs = inject(updateUserPrefs, undefined);
 dbg(`injected prefs: ${JSON.stringify(preferences.value)}`);
 dbg(`injected updater: ${!!updatePrefs}`);
 
-const rawCensorTypes = [{
-    label: "Nothing", value: "nothing"
-}, { label: "Pixels", value: "pix" }, { label: "Caption", value: "caption" }, { label: "Sticker", value: "sticker" }, { label: "Blur", value: "blur" }];
+const rawCensorTypes = getCensorTypes();
 
-const eyeCensorTypes = [{label: 'Nothing', value: 'nothing'}, {label: 'Black Bars', value: 'Box'}, {label: 'Sticker', value: 'Sticker'}];
+const eyeCensorTypes = [{label: 'Nothing', value: 'None'}, {label: 'Black Bars', value: 'Box'}, {label: 'Sticker', value: 'Sticker'}];
 
 watch(prefs, async (newMode, prevMode) => {
     // console.log(`prefs watch: ${prevMode}->${newMode}`);

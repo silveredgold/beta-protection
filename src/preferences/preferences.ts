@@ -1,4 +1,4 @@
-import { toTitleCase } from "@/util";
+import { setModeBadge, toTitleCase } from "@/util";
 import { IPreferences } from "@/preferences";
 import clone from "just-clone";
 import browser from 'webextension-polyfill';
@@ -28,7 +28,7 @@ export async function savePreferencesToStorage(prefs: IPreferences, skipClone: b
     await browser.storage.local.set({ 'preferences': clonedPrefs });
 }
 
-export async function mergeNewPreferences(prefs: IPreferences): Promise<void> {
+export async function mergeNewPreferences(prefs: Partial<IPreferences>): Promise<void> {
     const clonedPrefs = clone(prefs);
     
     const storedPrefs = await loadPreferencesFromStorage();
@@ -38,6 +38,7 @@ export async function mergeNewPreferences(prefs: IPreferences): Promise<void> {
         ...clonedPrefs
     };
     await savePreferencesToStorage(mergedPrefs, true);
+    setModeBadge(mergedPrefs.mode);
 }
 
 export function updateBackendPreferences(prefs: IPreferences) {
@@ -56,3 +57,23 @@ export function updateBackendPreferences(prefs: IPreferences) {
         port.postMessage({msg: MSG_UPDATE_PREFS.event});
     });
 }
+
+export const mergePreferences = async (backendPrefs: Partial<IPreferences>) => {
+    const log = (...data: any[]) => {
+        // console.debug(...data);
+        //this is just here to make debugging things easier
+        // this is so chatty, even using dbg would be annoying
+    };
+    const preferences = await loadPreferencesFromStorage();
+    log('loaded prefs', preferences);
+    const mergedPrefs = {
+        ...backendPrefs,
+        ...preferences
+    };
+    log('merged prefs', mergedPrefs);
+    await savePreferencesToStorage(mergedPrefs, true);
+    const newPrefs = await loadPreferencesFromStorage();
+    log('new prefs as stored:', newPrefs);
+    setModeBadge(newPrefs.mode);
+    return mergedPrefs;
+};

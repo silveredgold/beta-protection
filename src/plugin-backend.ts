@@ -1,11 +1,17 @@
 import { Plugin } from "vue";
-import { backendProvider, censorBackend } from "@/transport";
+import { backendProvider, censorBackend, IBackendProvider, ICensorBackend } from "@/transport";
+import { BetaCensoringProvider } from "@/transport/beta-censor";
 import { BetaSafetyProvider } from "./transport/beta-safety";
 import { RuntimePortManager } from "./transport/runtimePort";
 
-export const backendProviderPlugin: Plugin = {
+export const getProvider = (): IBackendProvider<ICensorBackend> => {
+    return new BetaCensoringProvider();
+}
+
+export const backendProviderPlugin: BackendPlugin = {
+    provider: getProvider(),
     install: (app, options) => {
-        const provider = new BetaSafetyProvider();
+        const provider = getProvider();
         const getBackend = (requestId?: string) => {
             return requestId 
                 ? provider.getRequestClient(requestId, new RuntimePortManager(), options?.host)
@@ -14,4 +20,8 @@ export const backendProviderPlugin: Plugin = {
         app.provide(backendProvider, provider);
         app.provide(censorBackend, getBackend());
     }
+}
+
+export type BackendPlugin = Plugin & {
+    provider: IBackendProvider<ICensorBackend>;
 }

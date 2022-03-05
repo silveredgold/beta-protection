@@ -5,10 +5,12 @@ import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
 import { UpdateService } from "./services/update-service";
 import { IBackendProvider, ICensorBackend } from "./transport";
-import { BetaSafetyProvider } from "./transport/beta-safety";
+import { mergeNewPreferences, mergePreferences } from "./preferences";
+import { StickerService } from "./services/sticker-service";
+import { backendProviderPlugin } from "@/plugin-backend";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
-export const backendProvider: IBackendProvider<ICensorBackend> = new BetaSafetyProvider()
+export const backendProvider: IBackendProvider<ICensorBackend> = backendProviderPlugin.provider;
 
 let currentClient: ICensorBackend | null;
 
@@ -207,11 +209,18 @@ function initExtension(syncPrefs: boolean = true) {
   getClient().then(client => {
     const eVersion = getExtensionVersion();
     if (syncPrefs) {
-      client.getRemotePreferences().then(() => {
+      client.getRemotePreferences().then((result) => {
+        if (result) {
+          mergeNewPreferences(result);
+        }
         trySendEvent({msg: 'reloadPreferences'});
       });
     }
-    client.getAvailableAssets('stickers');
+    client.getAvailableAssets('stickers').then(assets => {
+      if (assets && assets.length && assets.length > 0) {
+        StickerService.loadAvailableStickers(assets)
+      }
+    });
   });
 }
 

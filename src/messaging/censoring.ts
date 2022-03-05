@@ -1,5 +1,5 @@
 import { CSSManager } from "@/services/css-manager";
-import { IPreferences, loadPreferencesFromStorage, toRaw } from "@/preferences";
+import { IPreferences, loadPreferencesFromStorage } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
 import { dbgLog, getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
@@ -11,11 +11,12 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
         let preferences: IPreferences;
         if (message.prefs !== undefined) {
             preferences = message.prefs as IPreferences;
+        } else if (message.preferences !== undefined) {
+            preferences = message.preferences as IPreferences;
         } else {
             preferences = await loadPreferencesFromStorage();
         }
         const forced = preferences.autoAnimate || message.forceCensor;
-        const rawPrefs = toRaw(preferences);
         ctx.backendClient.censorImage({
             id: message.id,
             force: forced,
