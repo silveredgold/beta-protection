@@ -32,5 +32,3 @@ export const webExtensionNavigation = {
         return browser.runtime.getURL(assetUrl);
     }
 }
-
-export type AssetSource = (path: string) => string;

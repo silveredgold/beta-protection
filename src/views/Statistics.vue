@@ -5,13 +5,13 @@
           <template #fallback>
             Loading...
           </template>
-            <statistics-header v-if="statistics" :statistics="statistics" :asset-source="assetSrc" />
+            <!-- <statistics-header v-if="statistics" :statistics="statistics"  :nav-service="webExtensionNavigation"  /> -->
       </Suspense>
       <Suspense>
           <template #fallback>
             Loading...
           </template>
-            <statistics-detail v-if="statistics" :statistics="statistics" />
+            <!-- <statistics-detail v-if="statistics" :statistics="statistics" /> -->
       </Suspense>
     </n-notification-provider>
     <n-global-style />
@@ -25,18 +25,16 @@ import { themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import mitt from 'mitt';
 import { eventEmitter, ActionEvents } from "@/messaging";
-import { StatisticsData, StatisticsService } from "@/services/statistics-service";
-import StatisticsHeader from "@/components/StatisticsHeader.vue";
-import StatisticsDetail from "@/components/StatisticsDetail.vue";
-import { AssetSource } from "@/components/util";
+import { StatisticsService } from "@/services/statistics-service";
+import { StatisticsData } from "@/transport";
+// import { StatisticsDetail, StatisticsHeader, services, ErrorOptions } from "@silveredgold/beta-shared-components";
+import { webExtensionNavigation } from "@/components/util";
 
 const events = mitt<ActionEvents>();
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
 const statistics: Ref<StatisticsData> = ref({} as StatisticsData);
-
-const assetSrc: AssetSource = (path) =>  browser.runtime.getURL(path);
 
 onBeforeMount(async () => {
   await getCurrentStatistics();

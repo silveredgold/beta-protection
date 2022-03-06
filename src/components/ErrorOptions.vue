@@ -17,7 +17,7 @@
 </template>
 <script setup lang="ts">
 import { watch, toRefs, inject } from 'vue';
-import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
+import { NCard, NRadioGroup, NRadioButton } from "naive-ui";
 import { IPreferences } from '@/preferences';
 import { updateUserPrefs } from '@/options/services';
 
@@ -25,7 +25,6 @@ const props = defineProps<{
     preferences: IPreferences
 }>();
 
-const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs, undefined);

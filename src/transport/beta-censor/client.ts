@@ -150,7 +150,7 @@ export class BetaCensorClient implements ICensorBackend {
     }
     check(host?: string): Promise<ConnectionStatus> {
         return new Promise<ConnectionStatus>((resolve, reject) => {
-            const status: ConnectionStatus = {available: false};
+            const status: ConnectionStatus = {available: false, name: 'Beta Censoring'};
             const connection = new HubConnectionBuilder()
             .withUrl((host ?? this.host) + "/live", {
                 transport: HttpTransportType.WebSockets,

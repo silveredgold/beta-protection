@@ -1,20 +1,21 @@
 import { MSG_GET_STATISTICS, MSG_RESET_STATISTICS } from '@/messaging';
+import { StatisticsData } from '@/transport';
 import browser from 'webextension-polyfill';
 
 export class StatisticsService {
     private _id: string;
 
-    static parseRaw(rawObj: string): StatisticsData {
-        const out: StatisticsData = {};
-        const input = rawObj.replace(/^{/, "").replace(/}$/, "");
-        const siteObjs = (input ?? "").split(',').map(i => i.trim());
-        for (const site of siteObjs.filter(v => !!v)) {
-            const siteName = site.split('=')[0];
-            const [safe, hardcore, softcore] = site.split('=')[1].split(';');
-            out[siteName] = {safe: +safe, hardcore: +hardcore, softcore: +softcore};
-        }
-        return out;
-    }
+    // static parseRaw(rawObj: string): StatisticsData {
+    //     const out: StatisticsData = {};
+    //     const input = rawObj.replace(/^{/, "").replace(/}$/, "");
+    //     const siteObjs = (input ?? "").split(',').map(i => i.trim());
+    //     for (const site of siteObjs.filter(v => !!v)) {
+    //         const siteName = site.split('=')[0];
+    //         const [safe, hardcore, softcore] = site.split('=')[1].split(';');
+    //         out[siteName] = {safe: +safe, hardcore: +hardcore, softcore: +softcore};
+    //     }
+    //     return out;
+    // }
 
     /**
      *
@@ -54,8 +55,4 @@ export class StatisticsService {
         });
     }
 
-}
-
-export type StatisticsData = {
-    [domain: string]: {safe: number, softcore: number, hardcore: number};
 }

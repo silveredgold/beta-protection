@@ -11,13 +11,10 @@
 </template>
 <script setup lang="ts">
 import { inject } from 'vue';
-import { NCard, useNotification, NButton } from "naive-ui";
+import { NCard, NButton } from "naive-ui";
 import { defaultPrefs } from '@/preferences';
 import { updateUserPrefs } from '@/options/services';
 import browser from 'webextension-polyfill';
-
-
-const notif = useNotification();
 
 const updatePrefs = inject(updateUserPrefs);
 

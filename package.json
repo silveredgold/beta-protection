@@ -12,7 +12,7 @@
     "@microsoft/signalr": "^6.0.2",
     "@octokit/request": "^5.6.3",
     "@silveredgold/beta-censor-client": "^0.0.0-alpha1",
-    "@silveredgold/beta-shared": "0.0.1-alpha11",
+    "@silveredgold/beta-shared": "0.0.1-alpha14",
     "@zip.js/zip.js": "^2.4.3",
     "autoprefixer": "^9",
     "core-js": "^3.6.5",
@@ -25,8 +25,7 @@
     "sockette": "^2.0.6",
     "strongly-typed-events": "^2.1.14",
     "throttle-debounce": "^3.0.1",
-    "vue": "latest",
-    "vue-router": "latest"
+    "vue": "^3.2.31"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.177",
@@ -42,7 +41,6 @@
     "@vicons/utils": "^0.1.4",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-plugin-router": "~4.5.0",
     "@vue/cli-plugin-typescript": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "@vue/compiler-sfc": "3.2.29",

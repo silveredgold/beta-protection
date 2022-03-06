@@ -90,10 +90,11 @@ export const statisticsEvent : SocketEvent<void> = {
     event: 'getStatistics',
     handler: async (response, ctx) => {
         if (parseInt(response.status) === 200) {
-            const rawLogs = response["logs"] as string;
-            const stats = StatisticsService.parseRaw(rawLogs);
-            dbg('parsed stats data', stats);
-            ctx.sendMessage({msg: "reloadStatistics", statistics: stats}, "statistics");
+            console.warn('legacy getStatistics handler running!');
+            // const rawLogs = response["logs"] as string;
+            // const stats = StatisticsService.parseRaw(rawLogs);
+            // dbg('parsed stats data', stats);
+            // ctx.sendMessage({msg: "reloadStatistics", statistics: stats}, "statistics");
         }
     }
 }

@@ -143,7 +143,7 @@
 </template>
 <script setup lang="ts">
 import { inject, toRefs, watch } from 'vue';
-import { NCard, useNotification, NTabs, NTabPane, NSpace, NForm, NFormItem, NSelect, NInputGroup, NSlider, NThing, NCheckbox, NPopover, NIcon } from "naive-ui";
+import { NCard, NTabs, NTabPane, NSpace, NForm, NFormItem, NSelect, NInputGroup, NSlider, NThing, NCheckbox, NPopover, NIcon } from "naive-ui";
 import { HelpCircleOutline } from "@vicons/ionicons5";
 import { IPreferences, CensorType, BodyCensorModes, getCensorTypes } from '@/preferences';
 import { updateUserPrefs } from "@/options/services";
@@ -151,9 +151,7 @@ import { dbg, toTitleCase } from "@/util";
 
 const props = defineProps<{
     preferences: IPreferences
-}>()
-
-const notif = useNotification();
+}>();
 
 const sliderMarks = {
     1: "Very Light",

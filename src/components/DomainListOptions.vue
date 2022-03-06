@@ -56,15 +56,13 @@
 </template>
 <script setup lang="ts">
 import { computed, inject, ref, toRefs, watch } from 'vue';
-import { NCard, NList, NListItem, useNotification, NTabs, NTab, NTabPane, NSpace, NInput, NInputGroupLabel, NInputGroup, NButton } from "naive-ui";
+import { NCard, NList, NListItem, NTabs, NTab, NTabPane, NSpace, NInput, NInputGroupLabel, NInputGroup, NButton } from "naive-ui";
 import { updateUserPrefs, userPrefs } from "@/options/services";
 
 const props = defineProps<{
     allowList: string[],
     forceList: string[]
 }>();
-
-const notif = useNotification();
 
 // const { preferences } = toRefs(props);
 // const prefs = preferences;
