@@ -4,13 +4,13 @@ import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
 import { UpdateService } from "./services/update-service";
-import { IBackendProvider, ICensorBackend } from "./transport";
+import { BackendService, ICensorBackend } from "./transport";
 import { mergeNewPreferences, mergePreferences } from "./preferences";
 import { StickerService } from "./services/sticker-service";
 import { backendProviderPlugin } from "@/plugin-backend";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
-export const backendProvider: IBackendProvider<ICensorBackend> = backendProviderPlugin.provider;
+let backendService: BackendService| null;
 
 let currentClient: ICensorBackend | null;
 
@@ -106,6 +106,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
   dbg('background script handling runtime message', msg);
   if (msg.msg == "reloadSocket") {
     currentClient = null;
+    backendService = null;
     initExtension();
   } else {
     const factory = async () => {
@@ -261,16 +262,28 @@ function initAlarms() {
   });
 }
 
+async function getService(): Promise<BackendService> {
+  if (backendService) {
+    return backendService
+  } else {
+    backendService = await BackendService.create();
+    return backendService;
+  }
+}
+
 async function getClient(): Promise<ICensorBackend> {
+  console.log('getting client');
+  const service = await getService();
   if (currentClient) {
     return currentClient;
   } else {
-    currentClient = await backendProvider.getClient(portManager);
+    currentClient = await service.currentProvider.getClient(portManager);
     return currentClient;
   }
 }
 
 async function getRequestClient(requestId: string) {
-  const reqClient = await backendProvider.getRequestClient(requestId, portManager);
+  const service = await getService();
+  const reqClient = await service.currentProvider.getRequestClient(requestId, portManager);
   return reqClient;
 }

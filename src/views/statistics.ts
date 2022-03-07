@@ -4,7 +4,6 @@ import Statistics from './Statistics.vue';
 import 'vfonts/Lato.css'
 // Monospace Font
 import 'vfonts/FiraCode.css'
+import { backendProviderPlugin } from '@/plugin-backend';
 
-createApp(Statistics).mount("#app");
-
-export const reloadStatistics: InjectionKey<() => Promise<boolean>> = Symbol();
+createApp(Statistics).use(backendProviderPlugin).mount('#app')

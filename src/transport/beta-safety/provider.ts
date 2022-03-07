@@ -9,8 +9,11 @@ const version = getExtensionVersion();
 
 
 export class BetaSafetyProvider implements IBackendProvider<ICensorBackend> {
-    public get name() : string {
-        return "Beta Safety"
+    supportsUrl(url: string): boolean {
+        return url.startsWith('ws://') && url.includes('/ws');
+    }
+    public get id() : string {
+        return "beta-safety"
     }
     
     async getClient(portManager: RuntimePortManager, host?: string): Promise<ICensorBackend> {

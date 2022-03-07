@@ -464,11 +464,10 @@ function toDataURL(src: string, outputFormat?: string) {
         img.onload = function () {
             const canvas = document.createElement('CANVAS') as HTMLCanvasElement;
             const ctx = canvas.getContext('2d');
-            let dataURL;
             canvas.height = img.naturalHeight;
             canvas.width = img.naturalWidth;
             ctx?.drawImage(img, 0, 0);
-            dataURL = canvas.toDataURL(outputFormat);
+            const dataURL = canvas.toDataURL(outputFormat);
             // clearTimeout(timeout);
             resolve(dataURL);
         };

@@ -93,7 +93,7 @@ export class BetaCensorClient implements ICensorBackend {
                     dbgLog('getting buffer from bg response', resp.status, type);
                     const blob = await resp.blob();
                     encoded = await new Promise<string>( callback =>{
-                        let reader = new FileReader();
+                        const reader = new FileReader();
                         reader.onload = function(){ callback(this.result as string) } ;
                         reader.readAsDataURL(blob);
                     });

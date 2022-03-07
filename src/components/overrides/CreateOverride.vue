@@ -132,15 +132,14 @@
 </template>
 
 <script setup lang="ts">
-import { defaultPrefs, IOverride, IPreferences, OperationMode } from '@/preferences';
+import { defaultPrefs, IOverride, OperationMode } from '@/preferences';
+import type { IPreferences } from '@/preferences';
 import { OverrideService } from '@/services/override-service';
 import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NCheckbox, NCheckboxGroup, NSteps, NStep, NInputNumber, NThing, NInput, NInputGroup, NInputGroupLabel, NIcon, NAlert } from "naive-ui"; 
 import { LockClosedSharp, SaveOutline, Time, InformationCircleOutline } from "@vicons/ionicons5";
 import { computed, inject, Ref, ref, toRefs } from 'vue';
-import CensoringPreferences from '@/components/CensoringPreferences.vue';
-import VideoOptions from "@/components/VideoOptions.vue";
+import { CensoringPreferences, VideoOptions, ErrorOptions } from "@silveredgold/beta-shared-components";
 import DomainListOptions from '@/components/DomainListOptions.vue';
-import ErrorOptions from '@/components/ErrorOptions.vue';
 import { Duration } from "luxon";
 
 const currentStep = ref(1);

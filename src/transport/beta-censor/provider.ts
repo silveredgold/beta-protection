@@ -9,8 +9,11 @@ const version = getExtensionVersion();
 
 
 export class BetaCensoringProvider implements IBackendProvider<ICensorBackend> {
-    public get name() : string {
-        return "Beta Censoring"
+    supportsUrl(url: string): boolean {
+        return (url.startsWith('http') || url.startsWith('https')) && !url.endsWith('/ws');
+    }
+    public get id() : string {
+        return "beta-censoring"
     }
     
     async getClient(portManager: RuntimePortManager, host?: string): Promise<ICensorBackend> {

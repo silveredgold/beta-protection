@@ -28,7 +28,7 @@ export const MSG_IMAGE_DATA : RuntimeEvent<string> = {
         const type = resp.headers.get('content-type')
         dbgLog('getting buffer from bg response', resp.status, type);
         const buffer = await resp.arrayBuffer();
-        let encoded = base64ArrayBuffer(buffer, type);
+        const encoded = base64ArrayBuffer(buffer, type);
         dbgTimeEnd('getImageData');
         return encoded;
         // return dataBuffer.toString('base64')
@@ -57,10 +57,4 @@ export const MSG_FORWARDING : RuntimeEvent<void> = {
 export type RuntimeEvent<Type> = {
     event: string;
     handler: (message: any, sender: browser.Runtime.MessageSender, ctx: MessageContext) => Promise<Type> 
-}
-
-export const eventEmitter: InjectionKey<Emitter<ActionEvents>> = Symbol();
-
-export type ActionEvents = {
-    reload: string;
 }
