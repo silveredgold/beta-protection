@@ -5,13 +5,13 @@
           <template #fallback>
             Loading...
           </template>
-            <!-- <statistics-header v-if="statistics" :statistics="statistics"  :nav-service="webExtensionNavigation"  /> -->
+            <statistics-header v-if="statistics" :statistics="statistics"  :nav-service="webExtensionNavigation"  />
       </Suspense>
       <Suspense>
           <template #fallback>
             Loading...
           </template>
-            <!-- <statistics-detail v-if="statistics" :statistics="statistics" /> -->
+            <statistics-detail v-if="statistics" :statistics="statistics" :nav-service="webExtensionNavigation" />
       </Suspense>
     </n-notification-provider>
     <n-global-style />
@@ -20,19 +20,16 @@
 
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, useOsTheme } from "naive-ui";
-import { provide, Ref, ref, onBeforeMount, computed, Suspense } from 'vue';
-import { themeOverrides } from "@/util";
-import browser from 'webextension-polyfill';
-import mitt from 'mitt';
-import { eventEmitter, ActionEvents } from "@/messaging";
-import { StatisticsService } from "@/services/statistics-service";
+import { Ref, ref, onBeforeMount, computed, Suspense } from 'vue';
+import { dbg, themeOverrides } from "@/util";
 import { StatisticsData } from "@/transport";
-// import { StatisticsDetail, StatisticsHeader, services, ErrorOptions } from "@silveredgold/beta-shared-components";
+import { StatisticsDetail, StatisticsHeader, useEventEmitter, useLazyBackendTransport } from "@silveredgold/beta-shared-components";
 import { webExtensionNavigation } from "@/components/util";
 
-const events = mitt<ActionEvents>();
+const events = useEventEmitter();
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
+const backend = useLazyBackendTransport();
 
 const statistics: Ref<StatisticsData> = ref({} as StatisticsData);
 
@@ -41,12 +38,12 @@ onBeforeMount(async () => {
 });
 
 const getCurrentStatistics = async () => {
-    const svc = new StatisticsService();
-    // console.log('firing statistics service');
-    const result = await svc.getStatistics();
-    // console.log('got statistics response', result);
-    statistics.value = result as StatisticsData;
-
+    const client = await backend();
+    const results = await client.getStatistics();
+    if (results) {
+      dbg('got statistics from backend', client, results);
+      statistics.value = results;
+    }
 }
 
 
@@ -56,15 +53,12 @@ const getCurrentStatistics = async () => {
 //   }
 // });
 
-events.on('reload', evt => {
+events?.on('reload', evt => {
   console.log('got emitter event', evt);
   if (evt == 'statistics') {
     getCurrentStatistics();
   }
 });
-
-// provide()
-provide(eventEmitter, events);
 
 
 </script>

@@ -69,14 +69,14 @@ import { updateUserPrefs } from '@/options/services';
 import { PlaceholderService } from '@/services/placeholder-service';
 import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
 import { dbg, humanFileSize } from "@/util";
-import { eventEmitter } from "@/messaging";
 import { LocalPlaceholder } from '@/placeholders';
+import { useEventEmitter } from '@silveredgold/beta-shared-components';
 
 const props = defineProps<{
     preferences: IPreferences
 }>();
 
-const emitter = inject(eventEmitter);
+const emitter = useEventEmitter();
 const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
@@ -108,6 +108,8 @@ const enabled = computed({
 
 const openDir = async () => {
     const fs = new FileSystemClient();
+    const dir = await fs.openDir();
+    dbg('loaded dir', dir);
     const result = await fs.getFiles((file) => file.type.startsWith("image/"));
     dbg('loaded files', result);
     newFiles.value = result.files;

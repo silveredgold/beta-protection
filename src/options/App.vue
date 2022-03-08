@@ -38,10 +38,12 @@
         </template>
         <template #footer>To change the censoring mode, use the popup from your extension toolbar!</template>
       </n-page-header>
-      <connection-status :style="{marginBottom: '2em'}" />
+      <connection-status :style="{marginBottom: '2em'}" :host-config="getHost" />
       <n-collapse :style="{ marginTop: '1em', marginBottom: '1em', padding: '0.5em'}" style="width: unset;">
         <n-collapse-item title="Backend Host" name="backend-host">
-          <backend-host class="control-group" />
+          <suspense>
+            <backend-host class="control-group" />
+          </suspense>
           <privacy-options :preferences="prefs" class="control-group" />
           <template #header-extra>Set where your backend is running</template>
         </n-collapse-item>
@@ -119,30 +121,33 @@ import { debounce } from "throttle-debounce";
 import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
 import { updateUserPrefs, userPrefs } from "./services";
 import { themeOverrides, dbgLog } from "@/util";
-import CensoringPreferences from "@/components/CensoringPreferences.vue";
-import VideoOptions from "@/components/VideoOptions.vue";
 import {PlaceholderUpload, BetaSafetyImport, PlaceholderOptions} from "@/components/placeholders";
 import StickerOptions from "@/components/StickerOptions.vue";
 import SettingsReset from "@/components/SettingsReset.vue";
-import ConnectionStatus from "@/components/ConnectionStatus.vue";
 import DomainListOptions from "@/components/DomainListOptions.vue";
-import ErrorOptions from "@/components/ErrorOptions.vue";
+
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/components/placeholders/OpenStore.vue";
-import ImportExport from "@/components/ImportExport.vue";
 import ExtensionInfo from "@/components/ExtensionInfo.vue";
 import { openStatistics, openOverrides } from "@/components/util";
-import { eventEmitter, ActionEvents } from "@/messaging";
 import browser from 'webextension-polyfill';
-import mitt from "mitt";
 import {OverridableOption} from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
+// import ConnectionStatus from "@/components/ConnectionStatus.vue";
+import { ErrorOptions, ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus } from "@silveredgold/beta-shared-components";
+import type {HostConfigurator} from '@silveredgold/beta-shared-components'
+
+const getHost: HostConfigurator = {
+  getBackendHost: async () : Promise<string> => {
+    const configHost = await browser.storage.local.get('backendHost');
+    const host = configHost['backendHost'];
+    return host;
+  }
+}
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
-const events = mitt<ActionEvents>();
-// const notif = useNotification();
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
@@ -198,7 +203,6 @@ browser.runtime.onMessage.addListener((request, sender) => {
 });
 
 provide(updateUserPrefs, updatePrefs);
-provide(eventEmitter, events);
 
 
 </script>

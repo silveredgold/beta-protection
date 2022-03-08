@@ -30,16 +30,15 @@ import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, Global
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch, Suspense } from 'vue';
 import { dbg, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
-import mitt from 'mitt';
-import { eventEmitter, ActionEvents } from "@/messaging";
 import {OverrideDetails, CreateOverride} from "@/components/overrides"
 import { OverrideService } from "@/services/override-service";
 import { IOverride } from "@/preferences";
 import { overrideService } from "./override";
+import { useEventEmitter } from "@silveredgold/beta-shared-components";
 
-const events = mitt<ActionEvents>();
 const osTheme = useOsTheme()
-const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
+const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null));
+const events = useEventEmitter();
 
 const svc: Ref<OverrideService|undefined> = ref(undefined);
 
@@ -63,12 +62,11 @@ const onUpdate = async () => {
 //   }
 // });
 
-provide(eventEmitter, events);
 provide(overrideService, computed(() => svc.value) as unknown);
 
 browser.runtime.onMessage.addListener((msg, sender) => {
     if (msg.msg == 'storageChange:local' && msg.keys && msg.keys.includes('override')) {
-        events.emit('reload', 'override');
+        events?.emit('reload', 'override');
     }
     if (msg.msg == 'reloadOverride') {
         svc?.value?.reload();
