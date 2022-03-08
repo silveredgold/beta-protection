@@ -131,9 +131,7 @@ import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/components/placeholders/OpenStore.vue";
 import ExtensionInfo from "@/components/ExtensionInfo.vue";
 import { openStatistics, openOverrides } from "@/components/util";
-import { eventEmitter, ActionEvents } from "@/messaging";
 import browser from 'webextension-polyfill';
-import mitt from "mitt";
 import {OverridableOption} from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
 // import ConnectionStatus from "@/components/ConnectionStatus.vue";
@@ -150,8 +148,6 @@ const getHost: HostConfigurator = {
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
-const events = mitt<ActionEvents>();
-// const notif = useNotification();
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
@@ -207,7 +203,6 @@ browser.runtime.onMessage.addListener((request, sender) => {
 });
 
 provide(updateUserPrefs, updatePrefs);
-provide(eventEmitter, events);
 
 
 </script>

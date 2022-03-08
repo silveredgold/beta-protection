@@ -4,8 +4,6 @@ import { RuntimePortManager } from "./transport/runtimePort";
 import { censorBackend } from "@silveredgold/beta-shared-components";
 import { dbgLog } from "./util";
 
-const _service = BackendService.create();
-
 export const backendProviderPlugin: BackendPlugin = {
     install: (app, options) => {
         const getBackendAsync = () => new Promise<ICensorBackend>((resolve) => {

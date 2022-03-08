@@ -20,15 +20,13 @@
 
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, useOsTheme } from "naive-ui";
-import { provide, Ref, ref, onBeforeMount, computed, Suspense } from 'vue';
+import { Ref, ref, onBeforeMount, computed, Suspense } from 'vue';
 import { dbg, themeOverrides } from "@/util";
-import mitt from 'mitt';
-import { eventEmitter, ActionEvents } from "@/messaging";
 import { StatisticsData } from "@/transport";
-import { StatisticsDetail, StatisticsHeader, useLazyBackendTransport } from "@silveredgold/beta-shared-components";
+import { StatisticsDetail, StatisticsHeader, useEventEmitter, useLazyBackendTransport } from "@silveredgold/beta-shared-components";
 import { webExtensionNavigation } from "@/components/util";
 
-const events = mitt<ActionEvents>();
+const events = useEventEmitter();
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 const backend = useLazyBackendTransport();
@@ -55,15 +53,12 @@ const getCurrentStatistics = async () => {
 //   }
 // });
 
-events.on('reload', evt => {
+events?.on('reload', evt => {
   console.log('got emitter event', evt);
   if (evt == 'statistics') {
     getCurrentStatistics();
   }
 });
-
-// provide()
-provide(eventEmitter, events);
 
 
 </script>

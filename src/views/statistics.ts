@@ -1,9 +1,8 @@
-import {createApp, InjectionKey} from 'vue';
 import Statistics from './Statistics.vue';
 // General Font
 import 'vfonts/Lato.css'
 // Monospace Font
 import 'vfonts/FiraCode.css'
-import { backendProviderPlugin } from '@/plugin-backend';
+import { createBetaApp } from '@/plugins';
 
-createApp(Statistics).use(backendProviderPlugin).mount('#app')
+createBetaApp(Statistics, {enableBackend: true, enableEvents: true}).mount('#app');
