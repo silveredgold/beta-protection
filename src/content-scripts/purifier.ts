@@ -300,6 +300,7 @@ export class Purifier {
         const msg = {
             msg: 'censorRequest',
             imageURL: imageUrl,
+            srcUrl: imageSrc,
             id: id,
             priority: priority ?? 1,
             domain: getDomain(this._domain, this._hideDomains)

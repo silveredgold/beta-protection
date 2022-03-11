@@ -23,6 +23,7 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
             preferences,
             srcId: message['tabId'] ?? sender.tab!.id,
             url: img,
+            srcUrl: message.srcUrl,
             requestData: {
                 type: message.type,
                 priority: message.priority

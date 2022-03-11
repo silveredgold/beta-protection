@@ -31,6 +31,12 @@ module.exports = {
       entry: './src/views/override.ts',
       title: 'Config Override',
       filename: 'override.html'
+    },
+    local: {
+      template: 'public/browser-extension.html',
+      entry: './src/views/censorFiles.ts',
+      title: 'Censor Local Files',
+      filename: 'local.html'
     }
   },
   pluginOptions: {

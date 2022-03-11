@@ -7,7 +7,7 @@ import signalR, {HubConnectionBuilder} from "@microsoft/signalr";
 // import signalR from "@microsoft/signalr/dist/browser/signalr";
 import { censorImageRequest, censorImageResponse } from "./types";
 import { log } from "missionlog";
-import { base64ArrayBuffer, dbgLog } from "@/util";
+import { base64ArrayBuffer, dbg, dbgLog, dbgTime } from "@/util";
 
 export class BetaCensorClient implements ICensorBackend {
 
@@ -55,10 +55,9 @@ export class BetaCensorClient implements ICensorBackend {
     }
 
     private handleCensoredImage = (payload: censorImageResponse) => {
-        console.debug('got censored image result payload', payload);
+        console.debug('got censored image result payload', payload, payload.imageResult['session']);
         // console.timeEnd('censor:internal');
         // console.timeEnd('censor:transport');
-        console.debug('session info', payload.imageResult['session']);
         console.timeEnd(`censorRequest:${payload.requestId}`);
         if (payload.requestId) {
             const status = this._onImageCensored.dispatch(this, {
@@ -87,10 +86,10 @@ export class BetaCensorClient implements ICensorBackend {
                 encoded = request.url;
             } else {
                 try {
-                    dbgLog('fetching path', request.url);
+                    // dbgLog('fetching path', request.url);
                     const resp = await fetch(request.url, {credentials: 'include'});
                     const type = resp.headers.get('content-type');
-                    dbgLog('getting buffer from bg response', resp.status, type);
+                    // dbgLog('getting buffer from bg response', resp.status, type);
                     const blob = await resp.blob();
                     encoded = await new Promise<string>( callback =>{
                         const reader = new FileReader();
@@ -101,20 +100,21 @@ export class BetaCensorClient implements ICensorBackend {
                     log.warn('fetch', 'Failed to fetch image, reverting to URL request', e);
                 }
             }
-            // console.timeEnd('getImageData');
             const payload: censorImageRequest = {
                 RequestId: request.id,
                 ImageDataUrl: encoded ?? null,
                 ImageUrl: request.url,
                 CensorOptions: opts
             };
-            console.log('payload char length: ' + JSON.stringify(payload).length);
+            if (JSON.stringify(payload).length > 4194304) {
+                console.warn('payload would have exceeded message limits! Attempting to trim.');
+                if (payload.ImageUrl) {
+                    payload.ImageDataUrl = undefined;
+                }
+            }
             await this._ready;
-            console.debug('sending model payload', payload);
-            // const test = await this._connection.invoke('CensorImageSimple', request.url);
-            // console.time('censor:transport');
-            console.log('signalr: sending request', request.id);
-            console.time(`censorRequest:${request.id}`);
+            dbg('sending model payload', payload);
+            dbgTime(`censorRequest:${request.id}`);
             const result: boolean = await this._connection.invoke('CensorImage', payload);
             // console.time('censor:internal');
             console.log('signalr: request sent', request.id, result);
@@ -145,8 +145,25 @@ export class BetaCensorClient implements ICensorBackend {
     get onUpdate() {
         return this._onUpdate.asEvent();
     }
-    cancelRequests(request: CancelRequest): Promise<void> {
-        return Promise.resolve();
+    async cancelRequests(request: CancelRequest): Promise<void> {
+        try {
+            dbg('starting cancel request', request);
+            await this._ready;
+            dbgLog('got cancel request', request, this._srcMap);
+            const requests = request.requestId === undefined ? [] : typeof request.requestId === 'string' ? [request.requestId] : request.requestId as unknown as string[];
+            for (const [id, src] of this._srcMap.entries()) {
+                if (src == request.srcId) {
+                    requests.push(id);
+                }
+            }
+            const uniqueRequests = [...new Set(requests)];
+            dbg('invoking cancel', uniqueRequests);
+            await this.ensureConnected();
+            // dbg('connection ready for cancel');
+            this._connection.invoke("CancelRequests", {requests: uniqueRequests});
+        } catch {
+            //ignored
+        }
     }
     check(host?: string): Promise<ConnectionStatus> {
         return new Promise<ConnectionStatus>((resolve, reject) => {
@@ -168,6 +185,14 @@ export class BetaCensorClient implements ICensorBackend {
                     resolve(status);
                 });
         })
+    }
+
+    ensureConnected = (): Promise<void> => {
+        if (this._connection.state !== HubConnectionState.Connected) {
+            return this._connection.start();
+        } else {
+            return Promise.resolve();
+        }
     }
 
 }

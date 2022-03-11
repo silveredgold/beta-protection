@@ -4,7 +4,8 @@ import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
 import { UpdateService } from "./services/update-service";
-import { BackendService, ICensorBackend } from "./transport";
+import { BackendService } from "./transport";
+import type { ICensorBackend } from "@silveredgold/beta-shared/transport";
 import { mergeNewPreferences, mergePreferences } from "./preferences";
 import { StickerService } from "./services/sticker-service";
 import { backendProviderPlugin } from "@/plugin-backend";
@@ -144,8 +145,9 @@ browser.tabs.onUpdated.addListener(async (id, change, tab) => {
 browser.tabs.onRemoved.addListener((id, removeInfo) => {
   dbg('tab removed', removeInfo);
   getClient().then(client => {
-    portManager.closeForSrc(id.toString());
-    client.cancelRequests({srcId: id.toString()});
+    const portNames = portManager.closeForSrc(id.toString());
+    console.debug('invoking backend cancel', id, portNames);
+    client.cancelRequests({requestId: [...portNames]});
   });
 });
 
@@ -278,7 +280,7 @@ async function getClient(): Promise<ICensorBackend> {
     return currentClient;
   } else {
     currentClient = await service.currentProvider.getClient(portManager);
-    return currentClient;
+    return currentClient!;
   }
 }
 
