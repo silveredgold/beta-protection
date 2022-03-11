@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { computed, inject, ref, toRefs, watch } from 'vue';
 import { NCard, NList, NListItem, NTabs, NTab, NTabPane, NSpace, NInput, NInputGroupLabel, NInputGroup, NButton } from "naive-ui";
-import { updateUserPrefs, userPrefs } from "@/options/services";
+import { updateUserPrefs, userPrefs } from "@silveredgold/beta-shared-components";
 
 const props = defineProps<{
     allowList: string[],

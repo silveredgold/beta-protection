@@ -42,9 +42,10 @@
 import { Ref, ref, watch, computed, toRefs, inject } from 'vue';
 import { NCard, useNotification, NButton, NTooltip, NThing, NTree, TreeOption } from "naive-ui";
 import { IPreferences } from '@/preferences';
-import { updateUserPrefs } from '@/options/services';
+import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 import { PlaceholderService } from '@/services/placeholder-service';
-import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
+import { services } from "@silveredgold/beta-shared-components";
+import type { LoadedFileHandle } from "@silveredgold/beta-shared-components/lib/services"
 import { dbg, humanFileSize } from "@/util";
 import { eventEmitter } from "@/messaging";
 
@@ -80,7 +81,7 @@ const importMsg = computed(() => `Importing ${newFiles.value.flatMap(h => h.file
 const uniqueCategories = computed(() => [...new Set(newFiles.value.map(f => f.name))]);
 
 const openDir = async () => {
-    const fs = new FileSystemClient();
+    const fs = new services.FileSystemClient();
     const result = await fs.getDirectoriesandFiles((file) => file.type.startsWith("image/"));
     dbg('loaded files', result);
     const results = Object.keys(result).map(k => {

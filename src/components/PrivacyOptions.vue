@@ -24,7 +24,7 @@ import { Ref, watch, computed, toRefs, inject } from 'vue';
 import { NCard, NIcon, NCheckbox, NSpace, NThing } from "naive-ui";
 import { AlertCircleOutline } from "@vicons/ionicons5";
 import { IPreferences } from '@/preferences';
-import { updateUserPrefs } from '@/options/services';
+import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 
 const props = defineProps<{
     preferences: IPreferences

@@ -1,7 +1,7 @@
 import { LocalPlaceholder } from "@/placeholders";
 import { dbg, hashCode } from "@/util";
 import { DbClient } from "./db-client";
-import { LoadedFileHandle } from "./fs-client";
+import type { LoadedFileHandle } from "@silveredgold/beta-shared-components/lib/services"
 import browser from 'webextension-polyfill';
 
 export class PlaceholderService {

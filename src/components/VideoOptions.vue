@@ -40,7 +40,7 @@
 import { watch, computed, toRefs, inject } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification, NThing, NSpace, NCheckbox, NSlider } from "naive-ui";
 import { IPreferences } from '@/preferences';
-import { updateUserPrefs } from '@/options/services';
+import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 interface Props {
     preferences: IPreferences,
     compact: boolean

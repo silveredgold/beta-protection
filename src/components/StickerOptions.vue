@@ -23,7 +23,7 @@
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup } from "naive-ui";
 import { IPreferences } from '@/preferences';
-import { updateUserPrefs } from '@/options/services';
+import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 import { StickerService } from '@/services/sticker-service';
 
 const props = defineProps<{

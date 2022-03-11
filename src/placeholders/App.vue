@@ -13,7 +13,7 @@ import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, useOsT
 import { provide, ref, onBeforeMount, computed } from 'vue';
 import { debounce } from "throttle-debounce";
 import { getAvailablePlaceholders, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
-import { updateUserPrefs } from "@/options/services";
+import { updateUserPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbg } from "@/util";
 import browser from 'webextension-polyfill';
 import StoreHeader from './StoreHeader.vue';

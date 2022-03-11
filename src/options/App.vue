@@ -119,7 +119,7 @@ import BackendHost from '@/components/BackendHost.vue';
 import { provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
 import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
-import { updateUserPrefs, userPrefs } from "./services";
+import { updateUserPrefs, userPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbgLog } from "@/util";
 import {PlaceholderUpload, BetaSafetyImport, PlaceholderOptions} from "@/components/placeholders";
 import StickerOptions from "@/components/StickerOptions.vue";
@@ -130,13 +130,14 @@ import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/components/placeholders/OpenStore.vue";
 import ExtensionInfo from "@/components/ExtensionInfo.vue";
-import { openStatistics, openOverrides } from "@/components/util";
+import { webExtensionNavigation } from "@/components/util";
 import browser from 'webextension-polyfill';
 import {OverridableOption} from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
 // import ConnectionStatus from "@/components/ConnectionStatus.vue";
 import { ErrorOptions, ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus } from "@silveredgold/beta-shared-components";
 import type {HostConfigurator} from '@silveredgold/beta-shared-components'
+const { openOverrides, openStatistics } = webExtensionNavigation;
 
 const getHost: HostConfigurator = {
   getBackendHost: async () : Promise<string> => {

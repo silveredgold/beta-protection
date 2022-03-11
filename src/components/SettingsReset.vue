@@ -13,7 +13,7 @@
 import { inject } from 'vue';
 import { NCard, NButton } from "naive-ui";
 import { defaultPrefs } from '@/preferences';
-import { updateUserPrefs } from '@/options/services';
+import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 import browser from 'webextension-polyfill';
 
 const updatePrefs = inject(updateUserPrefs);

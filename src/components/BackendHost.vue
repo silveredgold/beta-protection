@@ -48,7 +48,7 @@ const allBackends: Ref<string[]> = ref(service.getSupported());
 const currentBackendId = ref('');
 const currentHost = ref("");
 const getCurrentHost = async () => {
-    var storeResponse = await browser.storage.local.get({'backendHost': ''});
+    const storeResponse = await browser.storage.local.get({'backendHost': ''});
     const currentStoredHost = storeResponse['backendHost'] ?? "";
     return currentStoredHost;
 }

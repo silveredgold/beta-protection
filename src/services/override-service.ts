@@ -1,9 +1,10 @@
 import { IOverride, IPreferences, OperationMode } from "@/preferences";
 import { generateUUID, hashCode } from "@/util";
 import { AES, enc } from "crypto-js";
-import { FileSystemClient } from "@/services/fs-client";
+import { services } from "@silveredgold/beta-shared-components";
 import browser from 'webextension-polyfill';
 import { DateTime, Duration } from "luxon";
+const { FileSystemClient } = services;
 
 export class OverrideService {
 

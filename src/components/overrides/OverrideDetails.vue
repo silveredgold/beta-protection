@@ -48,7 +48,7 @@
                     <n-space vertical>
                         <n-text>You don't have any override currently active! You can change any preferences from the Options page.</n-text>
                         <n-space item-style="display: flex;" justify="end">
-                            <n-button type="info" ghost size="large"  @click="openSettings">
+                            <n-button type="info" ghost size="large"  @click="webExtensionNavigation.openSettings">
                                 <template #icon>
                                     <n-icon :component="Open" />
                                 </template>
@@ -75,7 +75,7 @@ import { OverrideService } from '@/services/override-service';
 import { LockClosedSharp, Open, HelpCircleOutline } from "@vicons/ionicons5";
 import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NInput, NInputGroup, NInputGroupLabel, NIcon, NAlert, NPopover, NThing, NTime } from "naive-ui";
 import { computed, inject, reactive, ref, Ref, toRefs, watch } from 'vue';
-import { openSettings } from "@/components/util";
+import { webExtensionNavigation } from "@/components/util";
 import { eventEmitter } from "@/messaging";
 import { dbg } from '@/util';
 
