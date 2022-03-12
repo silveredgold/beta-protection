@@ -1,9 +1,9 @@
-import { CensorMode, IPreferences } from "@silveredgold/beta-shared/preferences";
+import { CensorMode, CensorType, IPreferences } from "@silveredgold/beta-shared/preferences";
 import { toNudeNet } from "@silveredgold/beta-shared/preferences/nudenet";
 import { ActionPayload, AssetType, CancelRequest, ConnectionStatus, ICensorBackend, ImageCensorRequest, ImageCensorResponse, StatisticsData } from "@silveredgold/beta-shared/transport";
 import { EventDispatcher, IEvent, ISimpleEvent, SimpleEventDispatcher } from "strongly-typed-events";
 import { HttpResponse, HttpTransportType, HubConnectionState } from "@microsoft/signalr";
-import signalR, {HubConnectionBuilder} from "@microsoft/signalr";
+import signalR, { HubConnectionBuilder } from "@microsoft/signalr";
 // import signalR from "@microsoft/signalr/dist/browser/signalr";
 import { censorImageRequest, censorImageResponse } from "./types";
 import { log } from "missionlog";
@@ -15,7 +15,7 @@ export class BetaCensorClient implements ICensorBackend {
     private _onReceivePreferences = new EventDispatcher<ICensorBackend, Partial<IPreferences>>();
     private _onUpdate = new SimpleEventDispatcher<ActionPayload>();
     private _connection: signalR.HubConnection;
-    private _srcMap = new Map<string, string|number>();
+    private _srcMap = new Map<string, string | number>();
     private _ready: Promise<void>;
     host: string;
 
@@ -74,26 +74,26 @@ export class BetaCensorClient implements ICensorBackend {
             }
         }
     }
-    
+
     ephemeral: boolean = false;
     async censorImage(request: ImageCensorRequest): Promise<ImageCensorResponse | undefined> {
         if (request.srcId) {
             this._srcMap.set(request.id, request.srcId);
             const opts = toBetaCensor(request.preferences);
             // console.time('getImageData');
-            let encoded: string|undefined = undefined;
+            let encoded: string | undefined = undefined;
             if (request.url.startsWith('data:')) {
                 encoded = request.url;
             } else {
                 try {
                     // dbgLog('fetching path', request.url);
-                    const resp = await fetch(request.url, {credentials: 'include'});
+                    const resp = await fetch(request.url, { credentials: 'include' });
                     const type = resp.headers.get('content-type');
                     // dbgLog('getting buffer from bg response', resp.status, type);
                     const blob = await resp.blob();
-                    encoded = await new Promise<string>( callback =>{
+                    encoded = await new Promise<string>(callback => {
                         const reader = new FileReader();
-                        reader.onload = function(){ callback(this.result as string) } ;
+                        reader.onload = function () { callback(this.result as string) };
                         reader.readAsDataURL(blob);
                     });
                 } catch (e) {
@@ -139,8 +139,13 @@ export class BetaCensorClient implements ICensorBackend {
     resetStatistics(): Promise<boolean> {
         return Promise.resolve(false);
     }
-    getAvailableAssets(assetType: AssetType): Promise<string[] | undefined> {
-        return Promise.resolve(undefined);
+    async getAvailableAssets(assetType: AssetType): Promise<string[] | undefined> {
+        if (assetType == "stickers") {
+            const resp = await fetch(this.host + "/assets/categories?type=stickers");
+            const json = await resp.json() as string[];
+            return json;
+        }
+        return undefined;
     }
     get onUpdate() {
         return this._onUpdate.asEvent();
@@ -160,21 +165,21 @@ export class BetaCensorClient implements ICensorBackend {
             dbg('invoking cancel', uniqueRequests);
             await this.ensureConnected();
             // dbg('connection ready for cancel');
-            this._connection.invoke("CancelRequests", {requests: uniqueRequests});
+            this._connection.invoke("CancelRequests", { requests: uniqueRequests });
         } catch {
             //ignored
         }
     }
     check(host?: string): Promise<ConnectionStatus> {
         return new Promise<ConnectionStatus>((resolve, reject) => {
-            const status: ConnectionStatus = {available: false, name: 'Beta Censoring'};
+            const status: ConnectionStatus = { available: false, name: 'Beta Censoring' };
             const connection = new HubConnectionBuilder()
-            .withUrl((host ?? this.host) + "/live", {
-                transport: HttpTransportType.WebSockets,
-                skipNegotiation: true
-            })
-            .withAutomaticReconnect([1,2])
-            .build();
+                .withUrl((host ?? this.host) + "/live", {
+                    transport: HttpTransportType.WebSockets,
+                    skipNegotiation: true
+                })
+                .withAutomaticReconnect([1, 2])
+                .build();
             connection.start()
                 .then(() => {
                     status.available = connection.state === HubConnectionState.Connected;
@@ -197,26 +202,30 @@ export class BetaCensorClient implements ICensorBackend {
 
 }
 
-const toBetaCensor = (prefs: IPreferences): {[key: string]: {CensorType: string, Level: number}} => {
+const toBetaCensor = (prefs: IPreferences): { [key: string]: { CensorType: string, Level: number } } => {
     return {
-        COVERED_BELLY: toPayload(prefs.covered.Belly),
-        COVERED_BREAST_F: toPayload(prefs.covered.Breasts),
-        COVERED_BUTTOCKS: toPayload(prefs.covered.Ass),
-        COVERED_FEET: toPayload(prefs.covered.Feet),
-        COVERED_GENITALIA_F: toPayload(prefs.covered.Pussy),
-        EXPOSED_ANUS: toPayload(prefs.exposed.Ass),
-        EXPOSED_ARMPITS: toPayload(prefs.exposed.Pits),
-        EXPOSED_BELLY: toPayload(prefs.exposed.Belly),
-        EXPOSED_BREAST_F: toPayload(prefs.exposed.Breasts),
-        EXPOSED_BUTTOCKS: toPayload(prefs.exposed.Ass),
-        EXPOSED_FEET: toPayload(prefs.exposed.Feet),
-        EXPOSED_GENITALIA_F: toPayload(prefs.exposed.Pussy),
-        EXPOSED_GENITALIA_M: toPayload(prefs.exposed.Cock),
-        FACE_F: toPayload(prefs.otherCensoring.femaleFace),
-        FACE_M: toPayload(prefs.otherCensoring.maleFace)
+        COVERED_BELLY: toPayload(prefs.covered.Belly, prefs),
+        COVERED_BREAST_F: toPayload(prefs.covered.Breasts, prefs),
+        COVERED_BUTTOCKS: toPayload(prefs.covered.Ass, prefs),
+        COVERED_FEET: toPayload(prefs.covered.Feet, prefs),
+        COVERED_GENITALIA_F: toPayload(prefs.covered.Pussy, prefs),
+        EXPOSED_ANUS: toPayload(prefs.exposed.Ass, prefs),
+        EXPOSED_ARMPITS: toPayload(prefs.exposed.Pits, prefs),
+        EXPOSED_BELLY: toPayload(prefs.exposed.Belly, prefs),
+        EXPOSED_BREAST_F: toPayload(prefs.exposed.Breasts, prefs),
+        EXPOSED_BUTTOCKS: toPayload(prefs.exposed.Ass, prefs),
+        EXPOSED_FEET: toPayload(prefs.exposed.Feet, prefs),
+        EXPOSED_GENITALIA_F: toPayload(prefs.exposed.Pussy, prefs),
+        EXPOSED_GENITALIA_M: toPayload(prefs.exposed.Cock, prefs),
+        FACE_F: toPayload(prefs.otherCensoring.femaleFace, prefs),
+        FACE_M: toPayload(prefs.otherCensoring.maleFace, prefs)
     };
 }
 
-const toPayload = (type: CensorMode) => {
-    return {CensorType: type.method, Level: Math.round(type.level)};
+const toPayload = (type: CensorMode, prefs: IPreferences): {CensorType: CensorType|string, Level: number} => {
+    if (type.method == CensorType.Sticker) {
+        return {CensorType: type.method + ":" + prefs.enabledStickers.join(';'), Level: Math.round(type.level)};
+    } else {
+        return { CensorType: type.method, Level: Math.round(type.level) };
+    }
 }
