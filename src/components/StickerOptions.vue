@@ -2,6 +2,14 @@
 <n-card title="Sticker Preferences" size="small">
         <!-- <template #header-extra>Backend Host</template> -->
         <div>
+            <n-thing 
+                content-indented 
+                title="No stickers loaded" 
+                description="Ensure your current censoring backend has stickers available and loaded for use!" v-if="!stickers || stickers.length == 0" >
+                <template #avatar >
+                    <n-button strong secondary circle @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template></n-button>
+                </template>
+                </n-thing>
              <n-list bordered v-if="stickers">
                  <n-checkbox-group v-model:value="enabled">
                     <n-list-item v-for="category in stickers" v-bind:key="category">
@@ -21,9 +29,10 @@
 </template>
 <script setup lang="ts">
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
-import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup } from "naive-ui";
+import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup, NButton, NIcon } from "naive-ui";
+import { Refresh } from "@vicons/ionicons5";
 import { IPreferences } from '@/preferences';
-import { updateUserPrefs } from '@silveredgold/beta-shared-components';
+import { censorBackend, updateUserPrefs, useBackendTransport } from '@silveredgold/beta-shared-components';
 import { StickerService } from '@/services/sticker-service';
 
 const props = defineProps<{
@@ -35,6 +44,7 @@ const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 const availableStickers: Ref<string[]> = ref([]);
+const asyncBackend = inject(censorBackend, undefined);
 
 const stickers = computed(() => availableStickers?.value?.length ? availableStickers?.value : []);
 
@@ -68,6 +78,14 @@ onBeforeMount(() => {
 const loadStickers = async () => {
     const holders = await StickerService.getAvailable();
     return holders;
+}
+
+const refreshStickers = async () => {
+    if (asyncBackend !== undefined) {
+        const backend = await asyncBackend();
+        const stickers = await StickerService.tryRefreshAvailable(backend);
+        availableStickers.value = stickers;
+    }
 }
 
 

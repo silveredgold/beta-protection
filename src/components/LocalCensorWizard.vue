@@ -22,12 +22,6 @@
                     <n-button @click="() => currentStep++">Next</n-button>
                 </n-space>
             </n-step>
-            <!-- <n-step title="Output Options" description="Set the censoring options for the files">
-                <n-text>Choose the censoring options to be applied to these files. These will be used for all the files being censored.</n-text>
-                <n-space item-style="display: flex;" justify="end" v-if="currentStep == 3">
-                    <n-button @click="() => currentStep++">Next</n-button>
-                </n-space>
-            </n-step> -->
             <n-step
                 title="Begin Censoring"
                 description="Queue your images to be censored on the backend">
@@ -73,20 +67,6 @@
                     </div>
             </template>
             </RequestQueue>
-            <!-- <n-list bordered>
-                <template #header>
-                    Pending
-                </template>
-                <n-list-item v-for="job of currentRequests" v-bind:key="job">
-                    {{job}}
-                    <template #suffix>
-                        <n-spin size="small" />
-                    </template>
-                </n-list-item>
-                <template #footer>
-                    
-                </template>
-            </n-list> -->
         </n-grid-item>
         <n-grid-item :span="savedQueue.size > 0 ? 1 : 2" v-if="resultsQueue.size > 0">
             <FileList :files="listFiles" title="Censored Files">
@@ -105,26 +85,9 @@
         </n-grid-item>
         <n-grid-item :span="savedQueue.size > 0 ? resultsQueue.size > 0 ? 1 : 2 : 0" v-if="savedQueue.size > 0">
             <FileList :files="savedFiles" title="Saved Files" />
-            <!-- <n-list bordered>
-                <template #header>
-                    Saved Files
-                </template>
-                <n-list-item v-for="job of savedFiles" v-bind:key="job">
-                    {{job}}
-                    <template #suffix>
-                        <n-icon-wrapper :size="24" :border-radius="10">
-                            <n-icon :size="18" :component="Checkmark" />
-                        </n-icon-wrapper>
-                    </template>
-                </n-list-item>
-            </n-list> -->
         </n-grid-item>
         <n-grid-item :span="3">
         </n-grid-item>
-
-            
-            <div v-if="resultsQueue && resultsQueue.size > 0">
-            </div>
             </n-grid>
         </div>
     </template>
@@ -143,7 +106,7 @@ import type { IFileEntry } from '@silveredgold/beta-shared-components/lib/compon
 import { ICensorBackend, ImageCensorResponse } from '@silveredgold/beta-shared/transport';
 import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface';
 import clone from 'just-clone';
-import { ImageScrambler } from './util';
+import { dbgLog } from '@/util';
 const { BatchCensorService } = services;
 
 const props = defineProps<{
@@ -182,34 +145,21 @@ const saveOptions : DropdownMixedOption[] = [
 
 
 const handleCensored = async (sender: ICensorBackend, response: ImageCensorResponse) => {
-    console.log('got censoring response', response, jobQueue.value);
+    dbgLog('got censoring response', response, jobQueue.value);
     if (response.id && jobQueue.value.has(response.id)) {
         const handle = jobQueue.value.get(response.id);
-        console.log('found matching handle for response', handle);
+        // console.log('found matching handle for response', handle);
         jobQueue.value.delete(response.id);
         if (response.error) {
             console.log('got error',response);
         } else {
             if (handle) {
-                if (handle.handle.name.includes('20150421')) {
-                    //already duped here
-                console.log('setting censor result in results queue', response.id, handle.handle.name, response.url);
-                }
-            resultsQueue.value.set(response.id, {handle: handle!.handle, url: response.url });
+                resultsQueue.value.set(response.id, {handle: handle!.handle, url: response.url });
             }
-            // const perms = await handle?.handle.queryPermission({mode: 'readwrite'});
-            // const stream = await handle?.handle.createWritable({keepExistingData: false})
-            // const blob = await b64toBlob(response.url, handle?.file.type!);
-            // stream?.write(blob);
-            // stream?.close();
         }
     }
 }
 backend.onImageCensored.subscribe(handleCensored);
-
-// const handleButtonClick = () => {
-//     currentStep.value = currentStep.value + 1
-// };
 
 const jobQueue: Ref<Map<string, DirectoryFile>> = ref(new Map());
 const resultsQueue: Ref<Map<string, {handle: FileSystemFileHandle, url: string }>> = ref(new Map());
@@ -219,7 +169,6 @@ const batchService = new BatchCensorService(backend, jobQueue.value);
 
 const startCensoring = async () => {
     const queue = await batchService.startCensoringFiles(workingFiles.value, {...clone(preferences.value), ...batchPreferences.value as IPreferences}, connection.name === 'Beta Safety');
-    // jobQueue.value = queue;
     workingFiles.value = [];
 }
 
@@ -234,16 +183,6 @@ const batchPreferences: Ref<Partial<IPreferences>> = ref({
 });
 
 const onFilesLoaded = async (dirHandle: FileSystemDirectoryHandle, files:DirectoryFileList[]) => {
-    var file = files[0].files[0];
-    // const blob = file.file;
-    //         const encoded = await new Promise<string>(callback => {
-    //             const reader = new FileReader();
-    //             reader.onload = function () { callback(this.result as string) };
-    //             reader.readAsDataURL(blob);
-    //         });
-    //     var scrambler = new ImageScrambler(encoded);
-    //     await scrambler.scramble();
-    //     console.log('scrambling done');
     workingFiles.value = files;
     inputHandle.value = dirHandle;
     currentStep.value++;
@@ -268,7 +207,6 @@ const deleteSourceFiles = async () => {
     for (const [id, file] of srcFiles) {
         let fileOutDir = inputHandle.value!;
         const resolved = await inputHandle.value!.resolve(file.handle);
-        console.log('resolved', resolved);
         if (resolved !== null && resolved.length > 1) {
             const segments = resolved?.slice(0, -1)
             for (let i = 0; i < segments.length; i++) {

@@ -11,14 +11,14 @@
                         <LocalCensorWizard v-if="!!currentPreferences" :preferences="currentPreferences" />
                 </Suspense>
             </n-tab-pane>
-            <n-tab-pane name="remote" tab="Create New">
+            <!-- <n-tab-pane name="remote" tab="Create New">
                 <Suspense>
                     <template #fallback>
                         Loading...
                     </template>
                         test
                 </Suspense>
-            </n-tab-pane>
+            </n-tab-pane> -->
         </n-tabs>
     </n-notification-provider>
     <n-global-style />

@@ -87,4 +87,3 @@ export * from '@silveredgold/beta-shared/transport';
 
 // export const backendProvider: InjectionKey<() => IBackendProvider<ICensorBackend>> = Symbol();
 export const backendService: InjectionKey<() => Promise<BackendService>> = Symbol();
-export const censorBackend: InjectionKey<() => Promise<ICensorBackend>> = Symbol();

@@ -24,6 +24,7 @@ export const backendProviderPlugin: BackendPlugin = {
         // app.provide(backendProvider, () => _service.current);
         app.provide(censorBackend, getBackendAsync);
         app.provide(backendService, BackendService.create);
+        app.provide('censorBackend', getBackendAsync);
     }
 }
 

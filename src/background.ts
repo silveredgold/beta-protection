@@ -184,13 +184,6 @@ browser.notifications.onClicked.addListener(id => {
 
 /** UTILITY FUNCTIONS BELOW THIS, USED BY EVENTS ABOVE */
 
-// function trySendEvent(msg: object) {
-//   browser.runtime.sendMessage(msg).then((res) => {
-//     console.debug('sent event message', res);
-//   }).catch(e => {
-//     console.warn("Failed to send preferences reload event. Likely there's just no listeners yet.", e);
-//   });
-// }
 
 const trySendEvent = async (msg: object, tabId?: number) => {
   if (tabId) {
@@ -219,11 +212,7 @@ function initExtension(syncPrefs: boolean = true) {
         trySendEvent({msg: 'reloadPreferences'});
       });
     }
-    client.getAvailableAssets('stickers').then(assets => {
-      if (assets && assets.length && assets.length > 0) {
-        StickerService.loadAvailableStickers(assets)
-      }
-    });
+    StickerService.tryRefreshAvailable(client);
   });
 }
 

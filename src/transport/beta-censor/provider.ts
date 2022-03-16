@@ -2,7 +2,7 @@ import { getExtensionVersion } from "@/util";
 import { ICensorBackend, IBackendProvider } from "@/transport";
 import browser from 'webextension-polyfill';
 import { RuntimePortManager } from "../runtimePort";
-import { BetaCensorClient } from "./client";
+import { BetaCensorClient } from "@silveredgold/beta-censor-client";
 import { loadPreferencesFromStorage } from "@/preferences";
 
 const version = getExtensionVersion();
