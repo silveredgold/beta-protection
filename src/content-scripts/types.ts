@@ -22,3 +22,8 @@ export type ImageStyleElement = {
     background: string,
     imageUrl?: string
 };
+
+export type VideoCensoringOptions = {
+    videoMode: "Block" | "Blur" | "Allow",
+    gifsAsVideos: boolean
+}

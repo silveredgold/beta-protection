@@ -14,20 +14,12 @@ export const backendProviderPlugin: BackendPlugin = {
                 resolve(provider.getClient(new RuntimePortManager(), options?.host));
             })
         });
-        const getBackend = async (requestId?: string) => {
-            const service = await BackendService.create();
-            const provider = service.currentProvider;
-            return requestId 
-                ? provider.getRequestClient(requestId, new RuntimePortManager(), options?.host)
-                : provider.getClient(new RuntimePortManager(), options?.host);
-        }
-        // app.provide(backendProvider, () => _service.current);
         app.provide(censorBackend, getBackendAsync);
         app.provide(backendService, BackendService.create);
-        app.provide('censorBackend', getBackendAsync);
     }
 }
 
+// this was going to have a lot of other stuff in it that's now in the BackendService
 export type BackendPlugin = Plugin & {
     // provider: IBackendProvider<ICensorBackend>;
 }

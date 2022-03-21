@@ -178,9 +178,9 @@ const store = reactive({
 
 const prefs = computed(() => store.preferences);
 
-watch(prefs, async (newMode, prevMode) => {
-    dbgLog('new mode', newMode);
-}, {deep: true});
+// watch(prefs, async (newMode, prevMode) => {
+//     dbgLog('new mode', newMode);
+// }, {deep: true});
 
 const updatePrefs = async (preferences?: IPreferences) => {
   dbgLog(`queuing prefs save`);

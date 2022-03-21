@@ -1,5 +1,5 @@
-import { dbg, dbgLog, dbgTime, dbgTimeEnd, getDomain, hashCode, isValidUrl } from "@/util";
-import { CensoringState, ImageStyleElement } from "./types";
+import { dbg, dbgLog, dbgTime, dbgTimeEnd, getDomain, hashCode, isGif, isValidUrl } from "@/util";
+import { CensoringState, ImageStyleElement, VideoCensoringOptions } from "./types";
 import { generateUUID, getRandom } from "@/util";
 import { debounce } from "throttle-debounce";
 import { LocalPlaceholder } from "@/placeholders";
@@ -48,16 +48,16 @@ export class Purifier {
         return this._urlTransformers;
     }
     
-    private _videoMode: string;
+    private _videoOptions: VideoCensoringOptions;
     /**
      *
      */
-    constructor(state: CensoringState, videoMode: "Block" | "Blur" | "Allow", location: Location | string, placeholders: LocalPlaceholder[], cache?: ImageTracker) {
+    constructor(state: CensoringState, videoMode: VideoCensoringOptions, location: Location | string, placeholders: LocalPlaceholder[], cache?: ImageTracker) {
         // Only update once in a while.
         this._currentState = state;
         this._placeholders = placeholders;
         this._ready = true
-        this._videoMode = videoMode;
+        this._videoOptions = videoMode;
         if (typeof location !== 'string') {
             location = (location as Location).hostname;
         }
@@ -126,7 +126,7 @@ export class Purifier {
             this.censorStyleImage(target);
         }
         // then videos
-        if (this._currentState.activeCensoring && this._videoMode == "Block") {
+        if (this._currentState.activeCensoring && this._videoOptions.videoMode == "Block") {
             const videoElements = this.discoverVideos(['video', 'video-element']);
             this.disableVideos(videoElements);
         }
@@ -171,7 +171,7 @@ export class Purifier {
         const otherEls: {el: HTMLImageElement, center: {x: number, y: number}}[] = [];
         elements.forEach(el => {
             this.flattenSrc(el);
-            if (el.tagName === "IMG" && isValidUrl(el.src)) {
+            if (el.tagName === "IMG" && isValidUrl(el.src) && (this._videoOptions.gifsAsVideos ? !isGif(el.src) : true)) {
                 // if (this.isUnsafe(el) && !this._safeList.includes(hashCode(el.src))) {
                 if (this.isUnsafe(el)) {
                     const domState = this.getVisibility(el);
@@ -305,7 +305,7 @@ export class Purifier {
             priority: priority ?? 1,
             domain: getDomain(this._domain, this._hideDomains)
         };
-        this._cache.trackImage(id, imageUrl);
+        this._cache.trackImage(id, imageSrc);
         if (false) {
 
         } else {
@@ -462,15 +462,23 @@ function toDataURL(src: string, outputFormat?: string) {
         // }, 2500);
         const img = new Image();
         img.crossOrigin = 'Anonymous';
+        img.addEventListener('error', function (e) {
+            e.preventDefault(); // Prevent error from getting thrown
+            reject(e);
+        });
         img.onload = function () {
-            const canvas = document.createElement('CANVAS') as HTMLCanvasElement;
-            const ctx = canvas.getContext('2d');
-            canvas.height = img.naturalHeight;
-            canvas.width = img.naturalWidth;
-            ctx?.drawImage(img, 0, 0);
-            const dataURL = canvas.toDataURL(outputFormat);
-            // clearTimeout(timeout);
-            resolve(dataURL);
+            try {
+                const canvas = document.createElement('CANVAS') as HTMLCanvasElement;
+                const ctx = canvas.getContext('2d');
+                canvas.height = img.naturalHeight;
+                canvas.width = img.naturalWidth;
+                ctx?.drawImage(img, 0, 0);
+                const dataURL = canvas.toDataURL(outputFormat);
+                // clearTimeout(timeout);
+                resolve(dataURL);
+            } catch (e) {
+                reject(e);
+            }
         };
         img.src = src;
         //this is for cache busting to force load(), but doesn't seem entirely necessary

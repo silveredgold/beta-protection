@@ -26,6 +26,11 @@ export function isValidUrl(url: string) {
     return http;
 }
 
+export function isGif(url: string) {
+  const isGif = url.includes('.gif') || url.startsWith('data:image/gif');
+  return isGif;
+}
+
 export function toTitleCase(str: string) {
     return str.replace(
       /\w\S*/g,

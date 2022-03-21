@@ -22,10 +22,12 @@ export class CSSManager {
         if (this._prefs.videoCensorMode == "Blur") {
             await browser.scripting.insertCSS(this.videoBase);
             await browser.scripting.insertCSS(this.blurVideo);
+            await browser.scripting.insertCSS(this.blurGifs);
         }
         if (this._prefs.videoCensorMode == "Block") {
             await browser.scripting.insertCSS(this.videoBase);
             await browser.scripting.insertCSS(this.blockVideo);
+            await browser.scripting.insertCSS(this.blockGifs);
         }
     }
 
@@ -89,11 +91,38 @@ video:not([censor-state='censored']) {
         };
     }
 
+    public get blurGifs() : browser.Scripting.CSSInjection {
+        return {
+            target: this._target,
+            css: `
+/* Blur only */
+img[src$=".gif"] {
+    filter: blur(${this._prefs.videoCensorLevel*4}px) !important;
+}
+
+img[src$=".gif"]:not([censor-state='censored']) {
+    visibility: visible !important;
+}
+`
+        };
+    }
+
     public get blockVideo() : browser.Scripting.CSSInjection {
         return {
             target: this._target,
             css: `
 video:not([censor-state='censored']) {
+    visibility: hidden !important;
+}
+`
+        }
+    }
+
+    public get blockGifs() : browser.Scripting.CSSInjection {
+        return {
+            target: this._target,
+            css: `
+img[src$=".gif"]:not([censor-state='censored']) {
     visibility: hidden !important;
 }
 `

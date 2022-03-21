@@ -5,13 +5,13 @@ import { BetaSafetyProvider } from './beta-safety';
 import { RuntimePortManager } from './runtimePort';
 import browser from 'webextension-polyfill';
 
-
+// I don't like this and will almost certainly be refactoring this significantly in future
 export class BackendService {
 
     static create = async (): Promise<BackendService> => {
         // let host: string|undefined = undefined;
         // let backend: string|undefined = undefined;
-        const configHost = await browser.storage.local.get({'backendHost': 'ws://localhost:8090/ws', 'backendId': 'beta-safety'});
+        const configHost = await browser.storage.local.get({'backendHost': 'http://localhost:2382', 'backendId': 'beta-censoring'});
             const host = configHost['backendHost'] as string;
             const backend = configHost['backendId'] as string;
             return new BackendService(backend, host, [new BetaSafetyProvider(), new BetaCensoringProvider()]);
@@ -45,12 +45,9 @@ export class BackendService {
     
 
     
-    private _defaultId : string = 'beta-safety';
+    private _defaultId : string = 'beta-censoring';
     public get defaultId() : string {
         return this._defaultId;
-    }
-    public set defaultId(v : string) {
-        this._defaultId = v;
     }
 
     private _currentProvider: IBackendProvider<ICensorBackend>;
@@ -85,5 +82,4 @@ export interface IBackendProvider<ICensorBackend> {
 
 export * from '@silveredgold/beta-shared/transport';
 
-// export const backendProvider: InjectionKey<() => IBackendProvider<ICensorBackend>> = Symbol();
 export const backendService: InjectionKey<() => Promise<BackendService>> = Symbol();

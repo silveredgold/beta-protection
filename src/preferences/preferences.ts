@@ -28,15 +28,21 @@ export async function savePreferencesToStorage(prefs: IPreferences, skipClone: b
     await browser.storage.local.set({ 'preferences': clonedPrefs });
 }
 
-export async function mergeNewPreferences(prefs: Partial<IPreferences>): Promise<void> {
+export async function mergeNewPreferences(prefs: Partial<IPreferences>, preferSaved: boolean = true): Promise<void> {
     const clonedPrefs = clone(prefs);
-    
+
     const storedPrefs = await loadPreferencesFromStorage();
-    const mergedPrefs = {
-        ...defaultPrefs,
-        ...storedPrefs,
-        ...clonedPrefs
-    };
+    const mergedPrefs = preferSaved
+        ? {
+            ...defaultPrefs,
+            ...clonedPrefs,
+            ...storedPrefs
+        }
+        : {
+            ...defaultPrefs,
+            ...storedPrefs,
+            ...clonedPrefs
+        }
     await savePreferencesToStorage(mergedPrefs, true);
     setModeBadge(mergedPrefs.mode);
 }
