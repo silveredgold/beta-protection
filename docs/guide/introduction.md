@@ -1,6 +1,6 @@
 # Introduction
 
-Beta Protection is a Chrome extension that uses the Beta Safety backend to censor images in near-real-time as you browse the web.
+Beta Protection is a Chrome extension that uses a configurable censoring backend to censor images in near-real-time as you browse the web.
 
 The extension includes a plethora of configuration options so you can customise its behaviour.
 
@@ -8,13 +8,15 @@ The extension includes a plethora of configuration options so you can customise 
 
 If you're already using Beta Safety, you most likely already have the Beta Safety chrome extension installed. The extension that comes with Beta Safety is perfectly functional and if you're happy with it, there's no _need_ to upgrade to Beta Protection.
 
-Beta Protection is a more feature-rich, but also more complex, alternative to the extension that comes bundled with Beta Safety. That being said, Beta Protection still **requires the Beta Safety backend**.
+Beta Protection is a more feature-rich, but also more complex, alternative to the extension that comes bundled with Beta Safety. That being said, Beta Protection still **requires a supported censoring backend**, such as Beta Censoring or Beta Safety.
 
 ##### A note on the backend
 
-For those who didn't realize, the Beta Safety backend (the `.exe`/`.jar` file you need to run first) is the part that does the actual censoring using the open-source NudeNet AI model. Essentially, as you browse, the browser extension detects images on the pages you view then sends them to the backend. The backend runs them through the API and censors the image and sends back the censored image. The extension then replaces the original image with the newly censored one.
+The _censoring backend_ is the part that does the actual censoring using the open-source NudeNet AI model. Essentially, as you browse, the browser extension detects images on the pages you view, then sends them to whatever backend you have configured. The backend runs them through the AI and censors the image and sends back the censored image. The extension then replaces the original image with the newly censored one. 
 
-Beta Protection works in much the same way, so it only replaces the _extension_ component of Beta Safety, not the backend.
+> This is similar to how Beta Safety works, for those familiar with it.
+
+This applies regardless of the censoring backend in use: the extension does all the work of finding, preparing and replacing images; the backend does the actual AI inference and censoring.
 
 ## So which one should you use?
 
@@ -31,6 +33,14 @@ In this author's opinion, the original Beta Safety extension's options are a lit
 Some parts of the original extension were a little more complex to set up than they needed to be. For example, adding new placeholders required you to directly mess around in the extension's installation directory, whereas Beta Protection allows you to import them directly to the extension where it's managed for you.
 
 Plus, Beta Protection allows you to change some settings that Beta Safety didn't expose as options at all, like where your backend is running or what messages the subliminal messages feature would show.
+
+#### Backend Choice
+
+Beta Protection is designed to work with any compatible censoring backend you like. Currently that includes [Beta Censoring](https://silveredgold.github.io/beta-censoring/) and Beta Safety. Whichever backend you choose, and wherever it's running, Beta Protection doesn't mind.
+
+#### Local censoring improvements
+
+While Beta Safety's backend can be used to censor locally saved images, it's not the most approachable process for most users and tweaking settings for local files is very daunting. Beta Protection includes a guided wizard for censoring your local files, with options to tweak the censoring applied to the files, regardless of whether you're using Beta Censoring or Beta Safety.
 
 #### Additional features
 

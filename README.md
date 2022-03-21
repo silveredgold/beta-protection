@@ -1,6 +1,6 @@
 # Beta Protection
 
-A Chrome extension companion to the Beta Safety app, censoring NSFW images as you view them.
+A Chrome extension that integrates a censoring backend into your browser (like Beta Censoring or Beta Safety), censoring NSFW images as you view them.
 
 ### Build Instructions
 

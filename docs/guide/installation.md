@@ -10,9 +10,17 @@ Beta Protection currently supports Chrome and Edge and _should_ work on any othe
 
 ## Prerequisites
 
-First off, make sure you have Beta Safety running somewhere. Follow the guides included with Beta Safety to run the backend, but you can ignore the parts about loading the extension into Chrome since we'll be using Beta Protection for that part.
+First off, make sure you have a censoring backend running somewhere.
 
-> Since Beta Protection allows you to customize where your backend is running, you could actually run the backend on another PC entirely, if you wanted to.
+#### Beta Censoring
+
+Beta Censoring is a new highly flexible open source censoring server. You can find all the guides and documentation for Beta Censoring [here](https://silveredgold.github.io/beta-censoring/), or check out the [GitHub repository](https://github.com/silveredgold/beta-censoring/).
+
+Once you have the server running, you're good to continue with setting up Beta Protection.
+
+#### Beta Safety
+
+If you'd prefer to stick with using Beta Safety's backend, you can do that. First off, make sure you have Beta Safety running somewhere. Follow the guides included with Beta Safety to run the backend, but you can ignore the parts about loading the extension into Chrome since we'll be using Beta Protection for that part.
 
 ## Download
 
