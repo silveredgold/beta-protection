@@ -12,7 +12,7 @@
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, useOsTheme} from "naive-ui";
 import { provide, ref, onBeforeMount, computed } from 'vue';
 import { debounce } from "throttle-debounce";
-import { getAvailablePlaceholders, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
+import { getAvailablePlaceholders, IExtensionPreferences, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
 import { updateUserPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbg } from "@/util";
 import browser from 'webextension-polyfill';
@@ -25,7 +25,7 @@ const events = useEventEmitter();
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
-const preferences = ref<IPreferences|undefined>(undefined);
+const preferences = ref<IExtensionPreferences|undefined>(undefined);
 const placeholders = ref<PlaceholderSet>({allImages: [], categories: []});
 
 const getCurrentPrefs = async () => {

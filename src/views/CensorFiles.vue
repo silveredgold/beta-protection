@@ -32,7 +32,7 @@ import { dbg, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import {OverrideDetails, CreateOverride} from "@/components/overrides"
 import { OverrideService } from "@/services/override-service";
-import { IOverride, IPreferences, loadPreferencesFromStorage } from "@/preferences";
+import { IPreferences, loadPreferencesFromStorage } from "@/preferences";
 import { overrideService } from "./override";
 import { useEventEmitter } from "@silveredgold/beta-shared-components";
 import LocalCensorWizard from "@/components/LocalCensorWizard.vue";

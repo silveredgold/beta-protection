@@ -70,7 +70,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { IOverride } from '@/preferences';
+import { IExtensionPreferences, IOverride } from '@/preferences';
 import { OverrideService } from '@/services/override-service';
 import { LockClosedSharp, Open, HelpCircleOutline } from "@vicons/ionicons5";
 import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NInput, NInputGroup, NInputGroupLabel, NIcon, NAlert, NPopover, NThing, NTime } from "naive-ui";
@@ -80,7 +80,7 @@ import { eventEmitter } from "@/messaging";
 import { dbg } from '@/util';
 
 const props = defineProps<{
-    override: IOverride | undefined
+    override: IOverride<IExtensionPreferences> | undefined
 }>();
 
 // const svc = await OverrideService.create();

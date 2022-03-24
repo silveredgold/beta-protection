@@ -5,6 +5,22 @@ import browser from 'webextension-polyfill';
 
 
 export class UpdateService {
+
+    static notifyForBreakingUpdate = async (oldVersion?: string) => {
+        oldVersion ??= "your version";
+        const updateOpts : chrome.notifications.NotificationOptions<true> = {
+                        
+            type: 'basic',
+            iconUrl: 'images/icon.png',
+            title: 'Beta Protection Settings Reset',
+            message: `Due to incompatibilities with settings from ${oldVersion}, your Beta Protection settings have been reset to defaults.`,
+            contextMessage: 'Open Options to reconfigure any of your preferred settings.',
+            priority: 1,
+            requireInteraction: false,
+        };
+        chrome.notifications.create('BP_BREAKING_CHANGE', updateOpts, undefined);
+    }
+
     static checkForUpdates = async () => {
         const currentVersion = getExtensionVersion();
         const allReleases = await request('GET /repos/{owner}/{repo}/releases', {

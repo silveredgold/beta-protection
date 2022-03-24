@@ -2,11 +2,11 @@
     visibility: hidden !important;
 } */
 
-img:not([censor-state="censored"]) {
+img:not([img-behaviour="video"]):not([censor-state="censored"]) {
     visibility: hidden !important;
 }
 
-img[censor-state="censored"], img[censor-state="excluded"] {
+img:not([img-behaviour="video"])[censor-state="censored"], img:not([gif-behaviour="video"])[censor-state="excluded"] {
     visibility: visible !important;
 }
 

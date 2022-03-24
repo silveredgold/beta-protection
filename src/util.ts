@@ -1,5 +1,5 @@
 import { GlobalThemeOverrides } from "naive-ui";
-import { IPreferences, OperationMode } from "./preferences";
+import { IExtensionPreferences, IPreferences, OperationMode } from "./preferences";
 import browser from 'webextension-polyfill';
 
 
@@ -27,7 +27,7 @@ export function isValidUrl(url: string) {
 }
 
 export function isGif(url: string) {
-  const isGif = url.includes('.gif') || url.startsWith('data:image/gif');
+  const isGif = url.toLowerCase().includes('.gif') || url.startsWith('data:image/gif');
   return isGif;
 }
 
@@ -144,7 +144,7 @@ export function generateUUID() { // Public Domain/MIT
   });
 }
 
-export const shouldCensor = (prefs: IPreferences, url: string): boolean => {
+export const shouldCensor = (prefs: IExtensionPreferences, url: string): boolean => {
   if (prefs?.mode) {
 		// let prefs = confPrefs["preferences"] as IPreferences;
 		const mode = prefs.mode;

@@ -96,11 +96,11 @@ video:not([censor-state='censored']) {
             target: this._target,
             css: `
 /* Blur only */
-img[src$=".gif"] {
+img[img-behaviour="video"] {
     filter: blur(${this._prefs.videoCensorLevel*4}px) !important;
 }
 
-img[src$=".gif"]:not([censor-state='censored']) {
+img[img-behaviour="video"]:not([censor-state='censored']) {
     visibility: visible !important;
 }
 `
@@ -122,7 +122,7 @@ video:not([censor-state='censored']) {
         return {
             target: this._target,
             css: `
-img[src$=".gif"]:not([censor-state='censored']) {
+img[img-behaviour="video"]:not([censor-state='censored']) {
     visibility: hidden !important;
 }
 `

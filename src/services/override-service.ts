@@ -1,4 +1,4 @@
-import { IOverride, IPreferences, OperationMode } from "@/preferences";
+import { IExtensionPreferences, IOverride, IPreferences, OperationMode } from "@/preferences";
 import { generateUUID, hashCode } from "@/util";
 import { AES, enc } from "crypto-js";
 import { services } from "@silveredgold/beta-shared-components";
@@ -17,7 +17,7 @@ export class OverrideService {
             return new OverrideService();
         }
     }
-    private _current: IOverride | undefined;
+    private _current: IOverride<IExtensionPreferences> | undefined;
 
     public get active() {
         return this._current != undefined && !!this._current?.id;
@@ -30,7 +30,7 @@ export class OverrideService {
     /**
      *
      */
-    private constructor(current?: IOverride) {
+    private constructor(current?: IOverride<IExtensionPreferences>) {
         if (current) {
             this._current = current;
         }
@@ -39,10 +39,10 @@ export class OverrideService {
 
     static overrideFileType = [{ accept: { 'text/json': '.betaoverride' }, description: 'Beta Protection Overrides' }];
 
-    static createOverride(keyPhrase: string, allowedModes: OperationMode[], prefs: Partial<IPreferences>) {
+    static createOverride(keyPhrase: string, allowedModes: OperationMode[], prefs: Partial<IExtensionPreferences>) {
         const overrideId = generateUUID();
         const key = AES.encrypt(overrideId, keyPhrase).toString();
-        const override: IOverride = {
+        const override: IOverride<IExtensionPreferences> = {
             key,
             id: overrideId,
             allowedModes,
@@ -52,7 +52,7 @@ export class OverrideService {
         return override;
     }
 
-    static exportOverride = async (override: IOverride) => {
+    static exportOverride = async (override: IOverride<IExtensionPreferences>) => {
         const fs = new FileSystemClient();
         const output = JSON.stringify(override);
         await fs.saveTextFile(output, OverrideService.overrideFileType);
@@ -66,7 +66,7 @@ export class OverrideService {
             const fs = new FileSystemClient();
             const file = await fs.getFile(OverrideService.overrideFileType);
             const text = await file.file.text();
-            const override = JSON.parse(text) as IOverride;
+            const override = JSON.parse(text) as IOverride<IExtensionPreferences>;
             if (override?.id && override.allowedModes && override.allowedModes.length > 0) {
                 const importHash = hashCode(JSON.stringify(override.preferences));
                 if (override.hash && override.hash != importHash) {
@@ -134,7 +134,7 @@ export type OverrideResult = {
     code: number
 };
 
-export const hasDurationPassed = (override: IOverride|undefined, defaultValue: boolean = false) => {
+export const hasDurationPassed = (override: IOverride<IExtensionPreferences>|undefined, defaultValue: boolean = false) => {
     if (override === undefined) {return defaultValue};
     if (override.activatedTime !== undefined && override.activatedTime > 0 &&
          override.minimumTime !== undefined && override.minimumTime > 0) {

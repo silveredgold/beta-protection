@@ -52,14 +52,14 @@
 <script setup lang="ts">
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, NThing, NSpace, NCheckbox, useNotification, NInputGroup, NInputGroupLabel, NInputNumber, NButton, NTooltip } from "naive-ui";
-import { IPreferences } from '@/preferences';
+import type { IExtensionPreferences } from '@/preferences';
 import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 import { SubliminalService } from '@/services/subliminal-service';
 import { services } from "@silveredgold/beta-shared-components";
 import { dbg } from '@/util';
 
 interface Props {
-    preferences?: IPreferences,
+    preferences?: IExtensionPreferences,
     compact?: boolean
 }
 

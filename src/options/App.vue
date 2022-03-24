@@ -118,7 +118,7 @@ import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen } fro
 import BackendHost from '@/components/BackendHost.vue';
 import { provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
-import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
+import { IExtensionPreferences, IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
 import { updateUserPrefs, userPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbgLog } from "@/util";
 import {PlaceholderUpload, BetaSafetyImport, PlaceholderOptions} from "@/components/placeholders";
@@ -134,8 +134,8 @@ import { webExtensionNavigation } from "@/components/util";
 import browser from 'webextension-polyfill';
 import {OverridableOption} from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
-// import ConnectionStatus from "@/components/ConnectionStatus.vue";
-import { ErrorOptions, ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus } from "@silveredgold/beta-shared-components";
+import ErrorOptions from "@/components/ErrorOptions.vue";
+import { ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus } from "@silveredgold/beta-shared-components";
 import type {HostConfigurator} from '@silveredgold/beta-shared-components'
 const { openOverrides, openStatistics } = webExtensionNavigation;
 
@@ -152,7 +152,7 @@ const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
-const currentOverride: Ref<IOverride|undefined> = ref(undefined);
+const currentOverride: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 
 const getCurrentPrefs = async () => {
   const storeResponse = await loadPreferencesFromStorage();
@@ -168,7 +168,7 @@ const updateFunc = debounce(1000, async (prefs) => {
 })
 
 const store = reactive({
-  preferences: {} as IPreferences,
+  preferences: {} as IExtensionPreferences,
   updatePreferences(prefs?: IPreferences) {
     const targetPrefs = prefs?.mode ? prefs : this.preferences;
     updateFunc(targetPrefs);

@@ -32,7 +32,7 @@ import { dbg, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import {OverrideDetails, CreateOverride} from "@/components/overrides"
 import { OverrideService } from "@/services/override-service";
-import { IOverride } from "@/preferences";
+import { IExtensionPreferences, IOverride } from "@/preferences";
 import { overrideService } from "./override";
 import { useEventEmitter } from "@silveredgold/beta-shared-components";
 
@@ -42,7 +42,7 @@ const events = useEventEmitter();
 
 const svc: Ref<OverrideService|undefined> = ref(undefined);
 
-const current: Ref<IOverride|undefined> = ref(undefined);
+const current: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 
 onBeforeMount(async () => {
     await onUpdate();

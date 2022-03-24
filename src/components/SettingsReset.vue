@@ -15,15 +15,14 @@
 <script setup lang="ts">
 import { inject } from 'vue';
 import { NCard, NButton, NSpace } from "naive-ui";
-import { defaultPrefs, mergeNewPreferences } from '@/preferences';
+import { defaultExtensionPrefs, mergeNewPreferences } from '@/preferences';
 import { updateUserPrefs, useLazyBackendTransport } from '@silveredgold/beta-shared-components';
-import browser from 'webextension-polyfill';
 
 const updatePrefs = inject(updateUserPrefs);
 const backend = useLazyBackendTransport();
 
 const resetToDefault = async () => {
-  updatePrefs?.(defaultPrefs).then(() => {
+  updatePrefs?.(defaultExtensionPrefs).then(() => {
     //   browser.runtime.sendMessage({msg: 'reloadPreferences'}); //the background script does this for us now
   });
 }

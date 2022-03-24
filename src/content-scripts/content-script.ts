@@ -55,7 +55,7 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	//TODO; not how that works
 	// preferences!.enabledPlaceholders = placeholders.categories;
 	// const port = buildPort();
-	const purifier = new Purifier(state, {videoMode: preferences!.videoCensorMode, gifsAsVideos: true}, window.location, placeholders.allImages);
+	const purifier = new Purifier(state, {videoMode: preferences!.videoCensorMode, gifsAsVideos: !(preferences!.autoAnimate)}, window.location, placeholders.allImages);
 	purifier.hideDomains = preferences.hideDomains ?? false;
 	// purifier.port = port;
 	const context: CensoringContext = {

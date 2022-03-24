@@ -4,7 +4,7 @@ video[censor-state='censored'] {
     max-width: 100% !important;
 }
 
-img[src$=".gif"][censor-state='censored'] {
+img[img-behaviour="video"][censor-state='censored'] {
     min-height: 250px;
     max-height: 100% !important;
     max-width: 100% !important;

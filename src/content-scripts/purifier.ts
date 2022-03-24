@@ -62,7 +62,7 @@ export class Purifier {
             location = (location as Location).hostname;
         }
         this._domain = getDomain(location).toLowerCase();
-        this._urlTransformers.push(srcUrl => srcUrl.replace(".gifv", ".gif"))
+        this._urlTransformers.push(srcUrl => srcUrl.replace(".gifv", ".gif"), srcUrl => srcUrl.replace(".GIF", ".gif"));
         if (cache) {
             this._cache = cache;
         }
@@ -171,17 +171,20 @@ export class Purifier {
         const otherEls: {el: HTMLImageElement, center: {x: number, y: number}}[] = [];
         elements.forEach(el => {
             this.flattenSrc(el);
-            if (el.tagName === "IMG" && isValidUrl(el.src) && (this._videoOptions.gifsAsVideos ? !isGif(el.src) : true)) {
-                // if (this.isUnsafe(el) && !this._safeList.includes(hashCode(el.src))) {
-                if (this.isUnsafe(el)) {
-                    const domState = this.getVisibility(el);
-                    if (domState.visible) {
-                        dbg('dom: identified element as visible', el);
-                        targetEls.push(el);
-                    } else {
-                        otherEls.push({el, center: domState.center});
+            if (el.tagName === "IMG" && isValidUrl(el.src)) {
+                if (this._videoOptions.gifsAsVideos && isGif(el.src)) {
+                    el.setAttribute('img-behaviour', 'video');
+                } else {
+                    if (this.isUnsafe(el)) {
+                        const domState = this.getVisibility(el);
+                        if (domState.visible) {
+                            dbg('dom: identified element as visible', el);
+                            targetEls.push(el);
+                        } else {
+                            otherEls.push({el, center: domState.center});
+                        }
+                        // this.purifyImage(el);
                     }
-                    // this.purifyImage(el);
                 }
             }
         });

@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NButton, NAutoComplete, NTooltip, NThing, NGrid, NGi } from "naive-ui";
-import { IPreferences } from '@/preferences';
+import { IExtensionPreferences } from '@/preferences';
 import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 import { PlaceholderService } from '@/services/placeholder-service';
 import { services } from "@silveredgold/beta-shared-components";
@@ -74,7 +74,7 @@ import { LocalPlaceholder } from '@/placeholders';
 import { useEventEmitter } from '@silveredgold/beta-shared-components';
 
 const props = defineProps<{
-    preferences: IPreferences
+    preferences: IExtensionPreferences
 }>();
 
 const emitter = useEventEmitter();

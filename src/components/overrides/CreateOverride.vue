@@ -132,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-import { defaultPrefs, IOverride, OperationMode } from '@/preferences';
+import { defaultPrefs, IExtensionPreferences, IOverride, OperationMode } from '@/preferences';
 import type { IPreferences } from '@/preferences';
 import { OverrideService } from '@/services/override-service';
 import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NCheckbox, NCheckboxGroup, NSteps, NStep, NInputNumber, NThing, NInput, NInputGroup, NInputGroupLabel, NIcon, NAlert } from "naive-ui"; 
@@ -152,7 +152,7 @@ const allowList: Ref<string[]> = ref([]);
 const forceList: Ref<string[]> = ref([]);
 
 const unlockKey: Ref<string> = ref('');
-const currentOverride: Ref<IOverride|undefined> = ref(undefined);
+const currentOverride: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 const enableMinTime: Ref<boolean> = ref(false);
 const minTime: Ref<{days: number, hours: number, minutes: number}> = ref({days: 0, hours: 0, minutes: 0});
 
@@ -191,7 +191,7 @@ const exportOverride = async () => {
     OverrideService.exportOverride(currentOverride.value!);
 }
 
-const overridePreferences: Ref<Partial<IPreferences>> = ref({
+const overridePreferences: Ref<Partial<IExtensionPreferences>> = ref({
     covered: defaultPrefs.covered,
     exposed: defaultPrefs.exposed,
     otherCensoring: defaultPrefs.otherCensoring,

@@ -58,7 +58,7 @@ import { NButton, NButtonGroup, darkTheme, NGlobalStyle, NConfigProvider, NNotif
 import { Settings, StatsChart, LockClosed, Images } from "@vicons/ionicons5";
 import ModeSwitch from "@/components/ModeSwitch.vue";
 import { webExtensionNavigation } from "@/components/util";
-import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
+import { IExtensionPreferences, IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
 import { debounce } from "throttle-debounce";
 import { computed, onBeforeMount, provide, reactive, ref, Ref, watch } from "vue";
 import { updateUserPrefs } from "@silveredgold/beta-shared-components";
@@ -80,7 +80,7 @@ const getHost: HostConfigurator = {
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
-const currentOverride: Ref<IOverride|undefined> = ref(undefined);
+const currentOverride: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 
 // loading
 const getCurrentPrefs = async () => {

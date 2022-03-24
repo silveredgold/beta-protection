@@ -1,14 +1,14 @@
 import { processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
-import { getExtensionVersion } from "./util";
+import { getExtensionVersion, setModeBadge } from "./util";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
 import { UpdateService } from "./services/update-service";
 import { BackendService } from "./transport";
 import type { ICensorBackend } from "@silveredgold/beta-shared/transport";
-import { mergeNewPreferences, mergePreferences } from "./preferences";
+import { defaultExtensionPrefs, loadPreferencesFromStorage, mergeNewPreferences, mergePreferences } from "./preferences";
 import { StickerService } from "./services/sticker-service";
-import { backendProviderPlugin } from "@/plugin-backend";
+import semver from 'semver';
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 let backendService: BackendService| null;
@@ -68,6 +68,19 @@ browser.runtime.onConnect.addListener((port) => {
 
 browser.runtime.onInstalled.addListener((details) => {
   console.log('Configuring BP settings!');
+  const breaking = 'v0.0.11'
+
+  if (details.reason === 'update' && details.previousVersion !== undefined) {
+    const newVersion = getExtensionVersion();
+    const srcVersion = semver.valid(details.previousVersion);
+    console.warn(`upgrading from ${srcVersion}->${newVersion}`);
+    if (srcVersion && semver.gte(newVersion, breaking) && semver.lt(srcVersion, breaking)) {
+      console.log('breaking change boundary cross detected!');
+      mergeNewPreferences(defaultExtensionPrefs, false).then(() => {
+        UpdateService.notifyForBreakingUpdate(details.previousVersion);
+      });
+    }
+  }
 
   if (details.reason === "install") {
     //to any adventurous code spelunkers:
@@ -83,7 +96,7 @@ browser.runtime.onInstalled.addListener((details) => {
         console.log('No installation ID found, creating new one!');
         browser.storage.local.set({'installationId': id});
       }
-    })
+    });
   }
   initExtension();
   initContextMenus();
@@ -161,6 +174,7 @@ browser.storage.onChanged.addListener((changes, area) => {
     }
   }
   browser.runtime.sendMessage({msg: `storageChange:${area}`, keys, changes});
+  loadPreferencesFromStorage().then(ep => setModeBadge(ep.mode)).catch(() => console.debug('failed to set mode badge'));
 });
 
 browser.alarms.onAlarm.addListener(alarm => {
@@ -263,7 +277,7 @@ async function getService(): Promise<BackendService> {
 }
 
 async function getClient(): Promise<ICensorBackend> {
-  console.log('getting client');
+  console.debug('getting client');
   const service = await getService();
   if (currentClient) {
     return currentClient;

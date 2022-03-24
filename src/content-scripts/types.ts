@@ -1,4 +1,4 @@
-import { IPreferences } from "@/preferences"
+import { IExtensionPreferences, IPreferences } from "@/preferences"
 import { ICensorBackend } from "@/transport";
 import { PageObserver } from "./observer"
 import { Purifier } from "./purifier"
@@ -10,7 +10,7 @@ export type CensoringState = {
 
 export type CensoringContext = {
     state: CensoringState,
-    preferences: IPreferences,
+    preferences: IExtensionPreferences,
     backendClient?: ICensorBackend,
     purifier: Purifier,
     observer?: PageObserver,
