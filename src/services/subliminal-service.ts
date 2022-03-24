@@ -1,5 +1,5 @@
 import { CSSManager } from "@/services/css-manager";
-import { IPreferences, loadPreferencesFromStorage, OperationMode, SubliminalOptions } from "@/preferences";
+import { IExtensionPreferences, IPreferences, loadPreferencesFromStorage, OperationMode, SubliminalOptions } from "@/preferences";
 import { DbClient } from "./db-client";
 import browser from 'webextension-polyfill';
 
@@ -78,7 +78,7 @@ export class SubliminalService {
         }
     }
 
-    private runSubliminal = (prefs: IPreferences, messages: string[]) => {
+    private runSubliminal = (prefs: IExtensionPreferences, messages: string[]) => {
 
         
 

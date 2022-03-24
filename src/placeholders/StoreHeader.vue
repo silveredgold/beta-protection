@@ -58,7 +58,7 @@
 import { NPageHeader, NGrid, NGi, NAvatar, NStatistic, NButton, NSpace, NIcon, useNotification, NPopover } from "naive-ui";
 import { Settings, Refresh, AddCircle } from "@vicons/ionicons5";
 import { computed, inject, Ref, toRefs } from "vue";
-import { IPreferences } from "@/preferences";
+import { IExtensionPreferences } from "@/preferences";
 import { PlaceholderSet } from ".";
 import browser from 'webextension-polyfill';
 import { getEnabledFromSet } from "./util";
@@ -66,7 +66,7 @@ import { eventEmitter, ActionEvents } from "@/messaging";
 import PlaceholderUpload from "@/components/placeholders/PlaceholderUpload.vue"
 
 const props = defineProps<{
-    preferences: IPreferences,
+    preferences: IExtensionPreferences,
     placeholders: PlaceholderSet
 }>();
 

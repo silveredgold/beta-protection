@@ -14,11 +14,11 @@
         <n-button-group>
           <n-popover trigger="hover" placement="bottom">
             <template #trigger>
-                <n-button size="small" @click="openOverrides">
-                    <n-icon size="25" :component="LockClosed" />
+                <n-button size="small" @click="openCensoring">
+                    <n-icon size="25" :component="Images" />
                 </n-button>
             </template>
-            Open Overrides
+            Open Censoring
         </n-popover>
         <n-popover trigger="hover" placement="bottom">
             <template #trigger>
@@ -41,7 +41,7 @@
     </template>
     <!-- <template #footer>Ensure you already have Beta Safety running in the background!</template> -->
   </n-page-header>
-  <connection-status :compact="true" />
+  <connection-status :compact="true" :host-config="getHost" />
   <mode-switch />
   <overridable-option :option="currentOverride?.preferences?.videoCensorMode">
     <video-options :preferences="prefs" :compact="true" />
@@ -55,24 +55,32 @@
 
 <script setup lang="ts">
 import { NButton, NButtonGroup, darkTheme, NGlobalStyle, NConfigProvider, NNotificationProvider, NPageHeader, NAvatar, NSpace, NIcon, NPopover, NCard } from "naive-ui";
-import { Settings, StatsChart, LockClosed } from "@vicons/ionicons5";
-import VideoOptions from "@/components/VideoOptions.vue";
+import { Settings, StatsChart, LockClosed, Images } from "@vicons/ionicons5";
 import ModeSwitch from "@/components/ModeSwitch.vue";
-import { openSettings, openStatistics, openOverrides } from "@/components/util";
-import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
+import { webExtensionNavigation } from "@/components/util";
+import { IExtensionPreferences, IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
 import { debounce } from "throttle-debounce";
 import { computed, onBeforeMount, provide, reactive, ref, Ref, watch } from "vue";
-import { updateUserPrefs } from "@/options/services";
-import ConnectionStatus from "@/components/ConnectionStatus.vue";
+import { updateUserPrefs } from "@silveredgold/beta-shared-components";
+import { ConnectionStatus, VideoOptions } from "@silveredgold/beta-shared-components";
 import { dbg, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import { OverrideService } from "@/services/override-service";
 import { OverridableOption } from "@/components/overrides";
+import type {HostConfigurator} from '@silveredgold/beta-shared-components';
+const { openOverrides, openStatistics, openSettings, openCensoring } = webExtensionNavigation
 
+const getHost: HostConfigurator = {
+  getBackendHost: async () : Promise<string> => {
+    const configHost = await browser.storage.local.get('backendHost');
+    const host = configHost['backendHost'];
+    return host;
+  }
+}
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
-const currentOverride: Ref<IOverride|undefined> = ref(undefined);
+const currentOverride: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 
 // loading
 const getCurrentPrefs = async () => {

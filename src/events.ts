@@ -1,8 +1,8 @@
-import { MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATISTICS, MSG_STATUS, MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_INJECT_SUBLIMINAL, MSG_IMAGE_DATA, MSG_FORWARDING } from "./messaging";
-import { loadPreferencesFromStorage, toRaw } from "@/preferences";
-import { WebSocketClient } from "@/transport/webSocketClient";
+import { MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATISTICS, MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_INJECT_SUBLIMINAL, MSG_IMAGE_DATA, MSG_FORWARDING } from "./messaging";
+import { loadPreferencesFromStorage } from "@/preferences";
 import { dbg, dbgLog, getDomain, getExtensionVersion } from "@/util";
 import browser from 'webextension-polyfill';
+import { ICensorBackend } from "@/transport";
 
 export const CMENU_REDO_CENSOR = "BSNG_REDO_CENSOR";
 export const CMENU_ENABLE_ONCE = "BP_FORCE_RUN";
@@ -10,25 +10,27 @@ export const CMENU_RECHECK_PAGE = "BP_RECHECK_PAGE";
 
 
 
-const knownMessages = [MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS, MSG_INJECT_CSS, MSG_INJECT_SUBLIMINAL, MSG_STATUS, MSG_IMAGE_DATA, MSG_FORWARDING];
+const knownMessages = [MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_RESET_STATISTICS, MSG_INJECT_CSS, MSG_INJECT_SUBLIMINAL, MSG_IMAGE_DATA, MSG_FORWARDING];
 
-export function processContextClick(info: browser.Menus.OnClickData, tab: browser.Tabs.Tab|undefined, client: WebSocketClient) {
+export function processContextClick(info: browser.Menus.OnClickData, tab: browser.Tabs.Tab|undefined, backendClient: ICensorBackend) {
     const eVersion = getExtensionVersion();
     dbgLog('prcessing context click event', info, tab);
     if (tab && info.menuItemId === CMENU_REDO_CENSOR) {
         browser.tabs.sendMessage(tab.id!, {msg: CMENU_REDO_CENSOR}).then(value => {
-            if (value.id) {
+            if (value !== undefined && value?.id) {
                 loadPreferencesFromStorage().then(prefs => {
-                    client.sendObj({
-                        version: eVersion,
-                        msg: "redoCensor",
+                    backendClient.censorImage({
                         url: value.origSrc,
-                        tabid: tab.id,
+                        srcId: tab.id,
                         id: value.id,
-                        priority: 1,
-                        preferences: toRaw(prefs),
-                        type: "normal",
-                        domain: getDomain(value.domain, prefs)
+                        force: true,
+                        preferences: prefs,
+                        requestData: {
+                            type: 'normal'
+                        },
+                        context: {
+                            domain: getDomain(value.domain, prefs)
+                        }
                     });
                 });
             }
@@ -41,13 +43,13 @@ export function processContextClick(info: browser.Menus.OnClickData, tab: browse
 }
 
 export type MessageContext = {
-    socketClient: IWebSocketClient,
+    backendClient: ICensorBackend,
     version: string;
 };
 
 export interface IWebSocketClient  {
-    sendObj: (message: object, callback?: () => any|void) => void;
-    send: (message: string, callback?: any) => void;
+    // sendObj: (message: object, callback?: () => any|void) => void;
+    // send: (message: string, callback?: any) => void;
     close: () => void
 }
 
@@ -68,12 +70,3 @@ export async function processMessage(message: any, sender: browser.Runtime.Messa
         console.warn('did not find a known message handler, unknown runtime message', message, sender);
     }
 }
-
-export function cancelRequestsForId(tabId: number, socketClient: WebSocketClient) {
-    socketClient.sendObj({
-        version: getExtensionVersion(),
-        msg: "cancelRequests",
-        tabid: tabId
-    });
-}
-

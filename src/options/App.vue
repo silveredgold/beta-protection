@@ -38,10 +38,12 @@
         </template>
         <template #footer>To change the censoring mode, use the popup from your extension toolbar!</template>
       </n-page-header>
-      <connection-status :style="{marginBottom: '2em'}" />
+      <connection-status :style="{marginBottom: '2em'}" :host-config="getHost" />
       <n-collapse :style="{ marginTop: '1em', marginBottom: '1em', padding: '0.5em'}" style="width: unset;">
         <n-collapse-item title="Backend Host" name="backend-host">
-          <backend-host class="control-group" />
+          <suspense>
+            <backend-host class="control-group" />
+          </suspense>
           <privacy-options :preferences="prefs" class="control-group" />
           <template #header-extra>Set where your backend is running</template>
         </n-collapse-item>
@@ -116,37 +118,40 @@ import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen } fro
 import BackendHost from '@/components/BackendHost.vue';
 import { provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
-import { IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
-import { updateUserPrefs, userPrefs } from "./services";
+import { IExtensionPreferences, IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
+import { updateUserPrefs, userPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbgLog } from "@/util";
-import CensoringPreferences from "@/components/CensoringPreferences.vue";
-import VideoOptions from "@/components/VideoOptions.vue";
 import {PlaceholderUpload, BetaSafetyImport, PlaceholderOptions} from "@/components/placeholders";
 import StickerOptions from "@/components/StickerOptions.vue";
 import SettingsReset from "@/components/SettingsReset.vue";
-import ConnectionStatus from "@/components/ConnectionStatus.vue";
 import DomainListOptions from "@/components/DomainListOptions.vue";
-import ErrorOptions from "@/components/ErrorOptions.vue";
+
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/components/placeholders/OpenStore.vue";
-import ImportExport from "@/components/ImportExport.vue";
 import ExtensionInfo from "@/components/ExtensionInfo.vue";
-import { openStatistics, openOverrides } from "@/components/util";
-import { eventEmitter, ActionEvents } from "@/messaging";
+import { webExtensionNavigation } from "@/components/util";
 import browser from 'webextension-polyfill';
-import mitt from "mitt";
 import {OverridableOption} from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
+import { ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus, ErrorOptions } from "@silveredgold/beta-shared-components";
+import type {HostConfigurator} from '@silveredgold/beta-shared-components'
+const { openOverrides, openStatistics } = webExtensionNavigation;
+
+const getHost: HostConfigurator = {
+  getBackendHost: async () : Promise<string> => {
+    const configHost = await browser.storage.local.get('backendHost');
+    const host = configHost['backendHost'];
+    return host;
+  }
+}
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
-const events = mitt<ActionEvents>();
-// const notif = useNotification();
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
-const currentOverride: Ref<IOverride|undefined> = ref(undefined);
+const currentOverride: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 
 const getCurrentPrefs = async () => {
   const storeResponse = await loadPreferencesFromStorage();
@@ -162,7 +167,7 @@ const updateFunc = debounce(1000, async (prefs) => {
 })
 
 const store = reactive({
-  preferences: {} as IPreferences,
+  preferences: {} as IExtensionPreferences,
   updatePreferences(prefs?: IPreferences) {
     const targetPrefs = prefs?.mode ? prefs : this.preferences;
     updateFunc(targetPrefs);
@@ -172,9 +177,9 @@ const store = reactive({
 
 const prefs = computed(() => store.preferences);
 
-watch(prefs, async (newMode, prevMode) => {
-    dbgLog('new mode', newMode);
-}, {deep: true});
+// watch(prefs, async (newMode, prevMode) => {
+//     dbgLog('new mode', newMode);
+// }, {deep: true});
 
 const updatePrefs = async (preferences?: IPreferences) => {
   dbgLog(`queuing prefs save`);
@@ -198,7 +203,6 @@ browser.runtime.onMessage.addListener((request, sender) => {
 });
 
 provide(updateUserPrefs, updatePrefs);
-provide(eventEmitter, events);
 
 
 </script>

@@ -3,3 +3,9 @@ video[censor-state='censored'] {
     max-height: 100% !important;
     max-width: 100% !important;
 }
+
+img[img-behaviour="video"][censor-state='censored'] {
+    min-height: 250px;
+    max-height: 100% !important;
+    max-width: 100% !important;
+}

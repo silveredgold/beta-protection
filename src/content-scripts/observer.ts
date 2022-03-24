@@ -1,4 +1,4 @@
-import { generateUUID, isNodeSafe, dbg } from "@/util";
+import { generateUUID, isNodeSafe, dbg, isNodeExcluded } from "@/util";
 import { Purifier } from "./purifier";
 import browser from 'webextension-polyfill';
 
@@ -66,9 +66,16 @@ export class PageObserver {
             }
             if (mutation.type === "attributes" && mutation.attributeName === "src") {
                 const target = mutation.target as Element;
+                let forceRecheck = false;
+                if (target.getAttribute('censor-state') === 'censored' && 
+                    (!target.getAttribute('src')?.startsWith('data:') &&
+                    !target.getAttribute('src')?.startsWith('chrome-extension'))) {
+                    forceRecheck = true;
+                }
+                const skipped = isNodeExcluded(mutation.target);
                 const safe = isNodeSafe(mutation.target);
-                dbg(`mutation running, checking for safe! ${safe}`, this._id, mutation.target);
-                if (safe) {
+                dbg(`mutation running, checking for safe! ${skipped}`, safe, this._id, mutation.target);
+                if (skipped && !forceRecheck) { //TODO: should add the safe check back here later
                     // Do nothing since it's safe.
                 } else {
                     target.setAttribute('censor-state', 'unsafe')

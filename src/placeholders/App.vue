@@ -12,21 +12,20 @@
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, useOsTheme} from "naive-ui";
 import { provide, ref, onBeforeMount, computed } from 'vue';
 import { debounce } from "throttle-debounce";
-import { getAvailablePlaceholders, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
-import { updateUserPrefs } from "@/options/services";
+import { getAvailablePlaceholders, IExtensionPreferences, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
+import { updateUserPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbg } from "@/util";
 import browser from 'webextension-polyfill';
 import StoreHeader from './StoreHeader.vue';
 import {Store} from '@/components/placeholders';
-import mitt from 'mitt';
-import { eventEmitter, ActionEvents } from "@/messaging";
+import { useEventEmitter } from "@silveredgold/beta-shared-components";
 import { PlaceholderSet } from "./types";
 
-const events = mitt<ActionEvents>();
+const events = useEventEmitter();
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
-const preferences = ref<IPreferences|undefined>(undefined);
+const preferences = ref<IExtensionPreferences|undefined>(undefined);
 const placeholders = ref<PlaceholderSet>({allImages: [], categories: []});
 
 const getCurrentPrefs = async () => {
@@ -73,7 +72,7 @@ browser.runtime.onMessage.addListener((request, sender) => {
   }
 });
 
-events.on('reload', evt => {
+events?.on('reload', evt => {
   dbg('got emitter event', evt);
   if (evt == 'placeholders') {
     getCurrentPlaceholders().then(set => {
@@ -88,7 +87,6 @@ events.on('reload', evt => {
 
 // provide(userPrefs, prefs);
 provide(updateUserPrefs, updatePreferences);
-provide(eventEmitter, events);
 
 </script>
 <style>

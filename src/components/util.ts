@@ -1,15 +1,26 @@
+import { INavigationService } from '@silveredgold/beta-shared-components';
 import browser from 'webextension-polyfill';
 
-export const openSettings = () => {
-    window.open(browser.runtime.getURL('options.html'));
-}
+export const webExtensionNavigation: INavigationService & {openCensoring: ()=> void} = {
+    openSettings: () => {
+        window.open(browser.runtime.getURL('options.html'));
+    },
+    
+    openStatistics: () => {
+        window.open(browser.runtime.getURL('statistics.html'));
+    },
+    
+    openOverrides: () => {
+        window.open(browser.runtime.getURL('override.html'));
+    },
 
-export const openStatistics = () => {
-    window.open(browser.runtime.getURL('statistics.html'));
+    openUrl: (url: string) => {
+        window.open(browser.runtime.getURL(url));
+    },
+    openCensoring: () => {
+        window.open(browser.runtime.getURL('local.html'));
+    },
+    getAssetUrl: (assetUrl: string) => {
+        return browser.runtime.getURL(assetUrl);
+    }
 }
-
-export const openOverrides = () => {
-    window.open(browser.runtime.getURL('override.html'));
-}
-
-export type AssetSource = (path: string) => string;

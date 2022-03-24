@@ -4,13 +4,7 @@ You should now see the Beta Protection extension in your Chrome extensions windo
 
 If you don't see the extension icon (look for the pink lock icon) in your browser toolbar, click the Extensions button (the puzzle piece) in your Chrome toolbar, find Beta Protection in the list and click the small pin icon beside it. This will pin Beta Protection to your toolbar so its always visible.
 
-Click the icon in the toolbar to open the popup and check on your extension. At the top of the screen will be the connection status. If this does not show Connected, make sure your backend is running.
-
-<Note type="info">
-
-If you have your backend running somewhere other than your local PC, open the settings using the cog in the top right and change your backend host.
-
-</Note>
+Click the icon in the toolbar to open the popup and check on your extension. At the top of the screen will be the connection status. If this shows *Connected* you're connected to the backend and can skip the next step!
 
 <ImageZoom 
   src="/beta-protection/assets/chrome_popup.jpg" 
@@ -19,6 +13,20 @@ If you have your backend running somewhere other than your local PC, open the se
 />
 
 From here, you can change the most common settings like the censoring mode and video censoring mode. If you want to customize Beta Protection though, click the Settings icon in the top right of the popup to open the full options page.
+
+## Backend Configuration
+
+Beta Protection (since v0.0.11) has defaulted to using a locally running Beta Censoring server for censoring. If you're running your backend somewhere other than your local PC, or are using a different backend (like Beta Safety), you'll need to quickly set that up.
+
+From the extension popup, open the settings using the cog in the top right. Drop down the *Backend Host* section, and enter the address where your backend is running into the text box. This will usually be something like `http://localhost:2382` (for Beta Censoring) or `ws://localhost:8090/ws` (for Beta Safety).
+
+Make sure the right backend is selected below the address and click *Save and Reconnect*. Click Recheck in the Connection Status at the top of the page to check that Beta Protection can communicate with your backend.
+
+<Note type="info">
+
+You can change your backend whenever you like! Just change the address (and make sure the right backend type is selected) in the settings, click *Save and Reconnect* and you're good to go.
+
+</Note>
 
 > You can also right-click on the icon in the toolbar and click `Options` to directly open the options page.
 

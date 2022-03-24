@@ -1,5 +1,5 @@
 import { CSSManager } from "@/services/css-manager";
-import { IPreferences, loadPreferencesFromStorage, toRaw } from "@/preferences";
+import { IPreferences, loadPreferencesFromStorage } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
 import { dbgLog, getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
@@ -11,25 +11,26 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
         let preferences: IPreferences;
         if (message.prefs !== undefined) {
             preferences = message.prefs as IPreferences;
+        } else if (message.preferences !== undefined) {
+            preferences = message.preferences as IPreferences;
         } else {
             preferences = await loadPreferencesFromStorage();
         }
-        let requestType = "censorImage";
-        if (preferences.autoAnimate || message.forceCensor) {
-            dbgLog('forcing to redo message type');
-            requestType = "redoCensor";
-        }
-        const rawPrefs = toRaw(preferences);
-        ctx.socketClient.sendObj({
-            version: ctx.version,
-            msg: requestType,
-            url: img,
-            tabid: message['tabId'] ?? sender.tab!.id,
+        const forced = preferences.autoAnimate || message.forceCensor;
+        ctx.backendClient.censorImage({
             id: message.id,
-            priority: message.priority,
-            preferences: rawPrefs,
-            type: message.type,
-            domain: getDomain(message.domain, preferences)
+            force: forced,
+            preferences,
+            srcId: message['tabId'] ?? sender.tab!.id,
+            url: img,
+            srcUrl: message.srcUrl,
+            requestData: {
+                type: message.type,
+                priority: message.priority
+            },
+            context: {
+                domain: getDomain(message.domain, preferences)
+            }
         });
     }
 }

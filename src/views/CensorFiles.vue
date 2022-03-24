@@ -3,22 +3,22 @@
     <n-notification-provider>
         <n-tabs size="large" justify-content="space-evenly">
         <!-- <n-tabs type="segment"> -->
-            <n-tab-pane name="current" tab="Current">
+            <n-tab-pane name="local" tab="Local Files">
                 <Suspense>
                     <template #fallback>
                         Loading...
                     </template>
-                        <override-details :override="current" />
+                        <LocalCensorWizard v-if="!!currentPreferences" :preferences="currentPreferences" />
                 </Suspense>
             </n-tab-pane>
-            <n-tab-pane name="create" tab="Create New">
+            <!-- <n-tab-pane name="remote" tab="Create New">
                 <Suspense>
                     <template #fallback>
                         Loading...
                     </template>
-                        <create-override />
+                        test
                 </Suspense>
-            </n-tab-pane>
+            </n-tab-pane> -->
         </n-tabs>
     </n-notification-provider>
     <n-global-style />
@@ -32,27 +32,24 @@ import { dbg, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import {OverrideDetails, CreateOverride} from "@/components/overrides"
 import { OverrideService } from "@/services/override-service";
-import { IExtensionPreferences, IOverride } from "@/preferences";
+import { IPreferences, loadPreferencesFromStorage } from "@/preferences";
 import { overrideService } from "./override";
 import { useEventEmitter } from "@silveredgold/beta-shared-components";
+import LocalCensorWizard from "@/components/LocalCensorWizard.vue";
 
 const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null));
 const events = useEventEmitter();
 
-const svc: Ref<OverrideService|undefined> = ref(undefined);
-
-const current: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
+const currentPreferences: Ref<IPreferences|undefined> = ref(undefined);
 
 onBeforeMount(async () => {
     await onUpdate();
 });
 
 const onUpdate = async () => {
-    const service = await OverrideService.create();
-    dbg('onUpdate', service);
-    svc.value = service;
-    current.value = service.current;
+    const prefs = await loadPreferencesFromStorage();
+    currentPreferences.value = prefs;
 }
 
 // events.on('reload', evt => {
@@ -61,17 +58,6 @@ const onUpdate = async () => {
 //     svc?.value?.reload();
 //   }
 // });
-
-provide(overrideService, computed(() => svc.value) as unknown);
-
-browser.runtime.onMessage.addListener((msg, sender) => {
-    if (msg.msg == 'storageChange:local' && msg.keys && msg.keys.includes('override')) {
-        events?.emit('reload', 'override');
-    }
-    if (msg.msg == 'reloadOverride') {
-        svc?.value?.reload();
-    }
-});
 
 </script>
 

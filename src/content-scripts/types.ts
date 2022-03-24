@@ -1,5 +1,5 @@
-import { IPreferences } from "@/preferences/types"
-import { WebSocketClient } from "@/transport/webSocketClient"
+import { IExtensionPreferences, IPreferences } from "@/preferences"
+import { ICensorBackend } from "@/transport";
 import { PageObserver } from "./observer"
 import { Purifier } from "./purifier"
 import browser from 'webextension-polyfill';
@@ -10,8 +10,8 @@ export type CensoringState = {
 
 export type CensoringContext = {
     state: CensoringState,
-    preferences: IPreferences,
-    socketClient?: WebSocketClient,
+    preferences: IExtensionPreferences,
+    backendClient?: ICensorBackend,
     purifier: Purifier,
     observer?: PageObserver,
     port?: browser.Runtime.Port
@@ -22,3 +22,8 @@ export type ImageStyleElement = {
     background: string,
     imageUrl?: string
 };
+
+export type VideoCensoringOptions = {
+    videoMode: "Block" | "Blur" | "Allow",
+    gifsAsVideos: boolean
+}

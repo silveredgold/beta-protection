@@ -64,19 +64,20 @@
 <script setup lang="ts">
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NButton, NAutoComplete, NTooltip, NThing, NGrid, NGi } from "naive-ui";
-import { IPreferences } from '@/preferences';
-import { updateUserPrefs } from '@/options/services';
+import { IExtensionPreferences } from '@/preferences';
+import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 import { PlaceholderService } from '@/services/placeholder-service';
-import { FileSystemClient, LoadedFileHandle } from "@/services/fs-client";
+import { services } from "@silveredgold/beta-shared-components";
+import type { LoadedFileHandle } from "@silveredgold/beta-shared-components/lib/services"
 import { dbg, humanFileSize } from "@/util";
-import { eventEmitter } from "@/messaging";
 import { LocalPlaceholder } from '@/placeholders';
+import { useEventEmitter } from '@silveredgold/beta-shared-components';
 
 const props = defineProps<{
-    preferences: IPreferences
+    preferences: IExtensionPreferences
 }>();
 
-const emitter = inject(eventEmitter);
+const emitter = useEventEmitter();
 const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
@@ -107,7 +108,9 @@ const enabled = computed({
 });
 
 const openDir = async () => {
-    const fs = new FileSystemClient();
+    const fs = new services.FileSystemClient();
+    const dir = await fs.openDir();
+    dbg('loaded dir', dir);
     const result = await fs.getFiles((file) => file.type.startsWith("image/"));
     dbg('loaded files', result);
     newFiles.value = result.files;
@@ -116,7 +119,7 @@ const openDir = async () => {
 }
 
 const openFile = async () => {
-    const fs = new FileSystemClient();
+    const fs = new services.FileSystemClient();
     const result = await fs.getFile(fs.imageTypes);
     dbg('loaded files', result);
     newFiles.value = [result];

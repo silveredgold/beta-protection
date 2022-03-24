@@ -1,14 +1,13 @@
-import {createApp, InjectionKey} from 'vue';
+import { InjectionKey } from 'vue';
 import Override from './Override.vue';
 // General Font
 import 'vfonts/Lato.css'
 // Monospace Font
 import 'vfonts/FiraCode.css'
 import { OverrideService } from '@/services/override-service';
+import { createBetaApp } from '@/plugins';
 
-const app = createApp(Override);
-app.config.unwrapInjectedRef = true;
-app.mount("#app");
+const app = createBetaApp(Override, {unwrapInjected: true}).mount('#app');
 
 
 

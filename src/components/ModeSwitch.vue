@@ -17,13 +17,13 @@
 <script setup lang="ts">
 import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage } from '@/preferences';
+import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage, IExtensionPreferences } from '@/preferences';
 import { dbg, setModeBadge } from "@/util"
 import { OverrideService } from '@/services/override-service';
 
 const notif = useNotification();
 const mode: Ref<OperationMode> = ref("" as OperationMode);
-let prefs = reactive({} as IPreferences);
+let prefs = reactive({} as IExtensionPreferences);
 const getCurrentMode = async () => {
     const storeResponse = await loadPreferencesFromStorage();
     const svc = await OverrideService.create();

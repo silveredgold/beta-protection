@@ -1,5 +1,5 @@
 import { GlobalThemeOverrides } from "naive-ui";
-import { IPreferences, OperationMode } from "./preferences";
+import { IExtensionPreferences, IPreferences, OperationMode } from "./preferences";
 import browser from 'webextension-polyfill';
 
 
@@ -26,6 +26,11 @@ export function isValidUrl(url: string) {
     return http;
 }
 
+export function isGif(url: string) {
+  const isGif = url.toLowerCase().includes('.gif') || url.startsWith('data:image/gif');
+  return isGif;
+}
+
 export function toTitleCase(str: string) {
     return str.replace(
       /\w\S*/g,
@@ -44,7 +49,7 @@ export const themeOverrides: GlobalThemeOverrides = { common: { fontWeightStrong
 //   return isChrome || inList;
 // }
 
-export function isNodeSafe(node: Node, safeList?: number[]) {
+export function isNodeExcluded(node: Node, safeList?: number[]) {
   const plSrc = node["placeholder-name"] as string;
   const url = node["src"] as string;
   let safeSrc = true;
@@ -55,6 +60,23 @@ export function isNodeSafe(node: Node, safeList?: number[]) {
   const isChrome = url && url.includes("extension://"); //edge doesn't use a prefix
   const inList = safeList && safeList.length > 0 ? safeList.includes(hashCode(url)) : true;
   return safeSrc || isChrome || inList;
+}
+
+export function isNodeSafe(node: Node) {
+  const conditions: boolean[] = [];
+  const plSrc = node["placeholder-name"] as string;
+  const url = node["src"] as string;
+  const origSrc = node["censor-src"] as string;
+  const state = node["censor-state"] ?? node["censor-style"];
+  if (plSrc) {
+    const filename = (url.split('/').pop() ?? '').split('#')[0].split('?')[0];
+    conditions.push(filename.toLowerCase() == plSrc.toLowerCase());
+  }
+  if (state === 'censored' && origSrc) {
+    conditions.push(url !== origSrc);
+    conditions.push(url.startsWith('data:'))
+  }
+  return conditions.every(c => c);
 }
 
 export function hashCode(str: string) {
@@ -122,7 +144,7 @@ export function generateUUID() { // Public Domain/MIT
   });
 }
 
-export const shouldCensor = (prefs: IPreferences, url: string): boolean => {
+export const shouldCensor = (prefs: IExtensionPreferences, url: string): boolean => {
   if (prefs?.mode) {
 		// let prefs = confPrefs["preferences"] as IPreferences;
 		const mode = prefs.mode;
@@ -158,6 +180,18 @@ export const dbg = (...data: any[]) => {
 export const dbgLog = (...data: any[]) => {
   if (__DEBUG__) {
     console.log(...data);
+  }
+}
+
+export const dbgTime = (label: string, id?: string) => {
+  if (__DEBUG__) {
+    console.time(id ? `${label}:${id}` : label);
+  }
+}
+
+export const dbgTimeEnd = (label: string, id?: string) => {
+  if (__DEBUG__) {
+    console.timeEnd(id ? `${label}:${id}` : label);
   }
 }
 

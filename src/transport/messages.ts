@@ -1,11 +1,13 @@
-import { createPreferencesFromBackend, IPreferences, loadPreferencesFromStorage, rawPreferences, savePreferencesToStorage } from "@/preferences"
+import { IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences"
+import { createPreferencesFromBackend, BetaSafetyPreferences } from "@silveredgold/beta-shared/preferences/beta-safety";
 import { PlaceholderService } from "@/services/placeholder-service"
 import { StickerService } from "@/services/sticker-service"
-import { WebSocketClient } from "./webSocketClient"
 import browser from 'webextension-polyfill';
 import { StatisticsService } from "@/services/statistics-service";
 import { setModeBadge, dbg } from "@/util";
 import { IWebSocketClient } from "@/events";
+
+// this file should be unnecessary now, retaining for compatibility and testing.
 
 export type SocketEvent<Type> = {
     event: string;
@@ -31,6 +33,7 @@ export const placeholderStickerEvent : SocketEvent<void> = {
 export const censoredImageEvent : SocketEvent<void> = {
     event: 'censorImage',
     handler: async (response, ctx) => {
+        let errorMsg: string|undefined;
         const prefs = await loadPreferencesFromStorage();
         let url: string;
         if (parseInt(response.status) === 200 || parseInt(response.status) === 304) {
@@ -40,12 +43,14 @@ export const censoredImageEvent : SocketEvent<void> = {
             url = prefs.errorMode === 'normal'
                 ? browser.runtime.getURL("images/error_normal.jpg")
                 : browser.runtime.getURL("images/error_simple.png");
+            errorMsg = response.url;
             // we don't have an NSFW error screen yet
             // ignore that, we do now
         }
         const body = {
             msg: "setSrc", censorURL: url,
-            id: response.id, tabid: response.tabid, type: response.type
+            id: response.id, tabid: response.tabid, 
+            type: response.type, error: errorMsg
         };
         ctx.sendMessage(body, response.id, response.tabid);
     }
@@ -61,7 +66,7 @@ export const preferencesEvent : SocketEvent<IPreferences> = {
         }
         const preferences = await loadPreferencesFromStorage();
         if (parseInt(response.status) === 200) {
-            const rawPrefs = response["preferences"] as rawPreferences;
+            const rawPrefs = response["preferences"] as BetaSafetyPreferences;
             log('raw prefs', rawPrefs);
             const backendPrefs = createPreferencesFromBackend(rawPrefs);
             log('backend prefs', backendPrefs);
@@ -85,10 +90,11 @@ export const statisticsEvent : SocketEvent<void> = {
     event: 'getStatistics',
     handler: async (response, ctx) => {
         if (parseInt(response.status) === 200) {
-            const rawLogs = response["logs"] as string;
-            const stats = StatisticsService.parseRaw(rawLogs);
-            dbg('parsed stats data', stats);
-            ctx.sendMessage({msg: "reloadStatistics", statistics: stats}, "statistics");
+            console.warn('legacy getStatistics handler running!');
+            // const rawLogs = response["logs"] as string;
+            // const stats = StatisticsService.parseRaw(rawLogs);
+            // dbg('parsed stats data', stats);
+            // ctx.sendMessage({msg: "reloadStatistics", statistics: stats}, "statistics");
         }
     }
 }

@@ -28,15 +28,15 @@
 <script setup lang="ts">
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup, NButton, NIcon } from "naive-ui";
-import { IPreferences, getAvailablePlaceholders } from '@/preferences';
+import { getAvailablePlaceholders, IExtensionPreferences } from '@/preferences';
 import { Refresh } from "@vicons/ionicons5";
-import { updateUserPrefs } from '@/options/services';
+import { updateUserPrefs } from '@silveredgold/beta-shared-components';
 import { LocalPlaceholder } from '@/placeholders';
 import { eventEmitter } from "@/messaging";
 import { dbg } from '@/util';
 
 const props = defineProps<{
-    preferences: IPreferences
+    preferences: IExtensionPreferences
 }>();
 
 const notif = useNotification();

@@ -1,15 +1,19 @@
-import { WebSocketClient } from "./transport/webSocketClient";
-import { cancelRequestsForId, processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
-import { getExtensionVersion } from "./util";
+import { processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
+import { getExtensionVersion, setModeBadge } from "./util";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
-import { WebSocketRequestClient } from "./transport/webSocketPortClient";
 import { UpdateService } from "./services/update-service";
+import { BackendService } from "./transport";
+import type { ICensorBackend } from "@silveredgold/beta-shared/transport";
+import { defaultExtensionPrefs, loadPreferencesFromStorage, mergeNewPreferences, mergePreferences } from "./preferences";
+import { StickerService } from "./services/sticker-service";
+import semver from 'semver';
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
+let backendService: BackendService| null;
 
-let currentClient: WebSocketClient | null;
+let currentClient: ICensorBackend | null;
 
 browser.runtime.onConnect.addListener((port) => {
   const portMsgListener = async (msg: any, port: browser.Runtime.Port) => {
@@ -22,7 +26,7 @@ browser.runtime.onConnect.addListener((port) => {
         const client = await getClient();
         const version = getExtensionVersion();
         return {
-          socketClient: client,
+          backendClient: client,
           version
         }
       };
@@ -37,7 +41,7 @@ browser.runtime.onConnect.addListener((port) => {
       const client = await getRequestClient(port.name);
       const version = getExtensionVersion();
       return {
-        socketClient: client,
+        backendClient: client,
         version
       }
     };
@@ -64,6 +68,19 @@ browser.runtime.onConnect.addListener((port) => {
 
 browser.runtime.onInstalled.addListener((details) => {
   console.log('Configuring BP settings!');
+  const breaking = 'v0.0.11'
+
+  if (details.reason === 'update' && details.previousVersion !== undefined) {
+    const newVersion = getExtensionVersion();
+    const srcVersion = semver.valid(details.previousVersion);
+    console.warn(`upgrading from ${srcVersion}->${newVersion}`);
+    if (srcVersion && semver.gte(newVersion, breaking) && semver.lt(srcVersion, breaking)) {
+      console.log('breaking change boundary cross detected!');
+      mergeNewPreferences(defaultExtensionPrefs, false).then(() => {
+        UpdateService.notifyForBreakingUpdate(details.previousVersion);
+      });
+    }
+  }
 
   if (details.reason === "install") {
     //to any adventurous code spelunkers:
@@ -79,7 +96,7 @@ browser.runtime.onInstalled.addListener((details) => {
         console.log('No installation ID found, creating new one!');
         browser.storage.local.set({'installationId': id});
       }
-    })
+    });
   }
   initExtension();
   initContextMenus();
@@ -103,13 +120,14 @@ browser.runtime.onMessage.addListener((msg, sender) => {
   dbg('background script handling runtime message', msg);
   if (msg.msg == "reloadSocket") {
     currentClient = null;
+    backendService = null;
     initExtension();
   } else {
     const factory = async () => {
       const client = await getClient();
       const version = getExtensionVersion();
       return {
-        socketClient: client,
+        backendClient: client,
         version
       }
     };
@@ -121,7 +139,7 @@ browser.runtime.onMessage.addListener((msg, sender) => {
 browser.tabs.onUpdated.addListener((id, change, tab) => {
   dbg('tab updated: cancelling requests', change, tab);
   getClient().then(client => {
-    cancelRequestsForId(id, client);
+    client.cancelRequests({srcId: id.toString()});
   });
 });
 
@@ -140,8 +158,9 @@ browser.tabs.onUpdated.addListener(async (id, change, tab) => {
 browser.tabs.onRemoved.addListener((id, removeInfo) => {
   dbg('tab removed', removeInfo);
   getClient().then(client => {
-    portManager.closeForSrc(id.toString());
-    cancelRequestsForId(id, client);
+    const portNames = portManager.closeForSrc(id.toString());
+    console.debug('invoking backend cancel', id, portNames);
+    client.cancelRequests({requestId: [...portNames]});
   });
 });
 
@@ -155,6 +174,7 @@ browser.storage.onChanged.addListener((changes, area) => {
     }
   }
   browser.runtime.sendMessage({msg: `storageChange:${area}`, keys, changes});
+  loadPreferencesFromStorage().then(ep => setModeBadge(ep.mode)).catch(() => console.debug('failed to set mode badge'));
 });
 
 browser.alarms.onAlarm.addListener(alarm => {
@@ -178,13 +198,6 @@ browser.notifications.onClicked.addListener(id => {
 
 /** UTILITY FUNCTIONS BELOW THIS, USED BY EVENTS ABOVE */
 
-// function trySendEvent(msg: object) {
-//   browser.runtime.sendMessage(msg).then((res) => {
-//     console.debug('sent event message', res);
-//   }).catch(e => {
-//     console.warn("Failed to send preferences reload event. Likely there's just no listeners yet.", e);
-//   });
-// }
 
 const trySendEvent = async (msg: object, tabId?: number) => {
   if (tabId) {
@@ -206,13 +219,14 @@ function initExtension(syncPrefs: boolean = true) {
   getClient().then(client => {
     const eVersion = getExtensionVersion();
     if (syncPrefs) {
-      client.sendObj({version: eVersion, msg: "getUserPreferences"});
+      client.getRemotePreferences().then((result) => {
+        if (result) {
+          mergeNewPreferences(result);
+        }
+        trySendEvent({msg: 'reloadPreferences'});
+      });
     }
-    client.sendObj({
-      version: eVersion,
-       msg: "detectPlaceholdersAndStickers"
-    });
-    trySendEvent({msg: 'reloadPreferences'});    
+    StickerService.tryRefreshAvailable(client);
   });
 }
 
@@ -253,18 +267,28 @@ function initAlarms() {
   });
 }
 
-async function getClient() {
-  if (currentClient?.ready) {
+async function getService(): Promise<BackendService> {
+  if (backendService) {
+    return backendService
+  } else {
+    backendService = await BackendService.create();
+    return backendService;
+  }
+}
+
+async function getClient(): Promise<ICensorBackend> {
+  console.debug('getting client');
+  const service = await getService();
+  if (currentClient) {
     return currentClient;
   } else {
-    currentClient = await WebSocketClient.create();
-    currentClient.usePortManager(portManager);
-    return currentClient;
+    currentClient = await service.currentProvider.getClient(portManager);
+    return currentClient!;
   }
 }
 
 async function getRequestClient(requestId: string) {
-  const reqClient = await WebSocketRequestClient.create(requestId);
-  reqClient.usePortManager(portManager);
+  const service = await getService();
+  const reqClient = await service.currentProvider.getRequestClient(requestId, portManager);
   return reqClient;
 }

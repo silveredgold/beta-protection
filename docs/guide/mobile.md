@@ -12,7 +12,7 @@ It's also worth noting that the experience on Android is sub-optimal at best, an
 
 ## Prerequisites
 
-First off, make sure you have Beta Safety running on a PC on your **local** network. Follow the guides included with Beta Safety to run the backend, but you can ignore the parts about loading the extension into Chrome/Kiwi since we'll be using Beta Protection for that part.
+First off, make sure you have a censoring backend (i.e. Beta Censoring or Beta Safety) running on a PC on your **local** network. Follow the guides for your backend of choice to run the backend, but you can ignore any parts about loading extensions into Chrome/Kiwi since we'll be using Beta Protection for that part.
 
 > You will need the IP address (or hostname) of the PC with the backend running for the next steps, so make sure you have that before proceeding
 
@@ -28,11 +28,14 @@ Tap on the *+ (from .zip/.crx/.user.js)* button at the top and navigate to the C
 
 ## Usage
 
-At this point Beta Protection is running, but you still need to tell it where your backend is running. Still on the Extensions page, tap on the *Details* button for Beta Protection and scroll down to tap on *Extension options*. That will open the settings screen where you can tap on the *Backend Host* section to reveal the configutation for the backend. In the text box, enter `ws://<YOUR-IP-ADDRESS-OR-NAME>:8090/ws`, substituting in the address/hostname of the PC with the backend running on it. 
+At this point Beta Protection is running, but you still need to tell it where your backend is running. Still on the Extensions page, tap on the *Details* button for Beta Protection and scroll down to tap on *Extension options*. That will open the settings screen where you can tap on the *Backend Host* section to reveal the configutation for the backend. In the text box, enter the address for your backend of choice (see below).
 
 Tap *Save and Reconnect* to save your new backend, then scroll up and tap on *Recheck* button under the Connection Status icon to check if your phone can reach the backend successfully. If so, you're ready to go! The "popup" menu will now be at the bottom of the Kiwi main menu and will open in a new tab where you can set the censoring mode(s) or open the full settings (with the button in the top right).
 
+### Beta Censoring
 
+For Beta Censoring your address will generally be `http://<YOUR-IP-ADDRESS-OR-NAME>:2382`, subtituting in the address/hostname of the PC with the Beta Censoring server running on it.
 
-Finally, drag and drop the CRX file you downloaded in the last step into the Extensions window in Chrome. Chrome should prompt you to install Beta Protection, so accept the prompt and Beta Protection should appear in your Extensions list!
+### Beta Safety
 
+For Beta Safety, your address will be `ws://<YOUR-IP-ADDRESS-OR-NAME>:8090/ws`, substituting in the address/hostname of the PC with Beta Safety running on it. 
