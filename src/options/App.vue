@@ -134,8 +134,7 @@ import { webExtensionNavigation } from "@/components/util";
 import browser from 'webextension-polyfill';
 import {OverridableOption} from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
-import ErrorOptions from "@/components/ErrorOptions.vue";
-import { ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus } from "@silveredgold/beta-shared-components";
+import { ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus, ErrorOptions } from "@silveredgold/beta-shared-components";
 import type {HostConfigurator} from '@silveredgold/beta-shared-components'
 const { openOverrides, openStatistics } = webExtensionNavigation;
 
