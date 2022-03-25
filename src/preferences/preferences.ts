@@ -10,7 +10,7 @@ export async function loadPreferencesFromStorage(): Promise<IExtensionPreference
     const result = await browser.storage.local.get('preferences');
     let storedPrefs = result['preferences'] as IExtensionPreferences;
     const overService = await OverrideService.create();
-    if (overService.active) {
+    if (storedPrefs && storedPrefs.mode && overService.active) {
         const merged: IExtensionPreferences = {
             ...storedPrefs,
             ...overService.current?.preferences
@@ -20,7 +20,7 @@ export async function loadPreferencesFromStorage(): Promise<IExtensionPreference
         }
         storedPrefs = merged;
     }
-    setModeBadge(storedPrefs.mode);
+    setModeBadge(storedPrefs?.mode);
     return storedPrefs;
 }
 
@@ -33,7 +33,6 @@ export async function mergeNewPreferences(prefs: Partial<IPreferences>, preferSa
     const clonedPrefs = clone(prefs);
 
     const storedPrefs = await loadPreferencesFromStorage();
-    debugger;
     const mergedPrefs = preferSaved
         ? {
             ...defaultExtensionPrefs,

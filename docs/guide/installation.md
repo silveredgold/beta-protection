@@ -41,15 +41,21 @@ Ensure the Developer mode toggle at the top-right of the page is enabled and you
 
 Finally, drag and drop the CRX file you downloaded in the last step into the Extensions window in Chrome. Chrome should prompt you to install Beta Protection, so accept the prompt and Beta Protection should appear in your Extensions list!
 
-### Troubleshooting
+## Whitelisting
 
-#### *Backend and browser versioning appear out of sync*
+Since we do not list Beta Protection in the Chrome Web Store (on account of it falling foul of Google's policies), some browser may generate warnings or refuse to install Beta Protection without jumping through some hoops.
 
-You can (in general) safely ignore that warning. It's generated as Beta Safety doesn't expect anything other than its own extension to talk to it, and it thinks you might be using an ancient version of Beta Safety or something like that.
+You can either whitelist Beta Protection specifically (read on) or install the extension unpacked from a directory on your PC (see Troubleshooting below).
 
-#### *This extension is not listed in the (...) Store* error
+### Registry Whitelist (for Windows)
 
-If you see an error message similar to the below, your browser is blocking extension packages not from an approved Web Store from loading. The easiest way to avoid this is to load the extension "unpacked" (this is how Beta Safety installs, if you're more familiar with that).
+All the Chrome-based browsers allow you to whitelist specific extensions by their IDs which will allow them to be installed even when not listed in the Chrome Web Store. For convenience, we have included automated scripts to whitelist Beta Protection's extension ID for Chrome, Edge and Brave. Download the `whitelisting.zip` file from the release (where you downloaded the CRX file) and unzip it somewhere. Find the `.reg` file for your browser and double click it.
+
+This will add a key to your registry with Beta Protection's ID that tells the browser you trust it. If you want to confirm that, right-click the `.reg` file and click Edit to see what changes it will make.
+
+### Installing the extension unpacked
+
+If you are having trouble with installing the CRX or don't want to whitelist Beta Protection, the easiest way to get started is to load the extension "unpacked" (this is how Beta Safety installs, if you're more familiar with that).
 
 <ImageZoom 
   src="/beta-protection/assets/brave-warning.png" 
@@ -57,12 +63,26 @@ If you see an error message similar to the below, your browser is blocking exten
   width="200"
 />
 
-1. Download the ZIP file from the GitHub Releases page (rather than the `.crx` file), and extract it somewhere
+1. Download the `beta-protection-...` ZIP file from the GitHub Releases page (rather than the `.crx` file), and extract it somewhere
 2. From your browser's Manage Extensions page (with Developer Mode on), find the *Load Unpacked* option
 3. Click it, and select the folder where you unpacked the ZIP file. Beta Protection should appear in your Extensions list.
 
 
-### Permissions
+## Troubleshooting
+
+#### *Backend and browser versioning appear out of sync*
+
+You can (in general) safely ignore that warning. It's generated as Beta Safety doesn't expect anything other than its own extension to talk to it, and it thinks you might be using an ancient version of Beta Safety or something like that.
+
+#### *This extension is not listed in the (...) Store* error
+
+See the section above on Whitelisting.
+
+#### Can't import placeholders or censor local images with Brave
+
+The Brave developers, for reasons that only make sense to the Brave developers, have disabled the File System Access API completely, even for extensions. You can re-enable it in the browser flags, but you'll have to set that up yourself (I don't use Brave, so can't really provide support for it).
+
+## Permissions
 
 As a result of Chrome's very granular extension API and the complexity of Beta Protection, there's actually quite a few permissions required. In the interest of transparency, here's a rundown of the permissions requested and they're used for:
 
@@ -72,7 +92,7 @@ As a result of Chrome's very granular extension API and the complexity of Beta P
 - `scripting`: Chrome requires this permission so we can inject styles and scripts into tabs. This is used for two things:
   - Styling: Since page lifecycles are complicated, the short version is that we add some global CSS styles to hide uncensored images while we process them
   - Subliminals: If you have subliminal messages enabled, the styles and logic for them are injected into each tab
-- `notifications`: Only used for the update checker, to notify you when there's an update available. This is needed since Chrome only auto-updates extensions from the Chrome Web Store, not locally installed ones
+- `notifications`: Only used for the update checker, to notify you when there's an update available, or for breaking changes. This is needed since Chrome only auto-updates extensions from the Chrome Web Store, not locally installed ones.
 - `alarms`: Due to changes in the Chrome extension API, this is now the only way to reliably perform tasks on a regular basis, so Beta Protection uses them for a few "utility" tasks.
 
 > As always, if you're worried about what Beta Protection is doing or how it works, you can always check the full source [on GitHub](https://github.com/silveredgold/beta-protection).

@@ -68,7 +68,7 @@ browser.runtime.onConnect.addListener((port) => {
 
 browser.runtime.onInstalled.addListener((details) => {
   console.log('Configuring BP settings!');
-  const breaking = 'v0.0.11'
+  const breaking = 'v0.1.0'
 
   if (details.reason === 'update' && details.previousVersion !== undefined) {
     const newVersion = getExtensionVersion();
@@ -97,6 +97,7 @@ browser.runtime.onInstalled.addListener((details) => {
         browser.storage.local.set({'installationId': id});
       }
     });
+    mergeNewPreferences(defaultExtensionPrefs, false);
   }
   initExtension();
   initContextMenus();
@@ -174,7 +175,7 @@ browser.storage.onChanged.addListener((changes, area) => {
     }
   }
   browser.runtime.sendMessage({msg: `storageChange:${area}`, keys, changes});
-  loadPreferencesFromStorage().then(ep => setModeBadge(ep.mode)).catch(() => console.debug('failed to set mode badge'));
+  loadPreferencesFromStorage().then(ep => setModeBadge(ep?.mode)).catch(() => console.debug('failed to set mode badge'));
 });
 
 browser.alarms.onAlarm.addListener(alarm => {

@@ -49,6 +49,10 @@ jobs:
       with:
         name: packed-crx
         path: ./*.crx
+    - uses: actions/upload-artifact@v2
+      with:
+        name: install-scripts
+        path: scripts/*
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
@@ -67,6 +71,17 @@ jobs:
       with:
         name: packed-crx
         path: crx
+    - name: Download build artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: install-scripts
+        path: scripts
+    - name: Build Scripts
+      uses: thedoctor0/zip-release@master
+      with:
+        type: 'zip'
+        directory: './scripts'
+        filename: 'whitelist-scripts.zip'
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
@@ -78,5 +93,6 @@ jobs:
         files: |
           ./extension/*.zip
           ./crx/*.crx
+          ./*-scripts.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

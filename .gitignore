@@ -32,3 +32,5 @@ pnpm-debug.log*
 
 .temp
 .cache
+key.pem
+*.crx

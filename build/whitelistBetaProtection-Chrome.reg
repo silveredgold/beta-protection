@@ -1,0 +1,6 @@
+Windows Registry Editor Version 5.00
+
+; Allows the Beta Protection extension ID to be installed in Chrome
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\ExtensionInstallWhitelist]
+"1"="dfkojjdnikkjlegfnckldamlhgfocgdf"

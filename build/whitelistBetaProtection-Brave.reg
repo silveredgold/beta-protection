@@ -1,0 +1,6 @@
+Windows Registry Editor Version 5.00
+
+; Allows the Beta Protection extension ID to be installed in Brave
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave\ExtensionInstallWhitelist]
+"1"="dfkojjdnikkjlegfnckldamlhgfocgdf"

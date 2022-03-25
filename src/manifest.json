@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "homepage_url": "https://github.com/silveredgold/beta-protection/",
-  "description": "A Chrome extension companion to the Beta Safety app, censoring NSFW images as you view them.",
+  "description": "A Chrome extension companion to Beta Censoring (or Beta Safety), censoring NSFW images as you view them.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4D1HzvAKcUV9/kNSMVxQbOgb/tjR9Ev3AAPp6uMDG53IhjRcs95u1o1iVVcbBWauq+dMcTC91C+b/b1RwdFcwe7BZ/Y+HT7F3sa1hx3EmbeSg64fKP6gyNzkqgADiT+0Gv0EIBzP1TkDYdjA0vgJyud4jrG0IJHU3pAJSv44W9hHtkzDk3jUsq1MEEm/yMnwdZulKOL8vMmOMyAMa5eQi8VNeepsDvi6ofwRIv6dPT0igu0K5T9UWOLj9A448upa4uR8SoyRHaSNhhqfKeKIAdFIaiqK30uoBZwX+u9FLREFVBhSWYrJZcIlOGVvj6/3flg1XjeXmiJ3QHB03nn1QwIDAQAB",
   "web_accessible_resources": [{
     "resources": ["images/*", "*.js", "*.json", "*.jpg", "*.png", "*.gif", "*.mp4", "*.wasm"],
     "matches": ["<all_urls>"]

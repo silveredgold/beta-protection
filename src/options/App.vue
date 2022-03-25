@@ -12,6 +12,14 @@
           <n-space item-style="display: flex;" justify="end">
             <n-popover trigger="hover" placement="bottom">
               <template #trigger>
+                  <n-button @click="openCensoring">
+                      <n-icon size="30" :component="Images" />
+                  </n-button>
+              </template>
+              Open Censoring
+            </n-popover>
+            <n-popover trigger="hover" placement="bottom">
+              <template #trigger>
                   <n-button @click="openOverrides">
                       <n-icon size="30" :component="LockOpen" />
                   </n-button>
@@ -26,7 +34,7 @@
               </template>
               Open Statistics
             </n-popover>
-            <n-popover trigger="click">
+            <n-popover trigger="click" placement="bottom-end">
               <template #trigger>
                 <n-button >
                   <n-icon size="30" :component="InformationCircleOutline" />
@@ -114,7 +122,7 @@
 
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, NSpace, useOsTheme, NPopover, NAlert } from "naive-ui";
-import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen } from "@vicons/ionicons5";
+import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen, Images } from "@vicons/ionicons5";
 import BackendHost from '@/components/BackendHost.vue';
 import { provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
@@ -136,7 +144,7 @@ import {OverridableOption} from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
 import { ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus, ErrorOptions } from "@silveredgold/beta-shared-components";
 import type {HostConfigurator} from '@silveredgold/beta-shared-components'
-const { openOverrides, openStatistics } = webExtensionNavigation;
+const { openOverrides, openStatistics, openCensoring } = webExtensionNavigation;
 
 const getHost: HostConfigurator = {
   getBackendHost: async () : Promise<string> => {
