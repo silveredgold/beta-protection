@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="generator" content="VuePress 2.0.0-beta.36">
+    <style>
+      :root {
+        --c-bg: #fff;
+      }
+      html.dark {
+        --c-bg: #22272e;
+      }
+      html, body {
+        background-color: var(--c-bg);
+      }
+    </style>
+    <script>
+      const userMode = localStorage.getItem('vuepress-color-scheme');
+			const systemDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+			if (userMode === 'dark' || (userMode !== 'light' && systemDarkMode)) {
+				document.documentElement.classList.toggle('dark', true);
+			}
+    </script>
+    <title>Beta Protection</title><meta name="description" content="On-demand censoring of NSFW images just for betas">
+    <link rel="modulepreload" href="/beta-protection/assets/app.0a012c35.js"><link rel="modulepreload" href="/beta-protection/assets/404.html.0f07aaf0.js"><link rel="modulepreload" href="/beta-protection/assets/404.html.37b0c78d.js"><link rel="modulepreload" href="/beta-protection/assets/plugin-vue_export-helper.21dcd24c.js">
+    <link rel="stylesheet" href="/beta-protection/assets/style.c6949df6.css">
+  </head>
+  <body>
+    <div id="app"><!--[--><div class="theme-container"><div class="theme-default-content"><h1>404</h1><blockquote>Looks like we&#39;ve got some broken links.</blockquote><a href="/beta-protection/" class="">Take me home</a></div></div><!----><!--]--></div>
+    <script type="module" src="/beta-protection/assets/app.0a012c35.js" defer></script>
+  </body>
+</html>
