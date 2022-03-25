@@ -1,10 +1,6 @@
 # Android Usage
 
-<Note type="danger">
-
-If you are currently using the Beta Safety Chrome extension, ***disable it first***. Do not attempt to run both Beta Safety and Beta Protection extensions at once. Bad things will happen.
-
-</Note>
+> If you are currently using the Beta Safety Chrome extension, ***disable it first***. Do not attempt to run both Beta Safety and Beta Protection extensions at once. Bad things will happen.
 
 At this time the only platform and browser combination that's known to support Chrome extensions is Kiwi Browser on Android. That means you won't be able to use Beta Protection at all on iOS and it will only be active while browsing with Kiwi (after you've set it up).
 
@@ -34,7 +30,7 @@ Tap *Save and Reconnect* to save your new backend, then scroll up and tap on *Re
 
 ### Beta Censoring
 
-For Beta Censoring your address will generally be `http://<YOUR-IP-ADDRESS-OR-NAME>:2382`, subtituting in the address/hostname of the PC with the Beta Censoring server running on it.
+For Beta Censoring your address will generally be `http://<YOUR-IP-ADDRESS-OR-NAME>:2382`, subtituting in the address/hostname of the PC with the Beta Censoring server running on it. If you check the server's web interface, the hostname will be shown at the top of the page header.
 
 ### Beta Safety
 

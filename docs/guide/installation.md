@@ -1,24 +1,20 @@
 # Installation
 
-<Note type="danger">
-
-If you are currently using the Beta Safety Chrome extension, ***disable it first***. Do not attempt to run both Beta Safety and Beta Protection extensions at once. Bad things will happen.
-
-</Note>
+> If you are currently using the Beta Safety Chrome extension, ***disable it first***. Do not attempt to run both Beta Safety and Beta Protection extensions at once. Bad things will happen.
 
 Beta Protection currently supports Chrome and Edge and _should_ work on any other Chrome derivatives (like Vivaldi). The extension actually _would_ support Firefox but Mozilla [still](https://blog.mozilla.org/addons/2021/05/27/manifest-v3-update/) don't support the latest version of the browser API that this extension relies on.
 
 ## Prerequisites
 
-First off, make sure you have a censoring backend running somewhere.
+First off, make sure you have a censoring backend running somewhere. In general, the majority of Beta Protection's functionality is designed to work with any supported backend but there might be some niche/experimental features that not all backends support.
 
-#### Beta Censoring
+### Beta Censoring
 
 Beta Censoring is a new highly flexible open source censoring server. You can find all the guides and documentation for Beta Censoring [here](https://silveredgold.github.io/beta-censoring/), or check out the [GitHub repository](https://github.com/silveredgold/beta-censoring/).
 
 Once you have the server running, you're good to continue with setting up Beta Protection.
 
-#### Beta Safety
+### Beta Safety
 
 If you'd prefer to stick with using Beta Safety's backend, you can do that. First off, make sure you have Beta Safety running somewhere. Follow the guides included with Beta Safety to run the backend, but you can ignore the parts about loading the extension into Chrome since we'll be using Beta Protection for that part.
 
@@ -31,9 +27,8 @@ Download the extension package from the [GitHub Releases](https://github.com/sil
 In Chrome, click the Extensions button in your browser toolbar (the puzzle piece) and click the Manage Extensions button at the bottom of the menu.
 
 <!-- ![Chrome Manage Extensions menu from Extensions popup on main toolbar](../assets/chrome_manage_extensions.jpg) -->
-<ImageZoom 
-  src="/beta-protection/assets/chrome_manage_extensions.jpg" 
-  :border="true" 
+<img 
+  src="/chrome_manage_extensions.jpg"
   width="200"
 />
 
@@ -43,9 +38,9 @@ Finally, drag and drop the CRX file you downloaded in the last step into the Ext
 
 ## Whitelisting
 
-Since we do not list Beta Protection in the Chrome Web Store (on account of it falling foul of Google's policies), some browser may generate warnings or refuse to install Beta Protection without jumping through some hoops.
+Since we do not list Beta Protection in the Chrome Web Store (on account of it falling foul of Google's policies), some browsers may generate warnings or refuse to install Beta Protection without jumping through some hoops.
 
-You can either whitelist Beta Protection specifically (read on) or install the extension unpacked from a directory on your PC (see Troubleshooting below).
+You can either whitelist Beta Protection specifically or install the extension unpacked from a directory on your PC.
 
 ### Registry Whitelist (for Windows)
 
@@ -57,9 +52,8 @@ This will add a key to your registry with Beta Protection's ID that tells the br
 
 If you are having trouble with installing the CRX or don't want to whitelist Beta Protection, the easiest way to get started is to load the extension "unpacked" (this is how Beta Safety installs, if you're more familiar with that).
 
-<ImageZoom 
-  src="/beta-protection/assets/brave-warning.png" 
-  :border="true" 
+<img 
+  src="/brave-warning.png" 
   width="200"
 />
 
