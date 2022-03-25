@@ -8,7 +8,7 @@ It's also worth noting that the experience on Android is sub-optimal at best, an
 
 ## Prerequisites
 
-First off, make sure you have a censoring backend (i.e. Beta Censoring or Beta Safety) running on a PC on your **local** network. Follow the guides for your backend of choice to run the backend, but you can ignore any parts about loading extensions into Chrome/Kiwi since we'll be using Beta Protection for that part.
+First off, make sure you have a censoring backend (i.e. [Beta Censoring](https://silveredgold.github.io/beta-censoring/) or Beta Safety) running on a PC on your **local** network. Follow the guides for your backend of choice to run the backend, but you can ignore any parts about loading extensions into Chrome/Kiwi since we'll be using Beta Protection for that part.
 
 > You will need the IP address (or hostname) of the PC with the backend running for the next steps, so make sure you have that before proceeding
 

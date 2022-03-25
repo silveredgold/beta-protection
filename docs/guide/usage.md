@@ -15,7 +15,7 @@ From here, you can change the most common settings like the censoring mode and v
 
 ## Backend Configuration
 
-Beta Protection (since v0.1.0) has defaulted to using a locally running Beta Censoring server for censoring. If you're running your backend somewhere other than your local PC, or are using a different backend (like Beta Safety), you'll need to quickly set that up.
+Beta Protection (since v0.1.0) has defaulted to using a locally running [Beta Censoring](https://silveredgold.github.io/beta-censoring/) server for censoring. If you're running your backend somewhere other than your local PC, or are using a different backend (like Beta Safety), you'll need to quickly set that up.
 
 From the extension popup, open the settings using the cog in the top right. Drop down the *Backend Host* section, and enter the address where your backend is running into the text box. This will usually be something like `http://localhost:2382` (for Beta Censoring) or `ws://localhost:8090/ws` (for Beta Safety).
 
