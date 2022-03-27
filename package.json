@@ -12,7 +12,7 @@
     "@microsoft/signalr": "^6.0.2",
     "@octokit/request": "^5.6.3",
     "@silveredgold/beta-censor-client": "0.0.0-alpha12",
-    "@silveredgold/beta-shared": "0.0.1-alpha30",
+    "@silveredgold/beta-shared": "0.0.1-alpha31",
     "@silveredgold/beta-shared-components": "0.0.1-alpha26",
     "autoprefixer": "^9",
     "core-js": "^3.6.5",

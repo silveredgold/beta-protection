@@ -93,6 +93,6 @@ jobs:
         files: |
           ./extension/*.zip
           ./crx/*.crx
-          ./*-scripts.zip
+          ./scripts/*.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

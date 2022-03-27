@@ -84,10 +84,10 @@ const openDir = async () => {
     const fs = new services.FileSystemClient();
     const result = await fs.getDirectoriesandFiles((file) => file.type.startsWith("image/"));
     dbg('loaded files', result);
-    const results = Object.keys(result).map(k => {
+    const results = Object.keys(result.files).map(k => {
         return {
-            name: k,
-            files: result[k]
+            name: k.replace(result.dir.name, '').replace('/', ''),
+            files: result.files[k]
         }
     });
     newFiles.value = results;
