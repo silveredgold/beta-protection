@@ -92,7 +92,7 @@ const getCurrentPrefs = async () => {
 }
 
 // store bullshit
-const updateFunc = debounce(1000, async (prefs) => {
+const updateFunc = debounce(500, async (prefs) => {
   dbg(`persisting prefs`, prefs);
   await savePreferencesToStorage(prefs);
   return true;

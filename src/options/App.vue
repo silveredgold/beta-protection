@@ -170,7 +170,7 @@ const getCurrentPrefs = async () => {
   return storeResponse;
 }
 
-const updateFunc = debounce(1000, async (prefs) => {
+const updateFunc = debounce(500, async (prefs) => {
   await savePreferencesToStorage(prefs);
 })
 

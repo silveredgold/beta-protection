@@ -1,9 +1,16 @@
-import { defaultPrefs, IPreferences, OperationMode, SubliminalOptions } from '@silveredgold/beta-shared/preferences';
+import { defaultPrefs, IPreferences, OperationMode } from '@silveredgold/beta-shared/preferences';
 
 export * from '@silveredgold/beta-shared/preferences';
 export type {IPreferences, BodyCensorModes} from '@silveredgold/beta-shared/preferences';
 export * from './preferences';
 export * from './util';
+
+export type SubliminalOptions = {
+    enabled: boolean;
+    delay: number;
+    duration: number;
+    ignoreCensorState: boolean;
+}
 
 export type IExtensionPreferences = IPreferences & {
     // mode: OperationMode;
@@ -22,7 +29,8 @@ export const defaultExtensionPrefs: IExtensionPreferences = {
     subliminal: {
         enabled: false,
         delay: 4000,
-        duration: 250
+        duration: 250,
+        ignoreCensorState: false
     },
     enabledPlaceholders: [],
     gifsAsVideos: true
