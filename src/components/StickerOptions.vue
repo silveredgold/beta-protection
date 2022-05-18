@@ -19,18 +19,33 @@
                     <n-thing :title="category" />
                     </n-list-item>
                 </n-checkbox-group>
+                <!-- <template #footer >
+                    <n-button strong secondary circle @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template></n-button>
+                    
+                </template> -->
             </n-list>
+            <n-thing 
+                content-indented 
+                description="Note that stickers will only be used if the censoring method is set to Sticker!"
+                title="Sticker Loading" v-if="stickers" >
+                <template #header-extra>
+                    <n-icon :component="Images" />
+                </template>
+                <template #action >
+                    <n-button strong secondary @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template>Refresh</n-button>
+                </template>
+                Available stickers are controlled by your backend: ensure stickers are loaded in your backend first for the categories to appear here.
+                </n-thing>
         </div>
-        <template #footer>
-            <!-- <p>{{mode}}</p> -->
-            Stickers will only be used if the censoring method is set to Sticker!
-        </template>
+        <!-- <template #footer>
+            
+        </template> -->
     </n-card>
 </template>
 <script setup lang="ts">
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup, NButton, NIcon } from "naive-ui";
-import { Refresh } from "@vicons/ionicons5";
+import { Refresh, Images } from "@vicons/ionicons5";
 import { IPreferences } from '@/preferences';
 import { censorBackend, updateUserPrefs, useBackendTransport } from '@silveredgold/beta-shared-components';
 import { StickerService } from '@/services/sticker-service';
