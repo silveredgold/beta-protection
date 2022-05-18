@@ -22,6 +22,8 @@ If you'd prefer to stick with using Beta Safety's backend, you can do that. Firs
 
 Download the extension package from the [GitHub Releases](https://github.com/silveredgold/beta-protection/releases) page. You should download the **beta-protection.crx** file from the Release, _not_ the ZIP file. Open the folder where you downloaded the CRX file, for later on.
 
+> You can also directly download the CRX file for the latest version using [**this link**](https://github.com/silveredgold/beta-protection/releases/latest/download/beta-protection.crx)
+
 ## Installation
 
 In Chrome, click the Extensions button in your browser toolbar (the puzzle piece) and click the Manage Extensions button at the bottom of the menu.

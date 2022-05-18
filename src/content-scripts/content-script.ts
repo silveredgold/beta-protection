@@ -245,7 +245,7 @@ const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 			dbgLog('evt: found available observer, starting!');
 			currentContext.observer.forceStart(document.body);
 		}
-		if ((currentContext?.preferences.subliminal?.enabled ?? false) && currentContext?.state.activeCensoring) {
+		if ((currentContext?.preferences.subliminal?.enabled ?? false) && (currentContext?.state.activeCensoring || currentContext?.preferences.subliminal?.ignoreCensorState)) {
 			//this should really be happening as a runtime message from the background script
 			// just inject it from there on page load, but that needs a refactor first.
 			// that actually requires a lot of info on the background side.

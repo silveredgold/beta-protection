@@ -41,9 +41,16 @@
                         Import a text file with one message per line to use as custom messages.
                     </n-tooltip>
                 </n-space>
-                <n-space vertical>
-                    <div>Only enable if you're ready for it!</div>
-                    <n-checkbox size="large" v-model:checked="prefs.subliminal.enabled">Enable Subliminal Messaging</n-checkbox>
+                <n-space>
+                    <!-- TODO: refactor to use HelpTooltip -->
+                    <n-space>
+                        <help-tooltip style="max-width: 40rem;" :size="20" :placement="'bottom-start'">When this is enabled, subliminals will be shown based on the extension mode, and will ignore censoring state. With this enabled, subliminals will be shown on all pages when in On Demand or Enabled mode, regardless of whether the current page is being censored (or whitelisted).</help-tooltip>
+                        <n-checkbox size="large" v-model:checked="prefs.subliminal.ignoreCensorState">Ignore Censoring State</n-checkbox>
+                    </n-space>
+                    <n-space vertical>
+                        <n-checkbox size="large" v-model:checked="prefs.subliminal.enabled">Enable Subliminal Messaging</n-checkbox>
+                        <div>Only enable if you're ready for it!</div>
+                    </n-space>
                 </n-space>
             </n-space>
         </template>
@@ -53,7 +60,7 @@
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, NThing, NSpace, NCheckbox, useNotification, NInputGroup, NInputGroupLabel, NInputNumber, NButton, NTooltip } from "naive-ui";
 import type { IExtensionPreferences } from '@/preferences';
-import { updateUserPrefs } from '@silveredgold/beta-shared-components';
+import { updateUserPrefs, HelpTooltip } from '@silveredgold/beta-shared-components';
 import { SubliminalService } from '@/services/subliminal-service';
 import { services } from "@silveredgold/beta-shared-components";
 import { dbg } from '@/util';
