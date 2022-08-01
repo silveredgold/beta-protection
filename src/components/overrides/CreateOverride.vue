@@ -180,8 +180,8 @@ const buildOverride = async () => {
     const override = OverrideService.createOverride(unlockKey.value, allowedModes.value as OperationMode[], overridePreferences.value);
     if (enableMinTime.value) {
         const dur = Duration.fromObject(minTime.value);
-        if (dur && dur.minutes > 0) {
-            override.minimumTime = dur.minutes;
+        if (dur && dur.as('minutes') > 0) {
+            override.minimumTime = dur.as('minutes');
         }
     }
     currentOverride.value = override;
