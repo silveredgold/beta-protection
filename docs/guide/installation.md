@@ -16,11 +16,15 @@ Once you have the server running, you're good to continue with setting up Beta P
 
 ### Beta Safety
 
+> At this time, Beta Safety is *supported* but *not recommended* for use. It's a proprietary tool that appears to be out of support from the author. Proceed at your own risk when using the Beta Safety backend.
+
 If you'd prefer to stick with using Beta Safety's backend, you can do that. First off, make sure you have Beta Safety running somewhere. Follow the guides included with Beta Safety to run the backend, but you can ignore the parts about loading the extension into Chrome since we'll be using Beta Protection for that part.
 
 ## Download
 
 Download the extension package from the [GitHub Releases](https://github.com/silveredgold/beta-protection/releases) page. You should download the **beta-protection.crx** file from the Release, _not_ the ZIP file. Open the folder where you downloaded the CRX file, for later on.
+
+If you get an error saying `CRX_REQUIRED_PROOF_MISSING`, that means your browser is trying to directly install the extension rather than downloading the file. Right-click the link and use *Save link as...* to download the file instead.
 
 > You can also directly download the CRX file for the latest version using [**this link**](https://github.com/silveredgold/beta-protection/releases/latest/download/beta-protection.crx)
 
