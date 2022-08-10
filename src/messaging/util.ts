@@ -1,5 +1,5 @@
 import { MessageContext } from "@/events";
-import { base64ArrayBuffer, dbgLog, dbgTime, dbgTimeEnd } from "@/util";
+import { base64ArrayBuffer, dbgLog, dbgTime, dbgTimeEnd, getExtensionVersion } from "@/util";
 import { Emitter } from "mitt";
 import { InjectionKey } from "vue";
 import browser from 'webextension-polyfill';
@@ -51,6 +51,13 @@ export const MSG_FORWARDING : RuntimeEvent<void> = {
             const newEvent = {msg: msg.event, ...msg};
             await browser.runtime.sendMessage(newEvent);
         }
+    }
+}
+
+export const MSG_API_EXTENSION_VERSION: RuntimeEvent<string> = {
+    event: 'getExtensionVersion',
+    handler: async (msg, sender, ctx) => {
+        return getExtensionVersion();
     }
 }
 

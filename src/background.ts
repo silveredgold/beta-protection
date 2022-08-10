@@ -97,6 +97,14 @@ browser.runtime.onInstalled.addListener((details) => {
         browser.storage.local.set({'installationId': id});
       }
     });
+    const defaultBackendHost = 'http://localhost:2382';
+    dbg(`persisting default backend host`, JSON.stringify({host: defaultBackendHost}));
+    browser.storage.local.set({'backendHost': defaultBackendHost})
+      .then(() => {
+        browser.storage.local.set({'backendId': 'beta-censoring'}).then(() => {
+          browser.runtime.sendMessage({msg: 'reloadSocket'});
+        })
+      });
     mergeNewPreferences(defaultExtensionPrefs, false);
   }
   initExtension();

@@ -50,7 +50,8 @@ module.exports = {
         },
         contentScripts: {
           entries: {
-            'content-script': 'src/content-scripts/content-script.ts'
+            'content-script': 'src/content-scripts/content-script.ts',
+            'connector': 'src/connector/main.ts'
           },
         },
       }
