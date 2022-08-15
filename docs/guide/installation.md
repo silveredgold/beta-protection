@@ -10,7 +10,7 @@ First off, make sure you have a censoring backend running somewhere. In general,
 
 ### Beta Censoring
 
-Beta Censoring is a new highly flexible open source censoring server. You can find all the guides and documentation for Beta Censoring [here](https://silveredgold.github.io/beta-censoring/), or check out the [GitHub repository](https://github.com/silveredgold/beta-censoring/).
+Beta Censoring is a new highly flexible open source censoring server. You can find all the guides and documentation for Beta Censoring [here](https://silveredgold.github.io/beta-censoring/). Make sure you follow the Installation guide for Beta Censoring to get set up.
 
 Once you have the server running, you're good to continue with setting up Beta Protection.
 
