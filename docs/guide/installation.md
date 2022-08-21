@@ -63,6 +63,8 @@ If you are having trouble with installing the CRX or don't want to whitelist Bet
   width="200"
 />
 
+> If you already tried the CRX method and it failed, make sure to remove it from the Manage Extensions page before trying this method.
+
 1. Download the `beta-protection-...` ZIP file from the GitHub Releases page (rather than the `.crx` file), and extract it somewhere
 2. From your browser's Manage Extensions page (with Developer Mode on), find the *Load Unpacked* option
 3. Click it, and select the folder where you unpacked the ZIP file. Beta Protection should appear in your Extensions list.

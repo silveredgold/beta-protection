@@ -114,7 +114,7 @@
           <template #header-extra>Be careful in here!</template>
         </n-collapse-item>
       </n-collapse>
-      <import-export :preferences="prefs" />
+      <import-export @imported="handleImport" :preferences="prefs" />
     </n-notification-provider>
     <n-global-style />
   </n-config-provider>
@@ -193,6 +193,12 @@ const updatePrefs = async (preferences?: IPreferences) => {
   dbgLog(`queuing prefs save`);
   store.updatePreferences(preferences);
   return true;
+}
+
+const handleImport = (prefs: IExtensionPreferences) => {
+  updatePrefs(prefs).then(() => {
+    console.log('imported new preferences!', prefs);
+  });
 }
 
 onBeforeMount(async () => {
