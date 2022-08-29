@@ -66,7 +66,10 @@ module.exports = {
     },
     plugins: [new CopyPlugin({
       // Use copy plugin to copy *.wasm to output folder.
-      patterns: [{ from: 'node_modules/onnxruntime-web/dist/*.wasm', to: 'wasm/[name].[ext]', noErrorOnMissing: true }]
+      patterns: [{ from: 'node_modules/onnxruntime-web/dist/*.wasm', to: 'wasm/[name].[ext]', noErrorOnMissing: true },
+      {
+        from: 'node_modules/webextension-polyfill/dist/browser-polyfill.js',
+      }]
     }),
     new DefinePlugin({
       __DEBUG__: JSON.stringify(process.env.NODE_ENV === 'development'),

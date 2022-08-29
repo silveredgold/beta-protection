@@ -1,5 +1,4 @@
 import { MSG_API_EXTENSION_VERSION, MSG_API_GET_CURRENT_OVERRIDE } from "@/messaging"
-import browser from 'webextension-polyfill';
 
 console.debug('Initializing Beta Protection connector!');
 
@@ -30,7 +29,7 @@ channel.onmessage = (e) => {
     console.log('received channel message in content script', e.data, e.source);
     if (e.data.type == "REQUEST" && !!e.data.request && allowedEvents.map(e => e.event).includes(e.data.request)) {
         console.debug('sending connector request as runtime message');
-        browser.runtime.sendMessage({ msg: e.data.request }).then(response => {
+        chrome.runtime.sendMessage({ msg: e.data.request }, response => {
             console.log('returning response to event source', e.source);
             channel.postMessage({type: "RESPONSE", msg: e.data.request, response: response, requestId: e.data.requestId});
         });
