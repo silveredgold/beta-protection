@@ -99,21 +99,28 @@
 
 import type { IPreferences } from '@/preferences';
 import { NList, NListItem, NCard, NGrid, NGridItem, NSpace, NButton, NDropdown, NSteps, NStep, NThing, NPopconfirm, NAlert, NText, NSpin, NIcon, NIconWrapper, NDataTable, DataTableColumns } from "naive-ui"; 
-import { computed, ComputedRef, h, reactive, Ref, ref, toRefs } from 'vue';
+import { computed, ComputedRef, h, reactive, Ref, ref, toRefs, onBeforeMount } from 'vue';
 import { CensoringPreferences, FileImportList, services, useBackendTransport, FileList, RequestQueue } from "@silveredgold/beta-shared-components";
+import { useUserOptionsStore } from '@/stores'
 import type { DirectoryFile, DirectoryFileList } from '@silveredgold/beta-shared-components/lib/services';
 import type { IFileEntry } from '@silveredgold/beta-shared-components/lib/components';
 import { ICensorBackend, ImageCensorResponse } from '@silveredgold/beta-shared/transport';
 import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface';
 import clone from 'just-clone';
 import { dbgLog } from '@/util';
+import { storeToRefs } from 'pinia';
 const { BatchCensorService } = services;
 
 const props = defineProps<{
     preferences: IPreferences
 }>();
 
-const {preferences} = toRefs(props)
+const store = useUserOptionsStore();
+
+const {preferences} = toRefs(props);
+const { allowUnsafeLocal } = storeToRefs(store);
+
+
 // const batchPreferences = clone(preferences);
 const workingFiles: Ref<DirectoryFileList[]>  = ref([])
 
@@ -132,17 +139,18 @@ const currentComplete = computed(() => [...resultsQueue.value.values()].map(v =>
 const listFiles: ComputedRef<IFileEntry[]> = computed(() => [...resultsQueue.value.values()].map((v): IFileEntry => {return {key: v.handle.name, imageSrc: v.url, completed: true}}));
 const savedFiles = computed(() => [...savedQueue.value.values()].map((v): IFileEntry => {return {key: v.path, completed: true}}))
 
-const saveOptions : DropdownMixedOption[] = [
+const saveOptions = computed(() => {
+    const base: DropdownMixedOption[] = [
     {
         label: 'Overwrite input images',
         key: 'overwrite',
-    },
-    {
+    }, {
         label: 'Save to directory',
-        key: 'save'
-    }
-];
-
+        key: 'save',
+        disabled: !allowUnsafeLocal.value
+    }];
+    return base;
+});
 
 const handleCensored = async (sender: ICensorBackend, response: ImageCensorResponse) => {
     dbgLog('got censoring response', response, jobQueue.value);
@@ -224,7 +232,10 @@ const deleteSourceFiles = async () => {
 }
 
 const onSelectSave = (key: string) => {
-        console.log('handling save', key);
-        saveCensored(key == 'overwrite');
+    saveCensored(key == 'overwrite');
 };
+
+onBeforeMount(async () => {
+  await store.load();
+});
 </script>

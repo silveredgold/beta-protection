@@ -1,4 +1,4 @@
-import { defaultExtensionPrefs, IExtensionPreferences, IPreferences, OperationMode } from "@/preferences";
+import { defaultExtensionPrefs, IExtensionPreferences, IOverride, IPreferences, OperationMode } from "@/preferences";
 import { OverrideService } from "@/services/override-service";
 import { setModeBadge } from "@/util";
 import clone from "just-clone";
@@ -6,28 +6,27 @@ import { defineStore } from "pinia";
 import browser from 'webextension-polyfill';
 
 export interface ExtensionState {
-    basePreferences: IExtensionPreferences;
-    // preferences: IExtensionPreferences;
-    overridePreferences?: Partial<IExtensionPreferences>;
+    basePreferences?: IExtensionPreferences;
+    override?: IOverride<IExtensionPreferences>;
     allowedModes: OperationMode[]
 }
 
-const usePreferencesStore = defineStore('preferences', {
+export const usePreferencesStore = (delayMs?: number) => defineStore('preferences', {
     state: (): ExtensionState => {
-        return { basePreferences: undefined!, overridePreferences: undefined!, allowedModes: [] }
+        return { basePreferences: undefined!, override: undefined, allowedModes: [] }
     },
     getters: {
         mode(): OperationMode {
-            if (!this.allowedModes.includes(this.basePreferences.mode)) {
+            if (this.basePreferences?.mode && !this.allowedModes.includes(this.basePreferences.mode)) {
                 return this.allowedModes[0];
             }
-            return this.basePreferences.mode;
+            return this.basePreferences?.mode || OperationMode.Enabled;
         },
         currentPreferences(): IExtensionPreferences {
-            let storedPrefs = this.basePreferences;
-            let overridePrefs = this.overridePreferences;
+            const storedPrefs = this.basePreferences;
+            const overridePrefs = this.overridePreferences;
             const merged: IExtensionPreferences = {
-                ...storedPrefs,
+                ...storedPrefs!,
                 ...overridePrefs
             };
             // if (!overService.current!.allowedModes.includes(storedPrefs.mode)) {
@@ -35,17 +34,21 @@ const usePreferencesStore = defineStore('preferences', {
             // }
             setModeBadge(this.mode);
             return merged;
+        }, currentOverride(): IOverride<IExtensionPreferences> | undefined {
+            return this.override;
+        }, overridePreferences(): Partial<IExtensionPreferences> | undefined {
+            return this.currentOverride?.preferences;
         }
     },
     actions: {
         async load() {
             const result = await browser.storage.local.get('preferences');
-            let storedPrefs = result['preferences'] as IExtensionPreferences;
+            const storedPrefs = result['preferences'] as IExtensionPreferences;
             this.basePreferences = storedPrefs;
             const overService = await OverrideService.create();
             this.allowedModes = [OperationMode.Enabled, OperationMode.OnDemand, OperationMode.Disabled]
             if (storedPrefs && storedPrefs.mode && overService.active) {
-                this.overridePreferences = overService.current?.preferences;
+                this.override = overService.current;
                 if (overService.current && overService.current.allowedModes.length > 0) {
                     this.allowedModes = overService.current.allowedModes;
                 }
@@ -54,7 +57,7 @@ const usePreferencesStore = defineStore('preferences', {
         },
         async save(prefs?: IExtensionPreferences, skipClone: boolean = false) {
             prefs = prefs || this.basePreferences;
-            const clonedPrefs = skipClone ? prefs : clone(prefs);
+            const clonedPrefs = skipClone ? prefs : clone(prefs!);
             await browser.storage.local.set({ 'preferences': clonedPrefs });
         },
         async merge(prefs: Partial<IPreferences>, preferSaved: boolean = true) {
@@ -73,8 +76,8 @@ const usePreferencesStore = defineStore('preferences', {
                 }
             await this.save(mergedPrefs, true);
         }
-    }
-});
+    }, debounce: {save: delayMs || 400}
+})();
 
 const loadPreferencesStore = async () => {
     const store = usePreferencesStore();

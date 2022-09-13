@@ -2,6 +2,7 @@ import { Component, createApp } from "vue";
 import { backendProviderPlugin } from '@/plugin-backend';
 import { eventEmitterPlugin } from "@silveredgold/beta-shared-components";
 import { createPinia } from "pinia";
+import { DebouncePlugin } from "./stores/debounce";
 
 export function createBetaApp(rootComponent: Component, options: {unwrapInjected?: boolean, enableBackend?: boolean, enableEvents?: boolean, disableStore?: boolean} = {}) {
     const app = createApp(rootComponent);
@@ -15,7 +16,9 @@ export function createBetaApp(rootComponent: Component, options: {unwrapInjected
         app.config.unwrapInjectedRef = true;
     }
     if (!options.disableStore) {
-        app.use(createPinia());
+        const pinia = createPinia();
+        pinia.use(DebouncePlugin);
+        app.use(pinia);
     }
     return app;
 }
