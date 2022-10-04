@@ -131,7 +131,6 @@ import { darkTheme, NConfigProvider, NMessageProvider, NDialogProvider, NGlobalS
 import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen, Images } from "@vicons/ionicons5";
 import BackendHost from '@/components/BackendHost.vue';
 import { provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
-import { debounce } from "throttle-debounce";
 import { IExtensionPreferences, IPreferences } from '@/preferences';
 import { updateUserPrefs, userPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbgLog } from "@/util";

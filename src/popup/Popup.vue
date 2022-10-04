@@ -58,7 +58,6 @@ import { Settings, StatsChart, LockClosed, Images } from "@vicons/ionicons5";
 import ModeSwitch from "@/components/ModeSwitch.vue";
 import { webExtensionNavigation } from "@/components/util";
 import { IExtensionPreferences, IOverride } from "@/preferences";
-import { debounce } from "throttle-debounce";
 import { computed, onBeforeMount, provide, reactive, ref, Ref, watch } from "vue";
 import { updateUserPrefs } from "@silveredgold/beta-shared-components";
 import { ConnectionStatus, VideoOptions } from "@silveredgold/beta-shared-components";
