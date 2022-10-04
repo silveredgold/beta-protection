@@ -132,11 +132,11 @@ import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen, Imag
 import BackendHost from '@/components/BackendHost.vue';
 import { provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
 import { debounce } from "throttle-debounce";
-import { IExtensionPreferences, IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
+import { IExtensionPreferences, IPreferences } from '@/preferences';
 import { updateUserPrefs, userPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbgLog } from "@/util";
 import { PlaceholderUpload, BetaSafetyImport, PlaceholderOptions } from "@/components/placeholders";
-import { usePreferencesStore, useUserOptionsStore } from "@/stores";
+import { loadPreferencesStore, usePreferencesStore, useUserOptionsStore } from "@/stores";
 import StickerOptions from "@/components/StickerOptions.vue";
 import SettingsReset from "@/components/SettingsReset.vue";
 import DomainListOptions from "@/components/DomainListOptions.vue";
@@ -166,37 +166,11 @@ const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
-// const getCurrentPrefs = async () => {
-//   const storeResponse = await loadPreferencesFromStorage();
-//   dbgLog(`options loaded prefs:`, storeResponse);
-//   const overrideService = await OverrideService.create();
-//   currentOverride.value = overrideService.current;
-//   // prefs = reactive(storeResponse);
-//   return storeResponse;
-// }
-
-// const updateFunc = debounce(500, async (prefs) => {
-//   await savePreferencesToStorage(prefs);
-// })
-
-const store = usePreferencesStore();
+const store = await loadPreferencesStore();
 const options = useUserOptionsStore();
-
-// const _ = reactive({
-//   preferences: {} as IExtensionPreferences,
-//   updatePreferences(prefs?: IPreferences) {
-//     const targetPrefs = prefs?.mode ? prefs : this.preferences;
-//     updateFunc(targetPrefs);
-//     // var storeResponse = await chrome.storage.local.set({ 'preferences': targetPrefs });
-//   }
-// })
 
 const prefs = computed(() => store.currentPreferences);
 const currentOverride = computed(() => store.currentOverride);
-
-// watch(prefs, async (newMode, prevMode) => {
-//     dbgLog('new mode', newMode);
-// }, {deep: true});
 
 const updatePrefs = async (preferences?: IExtensionPreferences) => {
   dbgLog(`queuing prefs save`);
@@ -204,14 +178,14 @@ const updatePrefs = async (preferences?: IExtensionPreferences) => {
   return true;
 }
 
-const handleImport = (prefs: IExtensionPreferences) => {
-  updatePrefs(prefs).then(() => {
+const handleImport = (prefs: IPreferences) => {
+  updatePrefs(prefs as IExtensionPreferences).then(() => {
     console.log('imported new preferences!', prefs);
   });
 }
 
 onBeforeMount(async () => {
-  await store.load();
+  // await store.load();
   await options.load();
 });
 
@@ -232,15 +206,6 @@ provide(updateUserPrefs, updatePrefs);
 
 </script>
 <style>
-html {
-  max-width: 800px;
-  height: 800px;
-  padding: 1.5rem;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
-}
 
 .control-group {
   margin-top: 0.5rem;

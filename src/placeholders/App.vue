@@ -12,7 +12,7 @@
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, useOsTheme} from "naive-ui";
 import { provide, ref, onBeforeMount, computed } from 'vue';
 import { debounce } from "throttle-debounce";
-import { getAvailablePlaceholders, IExtensionPreferences, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from '@/preferences';
+import { getAvailablePlaceholders, IExtensionPreferences } from '@/preferences';
 import { updateUserPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbg } from "@/util";
 import browser from 'webextension-polyfill';
@@ -20,6 +20,7 @@ import StoreHeader from './StoreHeader.vue';
 import {Store} from '@/components/placeholders';
 import { useEventEmitter } from "@silveredgold/beta-shared-components";
 import { PlaceholderSet } from "./types";
+import { usePreferencesStore } from "@/stores";
 
 const events = useEventEmitter();
 const osTheme = useOsTheme()
@@ -28,8 +29,10 @@ const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 const preferences = ref<IExtensionPreferences|undefined>(undefined);
 const placeholders = ref<PlaceholderSet>({allImages: [], categories: []});
 
+const store = usePreferencesStore();
+
 const getCurrentPrefs = async () => {
-  var storeResponse = await loadPreferencesFromStorage();
+  var storeResponse = await store.load();
   dbg(`options loaded prefs:`, storeResponse);
   return storeResponse;
 }
@@ -40,24 +43,16 @@ const getCurrentPlaceholders = async () => {
   return storeResponse;
 }
 
-const _updateFunc = debounce(1000, async (prefs) => {
-  dbg(`persisting prefs`, prefs);
-  dbg(`serialized prefs`, JSON.stringify(prefs));
-  await savePreferencesToStorage(prefs);
+const updatePrefs = async (preferences?: IExtensionPreferences) => {
+  await store.save(preferences);
   return true;
-})
-
-const updatePreferences = async (prefs?: IPreferences) => {
-    const targetPrefs = prefs?.mode ? prefs : preferences;
-    return await _updateFunc(targetPrefs);
 }
-
 // watch(preferences, async (newMode, prevMode) => {
 //     console.log('new mode', newMode);
 // }, {deep: true});
 
 onBeforeMount(async () => {
-  preferences.value = await getCurrentPrefs();
+  await store.load();
   placeholders.value = await getCurrentPlaceholders();
 });
 
@@ -79,14 +74,12 @@ events?.on('reload', evt => {
       placeholders.value = set;
     });
   } else if (evt == 'preferences') {
-    getCurrentPrefs().then(prefs => {
-      preferences.value = prefs;
-    });
+    store.load();
   }
 });
 
 // provide(userPrefs, prefs);
-provide(updateUserPrefs, updatePreferences);
+provide(updateUserPrefs, updatePrefs);
 
 </script>
 <style>

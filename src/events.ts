@@ -1,8 +1,8 @@
 import { MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATISTICS, MSG_PLACEHOLDERS_AVAILABLE, MSG_PLACEHOLDERS_ENABLED, MSG_INJECT_SUBLIMINAL, MSG_IMAGE_DATA, MSG_FORWARDING, MSG_API_EXTENSION_VERSION, MSG_API_GET_CURRENT_OVERRIDE } from "./messaging";
-import { loadPreferencesFromStorage } from "@/preferences";
 import { dbg, dbgLog, getDomain, getExtensionVersion } from "@/util";
 import browser from 'webextension-polyfill';
 import { ICensorBackend } from "@/transport";
+import { PreferencesService } from "./stores";
 
 export const CMENU_REDO_CENSOR = "BSNG_REDO_CENSOR";
 export const CMENU_ENABLE_ONCE = "BP_FORCE_RUN";
@@ -18,7 +18,8 @@ export function processContextClick(info: browser.Menus.OnClickData, tab: browse
     if (tab && info.menuItemId === CMENU_REDO_CENSOR) {
         browser.tabs.sendMessage(tab.id!, {msg: CMENU_REDO_CENSOR}).then(value => {
             if (value !== undefined && value?.id) {
-                loadPreferencesFromStorage().then(prefs => {
+                PreferencesService.create().then(store => {
+                    const prefs = store.currentPreferences;
                     backendClient.censorImage({
                         url: value.origSrc,
                         srcId: tab.id,

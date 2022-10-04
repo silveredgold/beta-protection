@@ -17,31 +17,26 @@
 <script setup lang="ts">
 import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
-import { loadPreferencesFromStorage, IPreferences, OperationMode, savePreferencesToStorage, IExtensionPreferences } from '@/preferences';
+import { IPreferences, OperationMode, IExtensionPreferences } from '@/preferences';
 import { dbg, setModeBadge } from "@/util"
-import { OverrideService } from '@/services/override-service';
+import { usePreferencesStore } from '@/stores';
 
 const notif = useNotification();
 const mode: Ref<OperationMode> = ref("" as OperationMode);
-let prefs = reactive({} as IExtensionPreferences);
+const store = usePreferencesStore();
+
+
 const getCurrentMode = async () => {
-    const storeResponse = await loadPreferencesFromStorage();
-    const svc = await OverrideService.create();
-    if (svc && svc.active) {
-        dbg('settings allowed modes', svc.current?.allowedModes);
-        allowedModes.value = svc.current!.allowedModes;
-    }
-    prefs = storeResponse;
-    mode.value = storeResponse.mode;
+    await store.load();
+    mode.value = store.mode;
+    allowedModes.value = store.allowedModes;
 }
 
 const allowedModes: Ref<OperationMode[]> = ref([]);
 
 const updateMode = async () => {
     dbg(`saving new mode ${mode.value}`);
-    prefs.mode = mode.value;
-    setModeBadge(mode.value);
-    await savePreferencesToStorage(prefs);
+    await store.setMode(mode.value);
 }
 
 onMounted(getCurrentMode);

@@ -6,9 +6,10 @@ import browser from "webextension-polyfill";
 import { UpdateService } from "./services/update-service";
 import { BackendService } from "./transport";
 import type { ICensorBackend } from "@silveredgold/beta-shared/transport";
-import { defaultExtensionPrefs, loadPreferencesFromStorage, mergeNewPreferences, mergePreferences } from "./preferences";
+import { defaultExtensionPrefs } from "./preferences";
 import { StickerService } from "./services/sticker-service";
 import semver from 'semver';
+import { PreferencesService } from "./stores";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 let backendService: BackendService| null;
@@ -76,8 +77,10 @@ browser.runtime.onInstalled.addListener((details) => {
     console.warn(`upgrading from ${srcVersion}->${newVersion}`);
     if (srcVersion && semver.gte(newVersion, breaking) && semver.lt(srcVersion, breaking)) {
       console.log('breaking change boundary cross detected!');
-      mergeNewPreferences(defaultExtensionPrefs, false).then(() => {
-        UpdateService.notifyForBreakingUpdate(details.previousVersion);
+      PreferencesService.create().then(store => {
+        store.merge(defaultExtensionPrefs, false).then(() => {
+          UpdateService.notifyForBreakingUpdate(details.previousVersion);
+        })
       });
     }
   }
@@ -105,7 +108,9 @@ browser.runtime.onInstalled.addListener((details) => {
           browser.runtime.sendMessage({msg: 'reloadSocket'});
         })
       });
-    mergeNewPreferences(defaultExtensionPrefs, false);
+    PreferencesService.create().then(store => {
+      store.merge(defaultExtensionPrefs, false)
+    });
   }
   initExtension();
   initContextMenus();
@@ -183,7 +188,7 @@ browser.storage.onChanged.addListener((changes, area) => {
     }
   }
   browser.runtime.sendMessage({msg: `storageChange:${area}`, keys, changes});
-  loadPreferencesFromStorage().then(ep => setModeBadge(ep?.mode)).catch(() => console.debug('failed to set mode badge'));
+  PreferencesService.create().then(ep => setModeBadge(ep.mode)).catch(() => console.debug('failed to set mode badge'));
 });
 
 browser.alarms.onAlarm.addListener(alarm => {
@@ -230,7 +235,9 @@ function initExtension(syncPrefs: boolean = true) {
     if (syncPrefs) {
       client.getRemotePreferences().then((result) => {
         if (result) {
-          mergeNewPreferences(result);
+          PreferencesService.create().then(store => {
+            store.merge(defaultExtensionPrefs)
+          });
         }
         trySendEvent({msg: 'reloadPreferences'});
       });

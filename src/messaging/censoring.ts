@@ -1,8 +1,9 @@
 import { CSSManager } from "@/services/css-manager";
-import { IPreferences, loadPreferencesFromStorage } from "@/preferences";
+import { IPreferences } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
 import { dbgLog, getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
+import { loadPreferencesStore, PreferencesService } from "@/stores";
 
 export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
     event: 'censorRequest',
@@ -14,7 +15,8 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
         } else if (message.preferences !== undefined) {
             preferences = message.preferences as IPreferences;
         } else {
-            preferences = await loadPreferencesFromStorage();
+            const store = await PreferencesService.create();
+            preferences = store.currentPreferences;
         }
         const forced = preferences.autoAnimate || message.forceCensor;
         ctx.backendClient.censorImage({
@@ -40,7 +42,7 @@ export const MSG_INJECT_CSS: RuntimeEvent<void> = {
         console.debug('CSS injection request', sender)
         const tabId = sender.tab?.id;
         if (tabId) {
-          const prefs = (request.preferences as IPreferences) ?? await loadPreferencesFromStorage();
+          const prefs = (request.preferences as IPreferences) ?? (await PreferencesService.create()).currentPreferences;
           const css = new CSSManager(tabId, prefs);
           console.debug(`injecting CSS to ${tabId}`, prefs);
         //   await css.removeCSS();
@@ -68,7 +70,7 @@ export const MSG_INJECT_SUBLIMINAL_CSS: RuntimeEvent<void> = {
         const tabId = sender.tab?.id;
         // console.debug(`got injectCSS for ${tabId}`);
         if (tabId) {
-          const prefs = (request.preferences as IPreferences) ?? await loadPreferencesFromStorage();
+          const prefs = (request.preferences as IPreferences) ?? (await PreferencesService.create()).currentPreferences;
           const css = new CSSManager(tabId, prefs);
           console.debug(`injecting CSS to ${tabId}`, prefs);
           await css.removeSubliminal();

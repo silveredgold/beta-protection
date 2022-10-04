@@ -3,6 +3,6 @@ import Statistics from './Statistics.vue';
 import 'vfonts/Lato.css'
 // Monospace Font
 import 'vfonts/FiraCode.css'
-import { createBetaApp } from '@/plugins';
+import { createBetaApp, createBetaView } from '@/plugins';
 
-createBetaApp(Statistics, {enableBackend: true, enableEvents: true}).mount('#app');
+createBetaApp(createBetaView(Statistics), {enableBackend: true, enableEvents: true}).mount('#app');

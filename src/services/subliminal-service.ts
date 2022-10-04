@@ -1,13 +1,9 @@
 import { CSSManager } from "@/services/css-manager";
-import { IExtensionPreferences, IPreferences, loadPreferencesFromStorage, OperationMode, SubliminalOptions } from "@/preferences";
+import { IExtensionPreferences } from "@/preferences";
 import { DbClient } from "./db-client";
 import browser from 'webextension-polyfill';
-
-const dbg = (...data: any[]) => {
-    if (__DEBUG__) {
-        console.log(...data);
-    }
-}
+import { PreferencesService } from "@/stores";
+import { dbg } from "@/util";
 
 export class SubliminalService {
     /**
@@ -58,8 +54,8 @@ export class SubliminalService {
     }
 
     injectSubliminalScript = async (tab: browser.Tabs.Tab) => {
-
-        const prefs = await loadPreferencesFromStorage();
+        const store = await PreferencesService.create();
+        const prefs = store.currentPreferences;
         const msgs = await this.getMessages();
         if (prefs?.subliminal?.enabled && tab.id) {
             dbg('sub: initializing subliminals for tab', tab);

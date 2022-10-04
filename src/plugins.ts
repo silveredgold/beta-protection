@@ -1,8 +1,9 @@
-import { Component, createApp } from "vue";
+import { Component, createApp, h } from "vue";
 import { backendProviderPlugin } from '@/plugin-backend';
 import { eventEmitterPlugin } from "@silveredgold/beta-shared-components";
 import { createPinia } from "pinia";
 import { DebouncePlugin } from "./stores/debounce";
+import AsyncView from "./views/AsyncView.vue"
 
 export function createBetaApp(rootComponent: Component, options: {unwrapInjected?: boolean, enableBackend?: boolean, enableEvents?: boolean, disableStore?: boolean} = {}) {
     const app = createApp(rootComponent);
@@ -21,4 +22,8 @@ export function createBetaApp(rootComponent: Component, options: {unwrapInjected
         app.use(pinia);
     }
     return app;
+}
+
+export function createBetaView(rootComponent: Component) {
+    return h(AsyncView, {component: rootComponent});
 }
