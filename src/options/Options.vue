@@ -206,6 +206,16 @@ provide(updateUserPrefs, updatePrefs);
 </script>
 <style>
 
+html {
+  max-width: 800px;
+  height: 800px;
+  padding: 1.5rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
 .control-group {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;

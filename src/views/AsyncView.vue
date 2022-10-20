@@ -18,7 +18,7 @@ const { component: targetComponent } = toRefs(props);
 
 </script>
 <style>
-html {
+/* html {
   max-width: 800px;
   height: 800px;
   padding: 1.5rem;
@@ -26,5 +26,5 @@ html {
   margin-right: auto;
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-}
+} */
 </style>

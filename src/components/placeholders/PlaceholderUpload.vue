@@ -109,8 +109,6 @@ const enabled = computed({
 
 const openDir = async () => {
     const fs = new services.FileSystemClient();
-    const dir = await fs.openDir();
-    dbg('loaded dir', dir);
     const result = await fs.getFiles((file) => file.type.startsWith("image/"));
     dbg('loaded files', result);
     newFiles.value = result.files;

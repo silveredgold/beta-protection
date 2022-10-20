@@ -6,9 +6,9 @@
     <template #title>
         Beta Protection
     </template>
-    <template #avatar>
+    <!-- <template #avatar>
       <n-avatar :src="iconSrc" />
-    </template>
+    </template> -->
     <template #extra>
       <n-space item-style="display: flex;" justify="end" :vertical="true">
         <n-button-group>

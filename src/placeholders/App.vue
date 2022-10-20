@@ -11,7 +11,6 @@
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, useOsTheme} from "naive-ui";
 import { provide, ref, onBeforeMount, computed } from 'vue';
-import { debounce } from "throttle-debounce";
 import { getAvailablePlaceholders, IExtensionPreferences } from '@/preferences';
 import { updateUserPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbg } from "@/util";
@@ -20,7 +19,7 @@ import StoreHeader from './StoreHeader.vue';
 import {Store} from '@/components/placeholders';
 import { useEventEmitter } from "@silveredgold/beta-shared-components";
 import { PlaceholderSet } from "./types";
-import { usePreferencesStore } from "@/stores";
+import { loadPreferencesStore } from "@/stores";
 
 const events = useEventEmitter();
 const osTheme = useOsTheme()
@@ -29,7 +28,7 @@ const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 const preferences = ref<IExtensionPreferences|undefined>(undefined);
 const placeholders = ref<PlaceholderSet>({allImages: [], categories: []});
 
-const store = usePreferencesStore();
+const store = await loadPreferencesStore();
 
 const getCurrentPrefs = async () => {
   var storeResponse = await store.load();
@@ -52,7 +51,7 @@ const updatePrefs = async (preferences?: IExtensionPreferences) => {
 // }, {deep: true});
 
 onBeforeMount(async () => {
-  await store.load();
+  preferences.value = await getCurrentPrefs();
   placeholders.value = await getCurrentPlaceholders();
 });
 
