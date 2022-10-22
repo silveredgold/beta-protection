@@ -69,8 +69,8 @@ export const usePreferencesStore = buildPreferencesStore;
 //     return buildPreferencesStore(delayMs);
 // }
 
-export const loadPreferencesStore = async () => {
-    const store = usePreferencesStore();
+export const loadPreferencesStore = async (delayMs?: number) => {
+    const store = usePreferencesStore(delayMs);
     await store.load();
     return store;
 }

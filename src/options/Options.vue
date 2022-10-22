@@ -165,7 +165,7 @@ const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
-const store = await loadPreferencesStore();
+const store = await loadPreferencesStore(300);
 const options = useUserOptionsStore();
 
 const prefs = computed(() => store.currentPreferences);
