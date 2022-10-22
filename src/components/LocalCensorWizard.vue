@@ -235,6 +235,16 @@ const onSelectSave = (key: string) => {
     saveCensored(key == 'overwrite');
 };
 
+const reset = () => {
+    workingFiles.value = [];
+    inputHandle.value = undefined;
+    inputClean.value = true;
+    currentStep.value = 1;
+    jobQueue.value = new Map();
+    resultsQueue.value = new Map();
+    savedQueue.value = new Map();
+}
+
 onBeforeMount(async () => {
   await store.load();
 });
