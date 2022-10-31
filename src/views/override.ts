@@ -5,9 +5,9 @@ import 'vfonts/Lato.css'
 // Monospace Font
 import 'vfonts/FiraCode.css'
 import { OverrideService } from '@/services/override-service';
-import { createBetaApp } from '@/plugins';
+import { createBetaApp, createBetaView } from '@/plugins';
 
-const app = createBetaApp(Override, {unwrapInjected: true}).mount('#app');
+const app = createBetaApp(createBetaView(Override), {unwrapInjected: true}).mount('#app');
 
 
 

@@ -6,9 +6,9 @@
     <template #title>
         Beta Protection
     </template>
-    <template #avatar>
+    <!-- <template #avatar>
       <n-avatar :src="iconSrc" />
-    </template>
+    </template> -->
     <template #extra>
       <n-space item-style="display: flex;" justify="end" :vertical="true">
         <n-button-group>
@@ -39,7 +39,6 @@
         </n-button-group>
       </n-space>
     </template>
-    <!-- <template #footer>Ensure you already have Beta Safety running in the background!</template> -->
   </n-page-header>
   <connection-status :compact="true" :host-config="getHost" />
   <mode-switch />
@@ -58,16 +57,15 @@ import { NButton, NButtonGroup, darkTheme, NGlobalStyle, NConfigProvider, NNotif
 import { Settings, StatsChart, LockClosed, Images } from "@vicons/ionicons5";
 import ModeSwitch from "@/components/ModeSwitch.vue";
 import { webExtensionNavigation } from "@/components/util";
-import { IExtensionPreferences, IOverride, IPreferences, loadPreferencesFromStorage, savePreferencesToStorage } from "@/preferences";
-import { debounce } from "throttle-debounce";
+import { IExtensionPreferences, IOverride } from "@/preferences";
 import { computed, onBeforeMount, provide, reactive, ref, Ref, watch } from "vue";
 import { updateUserPrefs } from "@silveredgold/beta-shared-components";
 import { ConnectionStatus, VideoOptions } from "@silveredgold/beta-shared-components";
-import { dbg, themeOverrides } from "@/util";
+import { dbg, dbgLog, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
-import { OverrideService } from "@/services/override-service";
 import { OverridableOption } from "@/components/overrides";
 import type {HostConfigurator} from '@silveredgold/beta-shared-components';
+import { usePreferencesStore } from "@/stores";
 const { openOverrides, openStatistics, openSettings, openCensoring } = webExtensionNavigation
 
 const getHost: HostConfigurator = {
@@ -82,47 +80,19 @@ const iconSrc = browser.runtime.getURL('/images/icon.png');
 
 const currentOverride: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 
-// loading
-const getCurrentPrefs = async () => {
-  var storeResponse = await loadPreferencesFromStorage();
-  dbg(`popup loaded prefs:`, storeResponse);
-  const overrideService = await OverrideService.create();
-  currentOverride.value = overrideService.current;
-  return storeResponse;
-}
-
-// store bullshit
-const updateFunc = debounce(500, async (prefs) => {
-  dbg(`persisting prefs`, prefs);
-  await savePreferencesToStorage(prefs);
-  return true;
-  // const n = notif?.create({
-  //         content: 'Saved!',
-  //         duration: 2500,
-  //         closable: true
-  //       });
-});
-
-const store = reactive({
-  preferences: {} as IPreferences,
-  async updatePreferences(prefs?: IPreferences) {
-    const targetPrefs = prefs?.mode ? prefs : this.preferences;
-    const result = await updateFunc(targetPrefs);
-    return result;
-    // var storeResponse = await chrome.storage.local.set({ 'preferences': targetPrefs });
-  }
-})
+const store = usePreferencesStore();
 
 //component setup
-const prefs = computed(() => store.preferences);
+const prefs = computed(() => store.currentPreferences);
 
 watch(prefs, async (newMode, prevMode) => {
     
 }, {deep: true});
 
-const updatePrefs = async (preferences: IPreferences | undefined) => {
-  const result = await store.updatePreferences(preferences);
-  return result;
+const updatePrefs = async (preferences?: IExtensionPreferences) => {
+  dbgLog(`queuing prefs save`);
+  await store.save(preferences);
+  return true;
 }
 
 provide(updateUserPrefs, updatePrefs);
@@ -133,15 +103,13 @@ browser.runtime.onMessage.addListener((request, sender) => {
   if (request['msg'] === 'reloadPreferences') {
     setTimeout(() => {
       dbg('reloading preferences for options view');
-      getCurrentPrefs().then(prefs => {
-        store.preferences = prefs;
-      });
+      store.load();
     }, 1000);
   }
 });
 
 onBeforeMount(async () => {
-  store.preferences = await getCurrentPrefs();
+  await store.load();
 });
 
 // provide(userPrefs, prefs);

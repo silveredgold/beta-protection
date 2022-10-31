@@ -3,7 +3,7 @@ import { ICensorBackend, IBackendProvider } from "@/transport";
 import browser from 'webextension-polyfill';
 import { RuntimePortManager } from "../runtimePort";
 import { BetaCensorClient } from "@silveredgold/beta-censor-client";
-import { loadPreferencesFromStorage } from "@/preferences";
+import { PreferencesService } from "@/stores";
 
 const version = getExtensionVersion();
 
@@ -49,9 +49,10 @@ export class BetaCensoringProvider implements IBackendProvider<ICensorBackend> {
     private registerEvents(backend: ICensorBackend, portManager: RuntimePortManager) {
         backend.onImageCensored.subscribe(async (sender, payload) => {
             if (payload.srcId !== '-1') {
+                const store = PreferencesService.create();
                 const prefs = payload.responseData['preferences']
                     ? payload.responseData['preferences']
-                    : await loadPreferencesFromStorage();
+                    : (await store).currentPreferences;
                 if (payload.error) {
                     console.log(`error image response`, payload);
                     payload.url = prefs.errorMode === 'normal'

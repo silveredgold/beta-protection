@@ -1,8 +1,9 @@
 import { LocalPlaceholder } from "@/placeholders";
 import { PlaceholderService } from "@/services/placeholder-service";
 import { StickerService } from "@/services/sticker-service";
-import { IExtensionPreferences, IPreferences, loadPreferencesFromStorage } from ".";
+import { IExtensionPreferences } from ".";
 import { dbg } from "@/util";
+import { PreferencesService } from "@/stores";
 
 export async function getAvailableStickers() {
     const cats = await StickerService.getAvailable();
@@ -33,7 +34,8 @@ export async function getEnabledPlaceholderCategories(prefs?: IExtensionPreferen
     const placeholderCategories = await PlaceholderService.getCategories();
     // let allPlaceholders = await PlaceholderService.getAssetPaths();
     if (!prefs?.enabledPlaceholders) {
-        prefs = await loadPreferencesFromStorage();
+        const store = await PreferencesService.create();
+        prefs = store.currentPreferences;
     }
     const enabledCategories = placeholderCategories.filter(cat => (prefs!.enabledPlaceholders ?? []).includes(cat));
     return enabledCategories;

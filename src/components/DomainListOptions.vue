@@ -12,7 +12,7 @@
                         <n-list-item v-for="match in allowed" v-bind:key="match">
                             {{ match }}
                             <template #suffix>
-                                <n-button @click="allowed.splice(allowed.indexOf(match))">Remove</n-button>
+                                <n-button @click="allowed.splice(allowed.indexOf(match), 1)">Remove</n-button>
                             </template>
                         </n-list-item>
                         <template #footer>

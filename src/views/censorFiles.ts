@@ -3,6 +3,6 @@ import CensorFiles from './CensorFiles.vue';
 import 'vfonts/Lato.css'
 // Monospace Font
 import 'vfonts/FiraCode.css'
-import { createBetaApp } from '@/plugins';
+import { createBetaApp, createBetaView } from '@/plugins';
 
-createBetaApp(CensorFiles, {enableBackend: true, enableEvents: true}).mount('#app');
+createBetaApp(createBetaView(CensorFiles), {enableBackend: true, enableEvents: true}).mount('#app');

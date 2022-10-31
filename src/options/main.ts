@@ -1,8 +1,8 @@
-import App from './App.vue';
+import Options from './Options.vue';
 // General Font
 import 'vfonts/Lato.css'
 // Monospace Font
 import 'vfonts/FiraCode.css'
-import { createBetaApp } from '@/plugins';
+import { createBetaApp, createBetaView } from '@/plugins';
 
-createBetaApp(App, {enableBackend: true, enableEvents: true}).mount('#app')
+createBetaApp(createBetaView(Options), {enableBackend: true, enableEvents: true}).mount('#app')

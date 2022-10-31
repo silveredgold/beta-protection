@@ -1,4 +1,3 @@
-import { loadPreferencesFromStorage } from "@/preferences";
 import { Purifier } from "./purifier";
 import { CensoringState, CensoringContext } from "./types";
 import { getDomain, hashCode, shouldCensor, dbg, dbgLog } from "@/util";
@@ -7,16 +6,17 @@ import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
 import { MSG_INJECT_SUBLIMINAL } from "@/messaging";
 import browser from 'webextension-polyfill';
 import { CMENU_RECHECK_PAGE, CMENU_REDO_CENSOR } from "@/events";
+import { PreferencesService } from "@/stores";
 
 let lastClickElement: HTMLElement|undefined|null;
 const safeList: number[] = [];
 let currentContext: CensoringContext|undefined;
+const service = PreferencesService.create();
 
 const getCensoringState = async (): Promise<CensoringState> => {
-	
-	const prefs = await loadPreferencesFromStorage();
+	const store = await service;
 	const currentSite = window.location.href.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
-	const censorEnabled = shouldCensor(prefs, currentSite);
+	const censorEnabled = shouldCensor(store.currentPreferences, currentSite);
 	dbg('censoring state', censorEnabled);
 	return {activeCensoring: censorEnabled};
 }
@@ -43,7 +43,8 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	// 	currentContext?.observer?.stop();
 	// 	} catch {}
 	// }
-	const preferences = await loadPreferencesFromStorage();
+	const store = await service;
+	const preferences = store.currentPreferences;
 	// const confPrefs = await browser.storage.local.get('preferences');
 	// const preferences = confPrefs['preferences'] as IPreferences;
 	const placeholders: any = await browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event});
