@@ -1,6 +1,6 @@
 import { defaultExtensionPrefs, IExtensionPreferences, IOverride, IPreferences, OperationMode } from "@/preferences";
 import { OverrideService } from "@/services/override-service";
-import { setModeBadge } from "@/util";
+import { dbgLog, setModeBadge } from "@/util";
 import clone from "just-clone";
 import { defineStore } from "pinia";
 import browser from 'webextension-polyfill';
@@ -43,9 +43,9 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
             return this.currentPreferences
         },
         async save(prefs?: IExtensionPreferences, skipClone: boolean = false) {
-            prefs = prefs || this.basePreferences;
+            prefs = prefs || this.currentPreferences;
             if (prefs) {
-                await this.$service.save(prefs || this.basePreferences, skipClone);
+                await this.$service.save(prefs, skipClone);
             }
         },
         async merge(prefs: Partial<IPreferences>, preferSaved: boolean = true) {
@@ -143,6 +143,7 @@ export class PreferencesService {
 
     static async save(prefs: IExtensionPreferences, skipClone: boolean = false) {
         const clonedPrefs = skipClone ? prefs : clone(prefs!);
+        dbgLog('saving preferences to browser', clonedPrefs);
         await browser.storage.local.set({ 'preferences': clonedPrefs });
     }
 

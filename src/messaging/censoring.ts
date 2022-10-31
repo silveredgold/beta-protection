@@ -17,6 +17,7 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
         } else {
             const store = await PreferencesService.create();
             preferences = store.currentPreferences;
+            // dbgLog('had to fall back to store-loaded preferences', preferences);
         }
         const forced = preferences.autoAnimate || message.forceCensor;
         ctx.backendClient.censorImage({

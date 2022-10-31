@@ -172,8 +172,7 @@ const prefs = computed(() => store.currentPreferences);
 const currentOverride = computed(() => store.currentOverride);
 
 const updatePrefs = async (preferences?: IExtensionPreferences) => {
-  dbgLog(`queuing prefs save`);
-  await store.save(preferences);
+  await store.save(preferences || prefs.value);
   return true;
 }
 
