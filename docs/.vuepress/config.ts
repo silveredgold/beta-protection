@@ -26,7 +26,7 @@ export default defineUserConfig<DefaultThemeOptions>({
             // NavbarGroup
             {
                 text: 'User Guide',
-                children: ['/guide/installation.md', '/guide/usage', '/guide/overrides', '/guide/mobile', '/guide/beta-safety'],
+                children: ['/guide/installation.md', '/guide/usage', '/guide/overrides', '/guide/mobile', '/guide/beta-safety', '/guide/beta-suite'],
             },
             // string - page file path
             {
