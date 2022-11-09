@@ -30,7 +30,7 @@ import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NList, NListItem, NThing, NCheckbox, NCheckboxGroup, NButton, NIcon } from "naive-ui";
 import { getAvailablePlaceholders, IExtensionPreferences } from '@/preferences';
 import { Refresh } from "@vicons/ionicons5";
-import { updateUserPrefs } from '@silveredgold/beta-shared-components';
+import { updateUserPrefs, watchForChanges } from '@silveredgold/beta-shared-components';
 import { LocalPlaceholder } from '@/placeholders';
 import { eventEmitter } from "@/messaging";
 import { dbg } from '@/util';
@@ -80,9 +80,7 @@ const getCount = (category: string): number => {
     return currentCount;
 }
 
-watch(prefs, async (newMode, prevMode) => {
-    updatePrefs!();
-}, {deep: true});
+watch(prefs, watchForChanges(updatePrefs), {deep: true})
 
 onBeforeMount(() => {
     refreshPlaceholders();

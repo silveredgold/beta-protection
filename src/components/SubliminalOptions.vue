@@ -60,7 +60,7 @@
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, NThing, NSpace, NCheckbox, useNotification, NInputGroup, NInputGroupLabel, NInputNumber, NButton, NTooltip } from "naive-ui";
 import type { IExtensionPreferences } from '@/preferences';
-import { updateUserPrefs, HelpTooltip } from '@silveredgold/beta-shared-components';
+import { updateUserPrefs, HelpTooltip, watchForChanges } from '@silveredgold/beta-shared-components';
 import { SubliminalService } from '@/services/subliminal-service';
 import { services } from "@silveredgold/beta-shared-components";
 import { dbg } from '@/util';
@@ -85,9 +85,7 @@ const messageCount = computed(() => messages.value.length);
 
 const svc = new SubliminalService();
 
-watch(prefs!, async (newMode, prevMode) => {
-    updatePrefs?.();
-}, { deep: true });
+watch(prefs!, watchForChanges(updatePrefs), {deep: true});
 
 onBeforeMount(() => {
     loadMessages().then(msgs => {

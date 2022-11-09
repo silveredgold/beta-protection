@@ -1,6 +1,6 @@
 import { defaultExtensionPrefs, IExtensionPreferences, IOverride, IPreferences, OperationMode } from "@/preferences";
 import { OverrideService } from "@/services/override-service";
-import { dbgLog, setModeBadge } from "@/util";
+import { dbg, dbgLog, setModeBadge } from "@/util";
 import clone from "just-clone";
 import { defineStore } from "pinia";
 import browser from 'webextension-polyfill';
@@ -45,6 +45,7 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
         async save(prefs?: IExtensionPreferences, skipClone: boolean = false) {
             prefs = prefs || this.currentPreferences;
             if (prefs) {
+                dbg(`calling service`, prefs.mode);
                 await this.$service.save(prefs, skipClone);
             }
         },
@@ -52,13 +53,14 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
             await this.$service.merge(prefs, preferSaved);
         },
         async setMode(mode: OperationMode) {
-            // dbg(`saving new mode ${mode.value}`);
-            if (this.basePreferences && mode) {
-                this.basePreferences.mode = mode;
+            dbg(`saving new mode ${mode}`);
+            if (this.currentPreferences && mode) {
+                dbg(`updating current prefs from ${this.currentPreferences.mode} to ${mode}`);
+                this.currentPreferences.mode = mode;
+                await this.save({...this.currentPreferences, mode});
             }
-            await this.save();
             await this.load();
-            setModeBadge(this.basePreferences!.mode);
+            setModeBadge(this.currentPreferences!.mode);
         }
     }, debounce: {save: delayMs || 400}
 })();

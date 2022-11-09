@@ -85,12 +85,10 @@ const store = usePreferencesStore();
 //component setup
 const prefs = computed(() => store.currentPreferences);
 
-watch(prefs, async (newMode, prevMode) => {
-    
-}, {deep: true});
-
 const updatePrefs = async (preferences?: IExtensionPreferences) => {
+  // var err = new Error();
   dbgLog(`queuing prefs save`);
+  // console.trace();
   await store.save(preferences);
   return true;
 }

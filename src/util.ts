@@ -158,22 +158,24 @@ export const dbgTimeEnd = (label: string, id?: string) => {
   }
 }
 
-export const setModeBadge = (mode: OperationMode, tabId?: number) => {
-  const modeDetails = mode == OperationMode.Disabled
-    ? { text: '❌', color: 'red', title: 'Disabled' }
-    : mode == OperationMode.Enabled
-      ? { text: '✔', color: 'green', title: 'Enabled' }
-      : { text: '💡', color: 'silver', title: 'On Demand Mode' }
+export const setModeBadge = (mode?: OperationMode, tabId?: number) => {
+  if (!!mode) {
+    const modeDetails = mode == OperationMode.Disabled
+      ? { text: '❌', color: 'red', title: 'Disabled' }
+      : mode == OperationMode.Enabled
+        ? { text: '✔', color: 'green', title: 'Enabled' }
+        : { text: '💡', color: 'silver', title: 'On Demand Mode' }
 
-  try {
-    if (tabId) {
-      browser.action.setBadgeText({ text: modeDetails.text, tabId });
-      browser.action.setBadgeBackgroundColor({ color: modeDetails.color, tabId });
-      browser.action.setTitle({ title: `Beta Protection - ${modeDetails.title}`, tabId });
-    } else {
-      browser.action.setBadgeText({ text: modeDetails.text });
-      browser.action.setBadgeBackgroundColor({ color: modeDetails.color });
-      browser.action.setTitle({ title: `Beta Protection - ${modeDetails.title}` });
-    }
-  } catch { }
+    try {
+      if (tabId) {
+        browser.action.setBadgeText({ text: modeDetails.text, tabId });
+        browser.action.setBadgeBackgroundColor({ color: modeDetails.color, tabId });
+        browser.action.setTitle({ title: `Beta Protection - ${modeDetails.title}`, tabId });
+      } else {
+        browser.action.setBadgeText({ text: modeDetails.text });
+        browser.action.setBadgeBackgroundColor({ color: modeDetails.color });
+        browser.action.setTitle({ title: `Beta Protection - ${modeDetails.title}` });
+      }
+    } catch { }
+  }
 }

@@ -24,7 +24,7 @@ import { Ref, watch, computed, toRefs, inject } from 'vue';
 import { NCard, NIcon, NCheckbox, NSpace, NThing } from "naive-ui";
 import { AlertCircleOutline } from "@vicons/ionicons5";
 import { IPreferences } from '@/preferences';
-import { updateUserPrefs } from '@silveredgold/beta-shared-components';
+import { updateUserPrefs, watchForChanges } from '@silveredgold/beta-shared-components';
 
 const props = defineProps<{
     preferences: IPreferences
@@ -38,8 +38,6 @@ const updatePrefs = inject(updateUserPrefs);
 
 const loaded = computed(() => !!preferences.value);
 
-watch(prefs, async (newMode, prevMode) => {
-    updatePrefs?.();
-}, {deep: true});
+watch(prefs, watchForChanges(updatePrefs), {deep: true});
 
 </script>

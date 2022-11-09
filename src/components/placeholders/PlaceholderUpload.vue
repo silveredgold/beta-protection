@@ -65,7 +65,7 @@
 import { Ref, ref, watch, computed, toRefs, inject, onBeforeMount } from 'vue';
 import { NCard, useNotification, NButton, NAutoComplete, NTooltip, NThing, NGrid, NGi } from "naive-ui";
 import { IExtensionPreferences } from '@/preferences';
-import { updateUserPrefs } from '@silveredgold/beta-shared-components';
+import { updateUserPrefs, watchForChanges } from '@silveredgold/beta-shared-components';
 import { PlaceholderService } from '@/services/placeholder-service';
 import { services } from "@silveredgold/beta-shared-components";
 import type { LoadedFileHandle } from "@silveredgold/beta-shared-components/lib/services"
@@ -143,11 +143,7 @@ const cancelImport = () => {
     newFiles.value = [];
 }
 
-
-
-watch(prefs, async (newMode, prevMode) => {
-    updatePrefs!();
-}, { deep: true });
+watch(prefs, watchForChanges(updatePrefs), {deep: true})
 
 onBeforeMount(() => {
     loadPlaceholders().then(ph => {

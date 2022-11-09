@@ -73,7 +73,7 @@ const enabled = computed({
 });
 
 watch(prefs, async (newMode, prevMode) => {
-    if (newMode.enabledStickers && newMode.enabledStickers.length > 0) {
+    if (!!prevMode && newMode.enabledStickers && newMode.enabledStickers.length > 0) {
         updatePrefs!();
     } else {
         notif.create({
