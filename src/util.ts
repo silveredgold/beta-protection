@@ -8,24 +8,36 @@ export { hashCode, base64ArrayBuffer, humanFileSize };
 let _extensionVersion: string;
 
 export function getExtensionVersion(): string {
-    if (!_extensionVersion) {
-        const manifestData = browser.runtime.getManifest();
-        _extensionVersion = manifestData.version;
-    }
-    return _extensionVersion;
+  if (!_extensionVersion) {
+    const manifestData = browser.runtime.getManifest();
+    _extensionVersion = manifestData.version;
+  }
+  return _extensionVersion;
 }
 
 export async function getExtensionId(): Promise<string> {
-  const idResult = await browser.storage.local.get({'installationId': ''});
+  const idResult = await browser.storage.local.get({ 'installationId': '' });
   if (idResult['installationId']) {
     return idResult['installationId'];
   }
   return '';
 }
 
+export async function getStorageUsage(): Promise<{ quota: number, usage: number, db?: number } | undefined> {
+  try {
+    const storageResp = await navigator.storage.estimate();
+    if (!!storageResp && !!storageResp.quota && !!storageResp.usage) {
+      return { quota: storageResp.quota, usage: storageResp.usage, db: (storageResp as any).usageDetails?.indexedDB }
+    }
+  } catch {
+    //ignored
+  }
+  return undefined;
+}
+
 export function isValidUrl(url: string) {
-    const http = (url.includes("http://") || url.includes("https://") || url.includes("data:image/") || url.includes("file://"));
-    return http;
+  const http = (url.includes("http://") || url.includes("https://") || url.includes("data:image/") || url.includes("file://"));
+  return http;
 }
 
 export function isGif(url: string) {
@@ -34,16 +46,16 @@ export function isGif(url: string) {
 }
 
 export function toTitleCase(str: string) {
-    return str.replace(
-      /\w\S*/g,
-      function(txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-      }
-    );
-  }
+  return str.replace(
+    /\w\S*/g,
+    function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    }
+  );
+}
 
 
-export const themeOverrides: GlobalThemeOverrides = { common: { fontWeightStrong: '600' }, Result: {lineHeight: '1.1', titleFontSizeSmall: '24', iconSizeSmall: '48px'} };
+export const themeOverrides: GlobalThemeOverrides = { common: { fontWeightStrong: '600' }, Result: { lineHeight: '1.1', titleFontSizeSmall: '24', iconSizeSmall: '48px' } };
 
 export function isNodeExcluded(node: Node, safeList?: number[]) {
   const plSrc = node["placeholder-name"] as string;
@@ -76,47 +88,47 @@ export function isNodeSafe(node: Node) {
 }
 
 export function getRandom<Type>(src: Type[]): Type {
-  return src[Math.floor(Math.random()*src.length)]
+  return src[Math.floor(Math.random() * src.length)]
 }
 
 export function generateUUID() { // Public Domain/MIT
   let d = new Date().getTime();//Timestamp
-  let d2 = (performance && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      let r = Math.random() * 16;//random number between 0 and 16
-      if(d > 0){//Use timestamp until depleted
-          r = (d + r)%16 | 0;
-          d = Math.floor(d/16);
-      } else {//Use microseconds since page-load if supported
-          r = (d2 + r)%16 | 0;
-          d2 = Math.floor(d2/16);
-      }
-      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  let d2 = (performance && performance.now && (performance.now() * 1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    let r = Math.random() * 16;//random number between 0 and 16
+    if (d > 0) {//Use timestamp until depleted
+      r = (d + r) % 16 | 0;
+      d = Math.floor(d / 16);
+    } else {//Use microseconds since page-load if supported
+      r = (d2 + r) % 16 | 0;
+      d2 = Math.floor(d2 / 16);
+    }
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
   });
 }
 
 export const shouldCensor = (prefs: IExtensionPreferences, url: string): boolean => {
   if (prefs?.mode) {
-		// let prefs = confPrefs["preferences"] as IPreferences;
-		const mode = prefs.mode;
-		const whitelist = prefs.allowList?.length ? prefs.allowList : [];
-		const blacklist = prefs.forceList?.length ? prefs.forceList : [];
-		dbg(`domain matching`, whitelist, blacklist, url);
-		const siteAllowed = whitelist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => url.includes(wle));
-		if (siteAllowed || mode == OperationMode.Disabled) {
-			return false;
-		} else if (mode == OperationMode.OnDemand) {
-			const siteForced = blacklist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => url.includes(wle));
-			return siteForced;
-		} else {
-			return true;
-		}
-	} else {
-		return false;
-	}
+    // let prefs = confPrefs["preferences"] as IPreferences;
+    const mode = prefs.mode;
+    const whitelist = prefs.allowList?.length ? prefs.allowList : [];
+    const blacklist = prefs.forceList?.length ? prefs.forceList : [];
+    dbg(`domain matching`, whitelist, blacklist, url);
+    const siteAllowed = whitelist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => url.includes(wle));
+    if (siteAllowed || mode == OperationMode.Disabled) {
+      return false;
+    } else if (mode == OperationMode.OnDemand) {
+      const siteForced = blacklist.map(l => l.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase()).some(wle => url.includes(wle));
+      return siteForced;
+    } else {
+      return true;
+    }
+  } else {
+    return false;
+  }
 }
 
-export const getDomain = (location: string, prefs?: IPreferences|boolean) => {
+export const getDomain = (location: string, prefs?: IPreferences | boolean) => {
   return (typeof prefs === 'boolean' && prefs) || (prefs && prefs.hideDomains)
     ? "unknown.tld"
     : location.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "")
@@ -124,7 +136,7 @@ export const getDomain = (location: string, prefs?: IPreferences|boolean) => {
 
 export const dbg = (...data: any[]) => {
   if (__DEBUG__) {
-      console.debug(...data);
+    console.debug(...data);
   }
 }
 
@@ -148,20 +160,20 @@ export const dbgTimeEnd = (label: string, id?: string) => {
 
 export const setModeBadge = (mode: OperationMode, tabId?: number) => {
   const modeDetails = mode == OperationMode.Disabled
-    ? {text: '❌', color: 'red', title: 'Disabled'}
+    ? { text: '❌', color: 'red', title: 'Disabled' }
     : mode == OperationMode.Enabled
-      ? {text: '✔', color: 'green', title: 'Enabled'}
-      : {text: '💡', color: 'silver', title: 'On Demand Mode'}
-    
-    try {
-      if (tabId) {
-        browser.action.setBadgeText({ text: modeDetails.text, tabId });
-        browser.action.setBadgeBackgroundColor({color: modeDetails.color, tabId});
-        browser.action.setTitle({title: `Beta Protection - ${modeDetails.title}`, tabId});
-      } else {
-        browser.action.setBadgeText({ text: modeDetails.text });
-        browser.action.setBadgeBackgroundColor({color: modeDetails.color});
-        browser.action.setTitle({title: `Beta Protection - ${modeDetails.title}`});
-      }
-    } catch {}
+      ? { text: '✔', color: 'green', title: 'Enabled' }
+      : { text: '💡', color: 'silver', title: 'On Demand Mode' }
+
+  try {
+    if (tabId) {
+      browser.action.setBadgeText({ text: modeDetails.text, tabId });
+      browser.action.setBadgeBackgroundColor({ color: modeDetails.color, tabId });
+      browser.action.setTitle({ title: `Beta Protection - ${modeDetails.title}`, tabId });
+    } else {
+      browser.action.setBadgeText({ text: modeDetails.text });
+      browser.action.setBadgeBackgroundColor({ color: modeDetails.color });
+      browser.action.setTitle({ title: `Beta Protection - ${modeDetails.title}` });
+    }
+  } catch { }
 }

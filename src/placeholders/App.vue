@@ -2,7 +2,7 @@
   <n-config-provider :theme-overrides="themeOverrides" :theme="theme">
     <n-notification-provider>
       <store-header v-if="preferences" :placeholders="placeholders" :preferences="preferences" style="height: calc(20vh - 3rem);" />
-      <store v-if="preferences" :preferences="preferences" :placeholders="placeholders" style="height: calc(80vh - 3rem);" />
+      <placeholder-store v-if="preferences" :preferences="preferences!" :placeholders="placeholders" style="height: calc(80vh - 3rem);" />
     </n-notification-provider>
     <n-global-style />
   </n-config-provider>
@@ -15,8 +15,8 @@ import { getAvailablePlaceholders, IExtensionPreferences } from '@/preferences';
 import { updateUserPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbg } from "@/util";
 import browser from 'webextension-polyfill';
-import StoreHeader from './StoreHeader.vue';
-import {Store} from '@/components/placeholders';
+// import StoreHeader from './StoreHeader.vue';
+import {Store as PlaceholderStore, StoreHeader} from '@/components/placeholders';
 import { useEventEmitter } from "@silveredgold/beta-shared-components";
 import { PlaceholderSet } from "./types";
 import { loadPreferencesStore } from "@/stores";

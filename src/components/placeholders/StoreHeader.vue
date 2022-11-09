@@ -59,9 +59,9 @@ import { NPageHeader, NGrid, NGi, NAvatar, NStatistic, NButton, NSpace, NIcon, u
 import { Settings, Refresh, AddCircle } from "@vicons/ionicons5";
 import { computed, inject, Ref, toRefs } from "vue";
 import { IExtensionPreferences } from "@/preferences";
-import { PlaceholderSet } from ".";
+import { PlaceholderSet } from "@/placeholders";
 import browser from 'webextension-polyfill';
-import { getEnabledFromSet } from "./util";
+import { getEnabledFromSet } from "@/placeholders/util";
 import { eventEmitter, ActionEvents } from "@/messaging";
 import PlaceholderUpload from "@/components/placeholders/PlaceholderUpload.vue"
 
