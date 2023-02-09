@@ -144,11 +144,12 @@ import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/components/placeholders/OpenStore.vue";
 import ExtensionInfo from "@/components/ExtensionInfo.vue";
+// import CensoringPreferences from "@/components/CensoringPreferences.vue";
 import { webExtensionNavigation } from "@/components/util";
 import browser from 'webextension-polyfill';
 import { OverridableOption } from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
-import { ImportExport, CensoringPreferences, VideoOptions, ConnectionStatus, ErrorOptions } from "@silveredgold/beta-shared-components";
+import { ImportExport,  VideoOptions, ConnectionStatus, ErrorOptions, CensoringPreferences } from "@silveredgold/beta-shared-components";
 import type { HostConfigurator } from '@silveredgold/beta-shared-components'
 const { openOverrides, openStatistics, openCensoring } = webExtensionNavigation;
 
@@ -161,7 +162,7 @@ const getHost: HostConfigurator = {
 }
 
 const osTheme = useOsTheme()
-const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null))
+const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null));
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
@@ -172,6 +173,7 @@ const prefs = computed(() => store.currentPreferences);
 const currentOverride = computed(() => store.currentOverride);
 
 const updatePrefs = async (preferences?: IExtensionPreferences) => {
+  dbgLog('saving preferences in Options', preferences);
   await store.save(preferences || prefs.value);
   return true;
 }
@@ -190,8 +192,13 @@ onBeforeMount(async () => {
 browser.runtime.onMessage.addListener((request, sender) => {
   if (request['msg'] === 'reloadPreferences') {
     setTimeout(() => {
-      console.log('reloading preferences for options view');
-      store.load();
+      dbgLog('reloading preferences for options view. SKIPPING!');
+      // browser.tabs.getCurrent().then(tab => {
+      //   if (!!tab) {
+      //     browser.tabs.reload(tab.id);
+      //   }
+      // });
+      // store.load();
       // getCurrentPrefs().then(prefs => {
       //   store.preferences = prefs;
       // });

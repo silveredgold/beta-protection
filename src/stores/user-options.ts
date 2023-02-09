@@ -4,6 +4,7 @@ import browser from 'webextension-polyfill';
 
 export interface UserOptions {
     forceOverwriteLocal?: boolean;
+    overrideAppliesToLocal?: boolean;
 }
 
 const saveOptions = async (prefs: UserOptions, skipClone: boolean = true) => {
@@ -13,12 +14,15 @@ const saveOptions = async (prefs: UserOptions, skipClone: boolean = true) => {
 
 export const useUserOptionsStore = (delayMs?: number) => defineStore('userOptions', {
     state: (): UserOptions => {
-        return { forceOverwriteLocal: false }
+        return { forceOverwriteLocal: false, overrideAppliesToLocal: false }
     },
     getters: {
         allowUnsafeLocal(): boolean {
             console.debug('returning from getter', this.forceOverwriteLocal);
             return this.forceOverwriteLocal !== true;
+        },
+        allowCustomLocalPreferences(): boolean {
+          return this.overrideAppliesToLocal !== true;
         }
     },
     actions: {
@@ -27,14 +31,20 @@ export const useUserOptionsStore = (delayMs?: number) => defineStore('userOption
             await saveOptions({forceOverwriteLocal: this.forceOverwriteLocal});
             await this.load();
         },
+        async enableOverridesOnLocal() {
+          this.overrideAppliesToLocal = true;
+          await saveOptions({overrideAppliesToLocal: this.overrideAppliesToLocal});
+          await this.load();
+        },
         async load() {
             const result = await browser.storage.local.get('userOptions');
             const storedPrefs = result['userOptions'] as UserOptions;
             console.debug('got back user options', result);
             this.forceOverwriteLocal = storedPrefs?.forceOverwriteLocal;
+            this.overrideAppliesToLocal = storedPrefs?.overrideAppliesToLocal;
             return this;
         }
-    }, 
+    },
     debounce: {}
 })();
 

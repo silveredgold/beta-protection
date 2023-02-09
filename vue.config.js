@@ -64,6 +64,15 @@ module.exports = {
         "#": '@silveredgold/beta-shared'
       }
     },
+    module: {
+      rules: [
+        {
+          test: /\.mjs$/,
+          include: /beta-components/,
+          type: 'javascript/auto'
+        }
+      ]
+    },
     plugins: [new CopyPlugin({
       // Use copy plugin to copy *.wasm to output folder.
       patterns: [{ from: 'node_modules/onnxruntime-web/dist/*.wasm', to: 'wasm/[name].[ext]', noErrorOnMissing: true },

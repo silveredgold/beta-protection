@@ -14,7 +14,16 @@
                     <template #header>Force overwriting local images</template>
                     <template #description><n-text>When censoring local images, you usually pick between overwriting or saving the censored images alongside the originals. With this enabled, you can <em>only</em> overwrite the originals.</n-text></template>
                 </n-thing>
-                <n-button @click="confirmOverwriteMode" :disabled="!options.allowUnsafeLocal">{{ options.allowUnsafeLocal ? 'Enable' : 'Activated' }}</n-button>
+                <n-button @click="() => confirmOverwriteMode()" :disabled="!options.allowUnsafeLocal">{{ options.allowUnsafeLocal ? 'Enable' : 'Activated' }}</n-button>
+            </n-space>
+        </div>
+        <div>
+            <n-space item-style="display: flex;" justify="space-between" align="center" :wrap="false">
+                <n-thing>
+                    <template #header>Overwrites apply to local censoring</template>
+                    <template #description><n-text>If you enable this option, any overrides you have active will <em>also apply to local censoring</em>. You won't be able to edit or customize censoring types for local images when you have an override active.</n-text></template>
+                </n-thing>
+                <n-button @click="() => confirmHardcoreOption(options.enableOverridesOnLocal)" :disabled="!options.allowCustomLocalPreferences">{{ options.allowCustomLocalPreferences ? 'Enable' : 'Activated' }}</n-button>
             </n-space>
         </div>
         <template #action>
@@ -35,6 +44,24 @@ const message = useMessage();
 const dialog = useDialog();
 const options = useUserOptionsStore();
 
+const confirmHardcoreOption = (action: () => Promise<any>, modeText?: string) => {
+  modeText = modeText || 'this hardcore option';
+    dialog.warning({
+          title: 'Enable',
+          content: 'Are you sure? This CANNOT BE UNDONE!',
+          positiveText: 'Confirm and Activate',
+          negativeText: 'Cancel',
+          onPositiveClick: () => {
+            action().then(() => {
+              message.success('Hardcore option activated!');
+            });
+          },
+          onNegativeClick: () => {
+
+          }
+        })
+}
+
 const confirmOverwriteMode = (modeText?: string) => {
     modeText = modeText || 'this hardcore option';
     dialog.warning({
@@ -43,11 +70,11 @@ const confirmOverwriteMode = (modeText?: string) => {
           positiveText: 'Confirm and Activate',
           negativeText: 'Cancel',
           onPositiveClick: () => {
-            options.enableForcedOverwriting().then(() => 
+            options.enableForcedOverwriting().then(() =>
             message.success('Hardcore option activated!'));
           },
           onNegativeClick: () => {
-            
+
           }
         })
 }

@@ -14,7 +14,7 @@
     "@octokit/request": "^6.2.2",
     "@silveredgold/beta-censor-client": "0.0.0-alpha16",
     "@silveredgold/beta-shared": "0.0.1-alpha32",
-    "@silveredgold/beta-shared-components": "0.0.1-alpha32",
+    "@silveredgold/beta-shared-components": "0.0.1-alpha34",
     "autoprefixer": "^9",
     "core-js": "^3.26.0",
     "crypto-js": "^4.1.1",

@@ -37,8 +37,11 @@
         <div v-if="currentStep == 1">
             <FileImportList action-help-text="Select a directory of images to censor" @files-loaded="onFilesLoaded" />
         </div>
-        <div v-if="currentStep == 2">
+        <div v-if="currentStep == 2 && !preferencesLocked">
             <censoring-preferences :preferences="(batchPreferences as IPreferences)" />
+        </div>
+        <div v-if="currentStep == 2 && preferencesLocked">
+            <locked-option title="Censoring options locked" />
         </div>
         <div v-if="currentStep == 3">
         <n-grid :cols="3">
@@ -71,11 +74,11 @@
         <n-grid-item :span="savedQueue.size > 0 ? 1 : 2" v-if="resultsQueue.size > 0">
             <FileList :files="listFiles" title="Censored Files">
             <template #action>
-            <n-dropdown 
-                trigger="click" 
-                :options="saveOptions" 
-                @select="onSelectSave" 
-                placement="bottom-end" 
+            <n-dropdown
+                trigger="click"
+                :options="saveOptions"
+                @select="onSelectSave"
+                placement="bottom-end"
                 :disabled="jobQueue.size != 0"
                 :show-arrow="true">
                 <n-button :disabled="jobQueue.size != 0" type="success" size="large" >Save...</n-button>
@@ -98,10 +101,11 @@
 <script setup lang="ts">
 
 import type { IPreferences } from '@/preferences';
-import { NList, NListItem, NCard, NGrid, NGridItem, NSpace, NButton, NDropdown, NSteps, NStep, NThing, NPopconfirm, NAlert, NText, NSpin, NIcon, NIconWrapper, NDataTable, DataTableColumns } from "naive-ui"; 
+import { NList, NListItem, NCard, NGrid, NGridItem, NSpace, NButton, NDropdown, NSteps, NStep, NThing, NPopconfirm, NAlert, NText, NSpin, NIcon, NIconWrapper, NDataTable, DataTableColumns } from "naive-ui";
 import { computed, ComputedRef, h, reactive, Ref, ref, toRefs, onBeforeMount } from 'vue';
 import { CensoringPreferences, FileImportList, services, useBackendTransport, FileList, RequestQueue } from "@silveredgold/beta-shared-components";
 import { useUserOptionsStore } from '@/stores'
+import { LockedOption } from "@/components/overrides";
 import type { DirectoryFile, DirectoryFileList } from '@silveredgold/beta-shared-components/lib/services';
 import type { IFileEntry } from '@silveredgold/beta-shared-components/lib/components';
 import { ICensorBackend, ImageCensorResponse } from '@silveredgold/beta-shared/transport';
@@ -109,6 +113,7 @@ import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface';
 import clone from 'just-clone';
 import { dbgLog } from '@/util';
 import { storeToRefs } from 'pinia';
+import { OverrideService } from '@/services/override-service';
 const { BatchCensorService } = services;
 
 const props = defineProps<{
@@ -118,7 +123,9 @@ const props = defineProps<{
 const store = useUserOptionsStore();
 
 const {preferences} = toRefs(props);
-const { allowUnsafeLocal } = storeToRefs(store);
+const { allowUnsafeLocal, allowCustomLocalPreferences } = storeToRefs(store);
+const service = reactive(await OverrideService.create());
+
 
 
 // const batchPreferences = clone(preferences);
@@ -138,6 +145,11 @@ const currentComplete = computed(() => [...resultsQueue.value.values()].map(v =>
 // const savedFiles = computed(() => [...savedQueue.value.values()].map(v => v.path));
 const listFiles: ComputedRef<IFileEntry[]> = computed(() => [...resultsQueue.value.values()].map((v): IFileEntry => {return {key: v.handle.name, imageSrc: v.url, completed: true}}));
 const savedFiles = computed(() => [...savedQueue.value.values()].map((v): IFileEntry => {return {key: v.path, completed: true}}))
+
+const active = ref(service.active);
+const preferencesLocked = computed(() => {
+  return !allowCustomLocalPreferences.value && active.value;
+})
 
 const saveOptions = computed(() => {
     const base: DropdownMixedOption[] = [

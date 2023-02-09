@@ -43,6 +43,7 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
             return this.currentPreferences
         },
         async save(prefs?: IExtensionPreferences, skipClone: boolean = false) {
+            dbgLog('in store save', prefs);
             prefs = prefs || this.currentPreferences;
             if (prefs) {
                 dbg(`calling service`, prefs.mode);
@@ -79,7 +80,7 @@ export const loadPreferencesStore = async (delayMs?: number) => {
 
 export class PreferencesService {
 
-    basePreferences: IExtensionPreferences 
+    basePreferences: IExtensionPreferences
     override?: IOverride<IExtensionPreferences>
     allowedModes: OperationMode[];
     /**
