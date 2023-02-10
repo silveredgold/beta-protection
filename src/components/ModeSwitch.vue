@@ -18,7 +18,7 @@
 import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
 import { IPreferences, OperationMode, IExtensionPreferences } from '@/preferences';
-import { dbg, setModeBadge } from "@/util"
+import { dbg, dbgLog, setModeBadge } from "@/util"
 import { usePreferencesStore } from '@/stores';
 
 const notif = useNotification();
@@ -42,7 +42,7 @@ const updateMode = async () => {
 onMounted(getCurrentMode);
 
 watch(mode, async (newMode, prevMode) => {
-    // console.log(`values: ${prevMode}->${newMode}`);
+    dbgLog(`values: ${prevMode}->${newMode}`);
     if (prevMode && (prevMode as string) !== "") {
     await updateMode();
     const n = notif.create({

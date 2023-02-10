@@ -49,7 +49,7 @@
   </n-notification-provider>
   <n-global-style />
 </n-config-provider>
-  
+
 </template>
 
 <script setup lang="ts">
@@ -87,7 +87,7 @@ const prefs = computed(() => store.currentPreferences);
 
 const updatePrefs = async (preferences?: IExtensionPreferences) => {
   // var err = new Error();
-  dbgLog(`queuing prefs save`);
+  dbgLog(`queuing prefs save`, preferences);
   // console.trace();
   await store.save(preferences);
   return true;

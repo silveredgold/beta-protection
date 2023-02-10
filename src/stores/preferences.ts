@@ -60,7 +60,7 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
                 this.currentPreferences.mode = mode;
                 await this.save({...this.currentPreferences, mode});
             }
-            await this.load();
+            // await this.load();
             setModeBadge(this.currentPreferences!.mode);
         }
     }, debounce: {save: delayMs || 400}
