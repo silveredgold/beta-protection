@@ -47,7 +47,9 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
             prefs = prefs || this.currentPreferences;
             if (prefs) {
                 dbg(`calling service`, prefs.mode);
-                await this.$service.save(prefs, skipClone);
+                await this.$service.save(prefs, skipClone).then(async () => {
+                  await this.load();
+                });
             }
         },
         async merge(prefs: Partial<IPreferences>, preferSaved: boolean = true) {

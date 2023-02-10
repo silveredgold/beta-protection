@@ -1,5 +1,7 @@
+import { dbgLog } from "@/util";
 import clone from "just-clone";
 import { defineStore } from "pinia";
+import { toRaw, unref } from "vue";
 import browser from 'webextension-polyfill';
 
 export interface UserOptions {
@@ -28,12 +30,16 @@ export const useUserOptionsStore = (delayMs?: number) => defineStore('userOption
     actions: {
         async enableForcedOverwriting() {
             this.forceOverwriteLocal = true;
-            await saveOptions({forceOverwriteLocal: this.forceOverwriteLocal});
+            const currentState = toRaw(unref(this.$state));
+            // dbgLog('state', currentState)
+            await saveOptions(currentState);
             await this.load();
         },
         async enableOverridesOnLocal() {
           this.overrideAppliesToLocal = true;
-          await saveOptions({overrideAppliesToLocal: this.overrideAppliesToLocal});
+          const currentState = toRaw(unref(this.$state));
+            // dbgLog('state', currentState);
+          await saveOptions(currentState);
           await this.load();
         },
         async load() {
