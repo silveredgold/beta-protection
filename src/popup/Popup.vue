@@ -42,7 +42,7 @@
   </n-page-header>
   <connection-status :compact="true" :host-config="getHost" />
   <mode-switch />
-  <overridable-option :option="currentOverride?.preferences?.videoCensorMode">
+  <overridable-option :option="currentOverride?.preferences?.videoCensorMode" title="Video Censoring">
     <video-options :preferences="prefs" :compact="true" />
   </overridable-option>
   </n-card>
@@ -78,12 +78,13 @@ const getHost: HostConfigurator = {
 
 const iconSrc = browser.runtime.getURL('/images/icon.png');
 
-const currentOverride: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
+// const currentOverride: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 
 const store = usePreferencesStore();
 
 //component setup
 const prefs = computed(() => store.currentPreferences);
+const currentOverride = computed(() => store.currentOverride);
 
 const updatePrefs = async (preferences?: IExtensionPreferences) => {
   // var err = new Error();

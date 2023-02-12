@@ -4,6 +4,7 @@ import { eventEmitterPlugin } from "@silveredgold/beta-shared-components";
 import { createPinia } from "pinia";
 import { DebouncePlugin } from "./stores/debounce";
 import AsyncView from "./views/AsyncView.vue"
+import { PersistencePlugin } from "./stores/persistent";
 
 export function createBetaApp(rootComponent: Component, options: {unwrapInjected?: boolean, enableBackend?: boolean, enableEvents?: boolean, disableStore?: boolean} = {}) {
     const app = createApp(rootComponent);
@@ -19,6 +20,7 @@ export function createBetaApp(rootComponent: Component, options: {unwrapInjected
     if (!options.disableStore) {
         const pinia = createPinia();
         pinia.use(DebouncePlugin);
+        pinia.use(PersistencePlugin)
         app.use(pinia);
     }
     return app;
