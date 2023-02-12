@@ -1,4 +1,5 @@
 import { dbg, dbgLog } from "@/util";
+import clone from "just-clone";
 import { PiniaCustomProperties, PiniaCustomStateProperties, PiniaPlugin, PiniaPluginContext } from "pinia";
 import browser from 'webextension-polyfill';
 
@@ -14,6 +15,7 @@ export const PersistencePlugin: PiniaPlugin = async (context: PiniaPluginContext
     const keys = Object.keys(changes);
     if (area === 'local' && keys.includes(stateStorageId) ) {
       console.log('local change: storage ' + context.store.$id, area, changes);
+      context.store.$patch(changes[stateStorageId].newValue);
     }
     // browser.runtime.sendMessage({msg: `storageChange:${area}`, keys, changes});
     // PreferencesService.create().then(ep => setModeBadge(ep.mode)).catch(() => console.debug('failed to set mode badge'));
@@ -54,6 +56,7 @@ export const PersistencePlugin: PiniaPlugin = async (context: PiniaPluginContext
     )
     context.store.$subscribe(() => {
       dbgLog('updating persistent -state store');
-      browser.storage.local.set({[`${context.store.$id}-state`]: {...context.store.$state}});
+      const clonedPrefs = clone({...context.store.$state});
+      browser.storage.local.set({[`${context.store.$id}-state`]: clonedPrefs});
     });
 };

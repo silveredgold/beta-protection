@@ -9,10 +9,10 @@ export interface UserOptions {
     overrideAppliesToLocal?: boolean;
 }
 
-const saveOptions = async (prefs: UserOptions, skipClone: boolean = true) => {
-    const clonedPrefs = skipClone ? prefs : clone(prefs!);
-    await browser.storage.local.set({ 'userOptions': clonedPrefs });
-};
+// const saveOptions = async (prefs: UserOptions, skipClone: boolean = true) => {
+//     const clonedPrefs = skipClone ? prefs : clone(prefs!);
+//     await browser.storage.local.set({ 'userOptions': clonedPrefs });
+// };
 
 export const useUserOptionsStore = (delayMs?: number) => defineStore('userOptions', {
     state: (): UserOptions => {
@@ -32,22 +32,22 @@ export const useUserOptionsStore = (delayMs?: number) => defineStore('userOption
             this.forceOverwriteLocal = true;
             const currentState = toRaw(unref(this.$state));
             // dbgLog('state', currentState)
-            await saveOptions(currentState);
-            await this.load();
+            // await saveOptions(currentState);
+            // await this.load();
         },
         async enableOverridesOnLocal() {
           this.overrideAppliesToLocal = true;
           const currentState = toRaw(unref(this.$state));
             // dbgLog('state', currentState);
-          await saveOptions(currentState);
-          await this.load();
+          // await saveOptions(currentState);
+          // await this.load();
         },
         async load() {
-            const result = await browser.storage.local.get('userOptions');
-            const storedPrefs = result['userOptions'] as UserOptions;
-            console.debug('got back user options', result);
-            this.forceOverwriteLocal = storedPrefs?.forceOverwriteLocal;
-            this.overrideAppliesToLocal = storedPrefs?.overrideAppliesToLocal;
+            // const result = await browser.storage.local.get('userOptions');
+            // const storedPrefs = result['userOptions'] as UserOptions;
+            // console.debug('got back user options', result);
+            // this.forceOverwriteLocal = storedPrefs?.forceOverwriteLocal;
+            // this.overrideAppliesToLocal = storedPrefs?.overrideAppliesToLocal;
             return this;
         }
     },
