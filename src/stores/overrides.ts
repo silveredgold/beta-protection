@@ -20,7 +20,7 @@ export type OverrideResult = {
 //     await browser.storage.local.set({ 'userOptions': clonedPrefs });
 // };
 
-export const useOverrideStore = (pinia?: Pinia | null | undefined) => defineStore('override', {
+export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: boolean) => defineStore('override', {
   state: (): Partial<IOverride<IExtensionPreferences>> => {
     return {}
   },
@@ -29,7 +29,8 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined) => defineStor
       const state = (ctx as any).$state;
       return !!state.id;
     },
-    currentOverride(state): IOverride<IExtensionPreferences> {
+    currentOverride(ctx): IOverride<IExtensionPreferences> {
+      const state = (ctx as any).$state;
       return { ...state } as IOverride<IExtensionPreferences>;
     },
     currentId(ctx): string {
@@ -107,7 +108,8 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined) => defineStor
       this.$state = currentOverride;
     }
   },
-  debounce: {}
+  debounce: {},
+  readOnly
 })(pinia);
 
 const loadOverrides = async () => {

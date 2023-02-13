@@ -4,6 +4,7 @@ import { DbClient } from "./db-client";
 import browser from 'webextension-polyfill';
 import { PreferencesService } from "@/stores";
 import { dbg } from "@/util";
+import { waitForPreferencesStore } from "@/stores/util";
 
 export class SubliminalService {
     /**
@@ -54,7 +55,7 @@ export class SubliminalService {
     }
 
     injectSubliminalScript = async (tab: browser.Tabs.Tab) => {
-        const store = await PreferencesService.create();
+        const store = await waitForPreferencesStore();
         const prefs = store.currentPreferences;
         const msgs = await this.getMessages();
         if (prefs?.subliminal?.enabled && tab.id) {
@@ -76,7 +77,7 @@ export class SubliminalService {
 
     private runSubliminal = (prefs: IExtensionPreferences, messages: string[]) => {
 
-        
+
 
 
         const opts = prefs.subliminal;

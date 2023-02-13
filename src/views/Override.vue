@@ -8,7 +8,7 @@
                     <template #fallback>
                         Loading...
                     </template>
-                        <override-details :override="current" />
+                        <override-details />
                 </Suspense>
             </n-tab-pane>
             <n-tab-pane name="create" tab="Create New">
@@ -40,20 +40,20 @@ const osTheme = useOsTheme()
 const theme = computed(() => (osTheme.value === 'dark' ? darkTheme : null));
 const events = useEventEmitter();
 
-const svc: Ref<OverrideService|undefined> = ref(undefined);
+// const svc: Ref<OverrideService|undefined> = ref(undefined);
 
 const current: Ref<IOverride<IExtensionPreferences>|undefined> = ref(undefined);
 
-onBeforeMount(async () => {
-    await onUpdate();
-});
+// onBeforeMount(async () => {
+//     await onUpdate();
+// });
 
-const onUpdate = async () => {
-    const service = await OverrideService.create();
-    dbg('onUpdate', service);
-    svc.value = service;
-    current.value = service.current;
-}
+// const onUpdate = async () => {
+//     const service = await OverrideService.create();
+//     dbg('onUpdate', service);
+//     // svc.value = service;
+//     current.value = service.current;
+// }
 
 // events.on('reload', evt => {
 //   console.log('got emitter event', evt);
@@ -62,14 +62,14 @@ const onUpdate = async () => {
 //   }
 // });
 
-provide(overrideService, computed(() => svc.value) as unknown);
+// provide(overrideService, computed(() => svc.value) as unknown);
 
 browser.runtime.onMessage.addListener((msg, sender) => {
     if (msg.msg == 'storageChange:local' && msg.keys && msg.keys.includes('override')) {
         events?.emit('reload', 'override');
     }
     if (msg.msg == 'reloadOverride') {
-        svc?.value?.reload();
+        // svc?.value?.reload();
     }
 });
 

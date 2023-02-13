@@ -2,8 +2,10 @@ import { defaultExtensionPrefs, IExtensionPreferences, IOverride, IPreferences, 
 import { OverrideService } from "@/services/override-service";
 import { dbg, dbgLog, setModeBadge } from "@/util";
 import clone from "just-clone";
-import { defineStore } from "pinia";
+import { defineStore, Pinia } from "pinia";
 import browser from 'webextension-polyfill';
+import { useOverrideStore } from "./overrides";
+import { getPinia } from "./util";
 
 export interface ExtensionState {
     basePreferences?: IExtensionPreferences;
@@ -12,9 +14,9 @@ export interface ExtensionState {
     $service: PreferencesService
 }
 
-export const buildPreferencesStore = (delayMs?: number) => defineStore('preferences', {
+export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undefined, readOnly?: boolean|undefined) => defineStore('preferencesStore', {
     state: (): ExtensionState => {
-        return { basePreferences: undefined!, override: undefined, allowedModes: [], $service: undefined! }
+        return { basePreferences: undefined!, allowedModes: [], $service: undefined! }
     },
     getters: {
         mode(): OperationMode {
@@ -24,11 +26,20 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
             return this.basePreferences?.mode || OperationMode.Enabled;
         },
         currentPreferences(): IExtensionPreferences {
-            return this.$service?.currentPreferences!;
+            // return this.$service?.currentPreferences!;
+            const storedPrefs = this.basePreferences;
+            const overridePrefs = this.currentOverride?.preferences;
+            const merged: IExtensionPreferences = {
+                ...storedPrefs!,
+                ...overridePrefs
+            };
+            setModeBadge(merged.mode);
+            return merged;
         }, currentOverride(): IOverride<IExtensionPreferences> | undefined {
-            return this.override;
-        }, overridePreferences(): Partial<IExtensionPreferences> | undefined {
-            return this.currentOverride?.preferences;
+          const overrideStore = useOverrideStore(undefined, true);
+          console.log('pulling overrides from store in preferences getter', overrideStore.isOverrideActive, overrideStore.currentOverride);
+          const overridePrefs = overrideStore.isOverrideActive ? overrideStore.currentOverride : undefined;
+          return overridePrefs;
         }
     },
     actions: {
@@ -65,8 +76,8 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
             // await this.load();
             setModeBadge(this.currentPreferences!.mode);
         }
-    }, debounce: {save: delayMs || 400}
-})();
+    }, debounce: {save: delayMs || 400}, readOnly
+})(pinia);
 
 export const usePreferencesStore = buildPreferencesStore;
 
@@ -95,8 +106,8 @@ export class PreferencesService {
     }
 
     static async create() {
-        const { basePreferences, allowedModes, override } = await PreferencesService.load();
-        return new PreferencesService(basePreferences, allowedModes, override);
+        const { basePreferences, allowedModes} = await PreferencesService.load();
+        return new PreferencesService(basePreferences, allowedModes, undefined);
     }
 
     async merge(newPrefs: Partial<IPreferences>, preferSaved: boolean = true) {
@@ -132,13 +143,15 @@ export class PreferencesService {
         const result = await browser.storage.local.get('preferences');
             const storedPrefs = result['preferences'] as IExtensionPreferences;
             const basePreferences = storedPrefs;
-            const overService = await OverrideService.create();
+            const overStore = useOverrideStore(getPinia(), true);
+            //TODO: re-enable this
+            debugger;
             let override: IOverride<IExtensionPreferences>|undefined = undefined;
             let allowedModes = [OperationMode.Enabled, OperationMode.OnDemand, OperationMode.Disabled]
-            if (storedPrefs && storedPrefs.mode && overService.active) {
-                override = overService.current;
-                if (overService.current && overService.current.allowedModes.length > 0) {
-                    allowedModes = overService.current.allowedModes;
+            if (storedPrefs && storedPrefs.mode && overStore.isOverrideActive) {
+                override = overStore.currentOverride;
+                if (override && override.allowedModes.length > 0) {
+                    allowedModes = override.allowedModes;
                 }
             }
             return {

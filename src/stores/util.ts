@@ -6,31 +6,20 @@ import { InitializePlugin, PersistencePlugin } from "./persistent";
 import { usePreferencesStore } from "./preferences";
 import Container from "@/components/Container.vue"
 
-export const loadPreferencesPlugin = async () => {
-  const app = createApp(null!);
-  const pinia = createPinia();
-  pinia.use(PersistencePlugin);
-  pinia.use(DebouncePlugin);
-  pinia.use(InitializePlugin);
-  setActivePinia(pinia);
-  app.use(pinia);
-
-  const preferencesStore = usePreferencesStore(undefined, pinia);
-  console.log('got pinia state for preferences', preferencesStore.$state);
-  await (preferencesStore as any).ready;
-  console.log('finished waiting for preferences to be ready');
-  return preferencesStore;
-}
-
-export const getPreferencesPlugin = () => {
+export const getPreferencesStore = (readOnly: boolean = true) => {
   const app = createApp(Container);
   const pinia = getPinia();
   // setActivePinia(pinia);
   app.use(pinia);
 
-  const preferencesStore = usePreferencesStore(undefined, pinia);
-  console.log('got pinia state for preferences direct', preferencesStore.$state);
+  const preferencesStore = usePreferencesStore(undefined, pinia, readOnly);
   return preferencesStore;
+}
+
+export const waitForPreferencesStore = async (readOnly: boolean = true) => {
+  const store = getPreferencesStore(readOnly);
+  await store.ready;
+  return store;
 }
 
 let piniaInstance: Pinia|null = null

@@ -3,7 +3,7 @@ import { IPreferences } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
 import { dbgLog, getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
-import { loadPreferencesStore, PreferencesService } from "@/stores";
+import { waitForPreferencesStore } from "@/stores/util";
 
 export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
     event: 'censorRequest',
@@ -15,7 +15,7 @@ export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
         } else if (message.preferences !== undefined) {
             preferences = message.preferences as IPreferences;
         } else {
-            const store = await PreferencesService.create();
+            const store = await waitForPreferencesStore();
             preferences = store.currentPreferences;
             // dbgLog('had to fall back to store-loaded preferences', preferences);
         }
@@ -43,7 +43,7 @@ export const MSG_INJECT_CSS: RuntimeEvent<void> = {
         console.debug('CSS injection request', sender)
         const tabId = sender.tab?.id;
         if (tabId) {
-          const prefs = (request.preferences as IPreferences) ?? (await PreferencesService.create()).currentPreferences;
+          const prefs = (request.preferences as IPreferences) ?? (await waitForPreferencesStore()).currentPreferences;
           const css = new CSSManager(tabId, prefs);
           console.debug(`injecting CSS to ${tabId}`, prefs);
         //   await css.removeCSS();
@@ -71,7 +71,7 @@ export const MSG_INJECT_SUBLIMINAL_CSS: RuntimeEvent<void> = {
         const tabId = sender.tab?.id;
         // console.debug(`got injectCSS for ${tabId}`);
         if (tabId) {
-          const prefs = (request.preferences as IPreferences) ?? (await PreferencesService.create()).currentPreferences;
+          const prefs = (request.preferences as IPreferences) ?? (await waitForPreferencesStore()).currentPreferences;
           const css = new CSSManager(tabId, prefs);
           console.debug(`injecting CSS to ${tabId}`, prefs);
           await css.removeSubliminal();

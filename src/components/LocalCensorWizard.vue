@@ -113,7 +113,7 @@ import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface';
 import clone from 'just-clone';
 import { dbgLog } from '@/util';
 import { storeToRefs } from 'pinia';
-import { OverrideService } from '@/services/override-service';
+import { useOverrideStore } from '@/stores/overrides';
 const { BatchCensorService } = services;
 
 const props = defineProps<{
@@ -124,7 +124,7 @@ const store = useUserOptionsStore();
 
 const {preferences} = toRefs(props);
 const { allowUnsafeLocal, allowCustomLocalPreferences } = storeToRefs(store);
-const service = reactive(await OverrideService.create());
+const overStore = useOverrideStore();
 
 
 
@@ -146,7 +146,7 @@ const currentComplete = computed(() => [...resultsQueue.value.values()].map(v =>
 const listFiles: ComputedRef<IFileEntry[]> = computed(() => [...resultsQueue.value.values()].map((v): IFileEntry => {return {key: v.handle.name, imageSrc: v.url, completed: true}}));
 const savedFiles = computed(() => [...savedQueue.value.values()].map((v): IFileEntry => {return {key: v.path, completed: true}}))
 
-const active = ref(service.active);
+const active = computed(() => overStore.isOverrideActive);
 const preferencesLocked = computed(() => {
   return !allowCustomLocalPreferences.value && active.value;
 })
