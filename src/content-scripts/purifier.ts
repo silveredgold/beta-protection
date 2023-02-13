@@ -9,7 +9,7 @@ import { ImageTracker } from "./image-tracker";
 
 export class Purifier {
     private _currentState: CensoringState;
-    
+
     private _backlog : boolean = false;
     private _port: browser.Runtime.Port | undefined;
     private _portFaulted: boolean = false;
@@ -31,7 +31,7 @@ export class Purifier {
         this._backlog = false;
         this._start();
     });
-    
+
     private _placeholders: LocalPlaceholder[];
     private _domain: any;
     private _ready: boolean;
@@ -42,12 +42,12 @@ export class Purifier {
         this._ready = v;
     }
 
-    
+
     private _urlTransformers : ((url: string) => string)[] = [];
     public get urlTransformers() : ((url: string) => string)[] {
         return this._urlTransformers;
     }
-    
+
     private _videoOptions: VideoCensoringOptions;
     /**
      *
@@ -68,7 +68,6 @@ export class Purifier {
         }
     }
 
-    
     public get port() : browser.Runtime.Port | undefined {
         return this._port;
     }
@@ -76,7 +75,6 @@ export class Purifier {
         this._port = v;
     }
 
-    
     private _hideDomains : boolean = false;
     public get hideDomains() : boolean {
         return this._hideDomains;
@@ -84,14 +82,12 @@ export class Purifier {
     public set hideDomains(v : boolean) {
         this._hideDomains = v;
     }
-    
 
     private getPlaceholderSrc = () => {
         let placeholder = browser.runtime.getURL('/images/loading.png');
         if (this._placeholders.length && this._placeholders.length > 0) {
             try {
             const random = getRandom(this._placeholders);
-            
             const src = PlaceholderService.toSrc(random);
             placeholder = src ? src : placeholder;
             } catch {
@@ -338,20 +334,11 @@ export class Purifier {
     }
 
     private censorStyleImage = (img: ImageStyleElement) => {
-        if (img.imageUrl) {
+      const box = img.element.getBoundingClientRect();
+      const largeElement = (box.height * box.width) > 15000 && box.height > 50 && box.width > 50
+        if (img.imageUrl && largeElement) {
             const imageURL = this.normalizeUrl(img.imageUrl);
             if (isValidUrl(imageURL) && !imageURL.includes(".svg") && this.isUnsafe(img.element)) {
-                // const image = new Image();
-
-                // just in case it is not already loaded
-                // image.addEventListener('load', () => {
-                //     if (image.width * image.height > 15000 && image.width > 100 && image.height > 100) {
-                        
-                //     } else {
-                //         this.setExcluded(img.element, 'size');
-                //     }
-                // }, { once: true });
-                // image.src = imageURL;
                 const uniqueID = generateUUID();
                 img.element.setAttribute('censor-id', uniqueID);
                 if (this._currentState && this._currentState.activeCensoring) {
@@ -444,7 +431,6 @@ const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: Ima
                 requestElement.removeAttribute('srcset');
                 requestElement.setAttribute('censor-state', 'censored');
                 requestElement.toggleAttribute('censor-placeholder', false);
-                
             } else {
                 (requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
                 requestElement.setAttribute('censor-style', 'censored');
