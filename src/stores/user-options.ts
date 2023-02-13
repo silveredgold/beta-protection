@@ -1,6 +1,6 @@
 import { dbgLog } from "@/util";
 import clone from "just-clone";
-import { defineStore } from "pinia";
+import { defineStore, Pinia } from "pinia";
 import { toRaw, unref } from "vue";
 import browser from 'webextension-polyfill';
 
@@ -14,7 +14,7 @@ export interface UserOptions {
 //     await browser.storage.local.set({ 'userOptions': clonedPrefs });
 // };
 
-export const useUserOptionsStore = (delayMs?: number) => defineStore('userOptions', {
+export const useUserOptionsStore = (pinia?: Pinia|null|undefined) => defineStore('userOptions', {
     state: (): UserOptions => {
         return { forceOverwriteLocal: false, overrideAppliesToLocal: false }
     },
@@ -52,7 +52,7 @@ export const useUserOptionsStore = (delayMs?: number) => defineStore('userOption
         }
     },
     debounce: {}
-})();
+})(pinia);
 
 const loadUserOptions = async () => {
     const store = useUserOptionsStore();

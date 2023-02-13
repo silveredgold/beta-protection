@@ -14,9 +14,9 @@
                                     <n-icon style="margin-top: auto; margin-bottom: auto;" :component="HelpCircleOutline" :size="30" />
                                 </template>
                                 <n-thing title="Override Details">
-                                    Current Override ID: {{getId()}}
+                                    Current Override ID: {{store.currentId}}
                                     <template #footer>
-                                          <n-text v-if="service?.current?.activatedTime">Activated <n-time :time="service.current.activatedTime" :to="currentTime" type="relative" /></n-text>
+                                          <n-text v-if="store?.activatedTime">Activated <n-time :time="store.activatedTime" :to="currentTime" type="relative" /></n-text>
                                     </template>
                                 </n-thing>
                             </n-popover>
@@ -78,41 +78,41 @@ import { computed, inject, reactive, ref, Ref, toRefs, watch } from 'vue';
 import { webExtensionNavigation } from "@/components/util";
 import { eventEmitter } from "@/messaging";
 import { dbg } from '@/util';
+import { useOverrideStore } from '@/stores/overrides';
 
-const props = defineProps<{
-    override: IOverride<IExtensionPreferences> | undefined
-}>();
+// const props = defineProps<{
+//     // override: IOverride<IExtensionPreferences> | undefined
+// }>();
 
 // const svc = await OverrideService.create();
-const service = reactive(await OverrideService.create());
+// const service = reactive(await OverrideService.create());
+const store = useOverrideStore();
 const notif = useNotification();
 
 const emitter = inject(eventEmitter);
 
-const { override } = toRefs(props);
+// const { override } = toRefs(props);
 const currentTime = computed(() => new Date().getTime());
 
-const timeRemaining: Ref<number> = ref(service.getTimeRemaining());
+const timeRemaining: Ref<number> = computed(() => store.timeRemaining);
 
 // const svc = inject(overrideService)
-watch(service, async (newMode, prevMode) => {
-    active.value = newMode.active;
-}, { deep: true });
+// watch(service, async (newMode, prevMode) => {
+//     active.value = newMode.active;
+// }, { deep: true });
 
-const serviceReady = computed(() => service !== undefined);
-const getId = () => {
-    return service?.current?.id ?? "Unknown";
-}
+const serviceReady = computed(() => store.$state !== undefined);
 
-const active = ref(service.active);
+const active = computed(() => !!store.$state.id);
 
 const unlockKey: Ref<string> = ref('');
 
 emitter?.on('reload', (evt) => {
     dbg('reloading override details from event');
     if (evt == 'override') {
-        active.value = service.active;
-        timeRemaining.value = service.getTimeRemaining();
+      //the store should do this for us
+        // active.value = service.active;
+        // timeRemaining.value = service.getTimeRemaining();
     }
 });
 
@@ -124,7 +124,7 @@ const onUpdate = async () => {
 }
 
 const importOverride = async () => {
-    const result = await service?.importOverride();
+    const result = await store?.importOverride();
     dbg('import result', result);
     if (notif) {
         notif.create({
@@ -138,7 +138,7 @@ const importOverride = async () => {
 }
 
 const disableCurrent = async () => {
-    const result = await service.tryDisable(unlockKey.value);
+    const result = await store.tryDisable(unlockKey.value);
     if (notif) {
         notif.create({
             type: result?.code == 200 ? 'success' : 'error',
