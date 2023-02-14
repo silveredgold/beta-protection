@@ -15,24 +15,30 @@
     </n-card>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive, Ref, ref, watch } from 'vue';
+import { computed, onMounted, reactive, Ref, ref, watch } from 'vue';
 import { NCard, NRadioGroup, NRadioButton, useNotification } from "naive-ui";
 import { IPreferences, OperationMode, IExtensionPreferences } from '@/preferences';
 import { dbg, dbgLog, setModeBadge } from "@/util"
 import { usePreferencesStore } from '@/stores';
+import { MutationType } from 'pinia';
 
 const notif = useNotification();
 const mode: Ref<OperationMode> = ref("" as OperationMode);
 const store = usePreferencesStore();
 
+store.$subscribe((mutation, state) => {
+  mode.value = store.mode;
+});
+
 
 const getCurrentMode = async () => {
-    await store.load();
+  await store.ready;
+    // await store.load();
     mode.value = store.mode;
-    allowedModes.value = store.allowedModes;
 }
 
-const allowedModes: Ref<OperationMode[]> = ref([]);
+// const mode: Ref<OperationMode> = computed(() => store.mode);
+const allowedModes: Ref<OperationMode[]> = computed(() => store.allowedModes);
 
 const updateMode = async () => {
     dbg(`saving new mode ${mode.value}`);

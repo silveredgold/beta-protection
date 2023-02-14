@@ -38,8 +38,6 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: bo
       return state.id ?? "Unknown";
     },
     timeRemaining(ctx): number {
-      debugger;
-      console.debug('state', ctx);
       const state = (ctx as any).$state;
       if (state === undefined) { return 0 };
       if (state.activatedTime !== undefined && state.activatedTime > 0 &&
@@ -68,7 +66,7 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: bo
             return { success: false, code: 422, message: 'Override has been modified!' }
           }
           override.activatedTime = new Date().getTime();
-          this.$state = override;
+          this.$patch({...override});
           // browser.storage.local.set({ 'override': override });
           return { success: true, code: 200, message: 'Override loaded and saved!' };
         }
@@ -78,7 +76,6 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: bo
       }
     },
     async tryDisable(keyPhrase: string): Promise<OverrideResult> {
-      debugger;
       if (!this.$state.id) {
         return { success: true, code: 204, message: 'There is no override active!' };
       }
@@ -93,7 +90,8 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: bo
         const candidate = bytes.toString(enc.Utf8);
         if (candidate === id) {
           // await browser.storage.local.remove('override');
-          this.$state = {id: undefined};
+          this.$patch({id: undefined, activatedTime: undefined, hash: undefined, key: undefined, preferences: undefined});
+          // this.$reset();
           return { success: true, code: 200, message: 'Override successfully disabled!' };
         } else {
           return { success: false, code: 403, message: 'Unlock key did not match!' };

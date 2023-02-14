@@ -55,8 +55,6 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
   // const store = await service;
 	await service;
 	const preferences = store.currentPreferences;
-	// const confPrefs = await browser.storage.local.get('preferences');
-	// const preferences = confPrefs['preferences'] as IPreferences;
 	const placeholders: any = await browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event});
 	// const newProm = new Promise(resolve => {
 	// 	browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event}, resp => resolve(resp));

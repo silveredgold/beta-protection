@@ -18,7 +18,6 @@ export function processContextClick(info: browser.Menus.OnClickData, tab: browse
     dbgLog('prcessing context click event', info, tab);
     if (tab && info.menuItemId === CMENU_REDO_CENSOR) {
         browser.tabs.sendMessage(tab.id!, {msg: CMENU_REDO_CENSOR}).then(value => {
-          debugger;
             if (value !== undefined && value?.id) {
                 waitForPreferencesStore().then(store => {
                     const prefs = store.currentPreferences;

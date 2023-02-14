@@ -4,10 +4,9 @@ import { createApp } from "vue";
 import { DebouncePlugin } from "./debounce";
 import { InitializePlugin, PersistencePlugin } from "./persistent";
 import { usePreferencesStore } from "./preferences";
-import Container from "@/components/Container.vue"
 
 export const getPreferencesStore = (readOnly: boolean = true) => {
-  const app = createApp(Container);
+  const app = createApp(null!);
   const pinia = getPinia();
   // setActivePinia(pinia);
   app.use(pinia);

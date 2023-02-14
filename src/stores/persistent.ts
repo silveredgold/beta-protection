@@ -57,7 +57,11 @@ export const PersistencePlugin: PiniaPlugin = (context: PiniaPluginContext): Par
   browser.storage.local.get(stateStorageId).then(stored => {
     if (stored) {
       dbgLog(`patching ${stateStorageId} with hydrated state`, context.store.$state, stored[stateStorageId]);
-      context.store.$patch(stored[stateStorageId]);
+      if (context.options.subKey) {
+        context.store.$patch({[context.options.subKey]: stored[stateStorageId]});
+      } else {
+        context.store.$patch(stored[stateStorageId]);
+      }
       ready.resolve();
     }
   });
@@ -66,7 +70,19 @@ export const PersistencePlugin: PiniaPlugin = (context: PiniaPluginContext): Par
     if (area === 'local' && keys.includes(stateStorageId)) {
       dbgLog('local change: storage ' + context.store.$id, area, changes);
       if (changes[stateStorageId].newValue) {
-        context.store.$patch(changes[stateStorageId].newValue);
+        const newData = changes[stateStorageId].newValue;
+        dbgLog('local change includes relevant key', stateStorageId, newData);
+        if (context.options.subKey) {
+          if (!isEqual(newData, context.store.$state[context.options.subKey])) {
+            dbg('local change new subkey value is different from old', newData, context.store.$state[context.options.subKey]);
+            context.store.$patch({[context.options.subKey]: newData});
+          }
+        } else {
+          if (!isEqual(newData, context.store.$state)) {
+            dbg('local change new root value is different from old', newData, context.store.$state);
+          }
+          context.store.$patch(newData);
+        }
       } else {
         context.store.$state = {};
       }
@@ -77,9 +93,15 @@ export const PersistencePlugin: PiniaPlugin = (context: PiniaPluginContext): Par
 
   context.store.$subscribe(() => {
     if (context.options.readOnly !== true) {
-      dbgLog(`updating persistent ${stateStorageId} store`);
-      const clonedPrefs = clone({ ...context.store.$state });
-      browser.storage.local.set({ [stateStorageId]: clonedPrefs });
+      dbgLog(`updating persistent ${stateStorageId} store`, context.options.subKey);
+      if (context.options.subKey) {
+        const targetProperty = context.store.$state[ context.options.subKey]
+        const clonedPrefs = clone(targetProperty);
+        browser.storage.local.set({[stateStorageId]: clonedPrefs});
+      } else {
+        const clonedPrefs = clone({ ...context.store.$state });
+        browser.storage.local.set({ [stateStorageId]: clonedPrefs });
+      }
     }
   });
 };
