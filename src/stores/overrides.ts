@@ -31,7 +31,21 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: bo
     },
     currentOverride(ctx): IOverride<IExtensionPreferences> {
       const state = (ctx as any).$state;
+      // const overrideState: Partial<IOverride<IExtensionPreferences>> = {
+      //   allowedModes: ctx.allowedModes,
+      //   id: ctx.id,
+      //   activatedTime: this.activatedTime,
+      //   hash: this.hash,
+      //   key: this.key,
+      //   minimumTime: this.minimumTime,
+      //   preferences: this.preferences
+      // };
+      // console.log('returning override from getter', overrideState);
+      // return overrideState as IOverride<IExtensionPreferences>;
+      // extremely unclear why the above doesn't work, but it doesn't seem to be reactive *at all*
+
       return { ...state } as IOverride<IExtensionPreferences>;
+
     },
     currentId(ctx): string {
       const state = (ctx as any).$state;
@@ -90,7 +104,7 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: bo
         const candidate = bytes.toString(enc.Utf8);
         if (candidate === id) {
           // await browser.storage.local.remove('override');
-          this.$patch({id: undefined, activatedTime: undefined, hash: undefined, key: undefined, preferences: undefined});
+          this.$patch({id: undefined, activatedTime: undefined, hash: undefined, key: undefined, preferences: undefined, allowedModes: undefined, minimumTime: undefined});
           // this.$reset();
           return { success: true, code: 200, message: 'Override successfully disabled!' };
         } else {

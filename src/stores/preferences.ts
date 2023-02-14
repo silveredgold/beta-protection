@@ -44,9 +44,10 @@ export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undef
             };
             setModeBadge(merged.mode);
             return merged;
-        }, currentOverride(): IOverride<IExtensionPreferences> | undefined {
+        },
+        currentOverride(): IOverride<IExtensionPreferences> | undefined {
           const overrideStore = useOverrideStore(undefined, true);
-          console.log('pulling overrides from store in preferences getter', overrideStore.isOverrideActive, overrideStore.currentOverride);
+          // console.log('pulling overrides from store in preferences getter', overrideStore.isOverrideActive, overrideStore.currentOverride);
           const overridePrefs = overrideStore.isOverrideActive ? overrideStore.currentOverride : undefined;
           return overridePrefs;
         }
@@ -112,7 +113,7 @@ export const usePreferencesStore = buildPreferencesStore;
 
 export const loadPreferencesStore = async (delayMs?: number) => {
     const store = usePreferencesStore(delayMs);
-    await store.load();
+    await store.ready;
     return store;
 }
 

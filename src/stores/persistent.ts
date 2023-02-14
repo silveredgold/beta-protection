@@ -3,7 +3,7 @@ import clone from "just-clone";
 import { PiniaCustomProperties, PiniaCustomStateProperties, PiniaPlugin, PiniaPluginContext, storeToRefs } from "pinia";
 import browser from 'webextension-polyfill';
 import { isEqual } from "lodash";
-import { reactive, ref } from "vue";
+import { reactive, toRaw } from "vue";
 
 class Deferred {
   promise: Promise<void>;
@@ -73,15 +73,17 @@ export const PersistencePlugin: PiniaPlugin = (context: PiniaPluginContext): Par
         const newData = changes[stateStorageId].newValue;
         dbgLog('local change includes relevant key', stateStorageId, newData);
         if (context.options.subKey) {
-          if (!isEqual(newData, context.store.$state[context.options.subKey])) {
-            dbg('local change new subkey value is different from old', newData, context.store.$state[context.options.subKey]);
+          const oldData = toRaw(context.store.$state[context.options.subKey]);
+          if (!isEqual(newData, oldData)) {
+            dbg('local change new subkey value is different from old', newData, oldData);
             context.store.$patch({[context.options.subKey]: newData});
           }
         } else {
-          if (!isEqual(newData, context.store.$state)) {
-            dbg('local change new root value is different from old', newData, context.store.$state);
+          const oldData = toRaw(context.store.$state);
+          if (!isEqual(newData, oldData)) {
+            dbg('local change new root value is different from old', newData, oldData);
+            context.store.$patch(newData);
           }
-          context.store.$patch(newData);
         }
       } else {
         context.store.$state = {};
