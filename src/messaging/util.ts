@@ -1,8 +1,11 @@
 import { MessageContext } from "@/events";
 import { OverrideService } from "@/services/override-service";
+import { useOverrideStore } from "@/stores/overrides";
+import { getPinia } from "@/stores/util";
 import { base64ArrayBuffer, dbgLog, dbgTime, dbgTimeEnd, getExtensionVersion } from "@/util";
 import { Emitter } from "mitt";
-import { InjectionKey } from "vue";
+import { createPinia, setActivePinia } from "pinia";
+import { createApp, InjectionKey } from "vue";
 import browser from 'webextension-polyfill';
 
 export const MSG_RESET_STATISTICS: RuntimeEvent<void> = {
@@ -65,21 +68,26 @@ export const MSG_API_EXTENSION_VERSION: RuntimeEvent<string> = {
 export const MSG_API_GET_CURRENT_OVERRIDE: RuntimeEvent<{id?: string, remainingTime?: number, activatedTime?: number}> = {
     event: 'getCurrentOverride',
     handler: async (message: any, sender, ctx: MessageContext): Promise<{ id?: string | undefined; remainingTime?: number | undefined; activatedTime?: number | undefined; }> => {
-        const service = await OverrideService.create();
-        console.debug('querying override service for active override');
-        if (service.active) {
-            return {
-                id: service.current?.id,
-                activatedTime: service.current?.activatedTime,
-                remainingTime: service.getTimeRemaining()
-            }
+        const app = createApp(null!);
+        const pinia = getPinia();
+        setActivePinia(pinia);
+        app.use(pinia);
+        const store = useOverrideStore(pinia);
+        await (store as any).ready;
+        console.debug('querying override service for active override', store);
+        if (store.isOverrideActive) {
+          return {
+            id: store.currentId,
+            activatedTime: store.$state.activatedTime,
+            remainingTime: store.timeRemaining
+          }
         } else {
-            return {id: undefined};
+          return {id: undefined}
         }
     }
 }
 
 export type RuntimeEvent<Type> = {
     event: string;
-    handler: (message: any, sender: browser.Runtime.MessageSender, ctx: MessageContext) => Promise<Type> 
+    handler: (message: any, sender: browser.Runtime.MessageSender, ctx: MessageContext) => Promise<Type>
 }

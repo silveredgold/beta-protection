@@ -1,6 +1,6 @@
 import { dbgLog } from "@/util";
 import clone from "just-clone";
-import { defineStore } from "pinia";
+import { defineStore, Pinia } from "pinia";
 import { toRaw, unref } from "vue";
 import browser from 'webextension-polyfill';
 
@@ -9,12 +9,12 @@ export interface UserOptions {
     overrideAppliesToLocal?: boolean;
 }
 
-const saveOptions = async (prefs: UserOptions, skipClone: boolean = true) => {
-    const clonedPrefs = skipClone ? prefs : clone(prefs!);
-    await browser.storage.local.set({ 'userOptions': clonedPrefs });
-};
+// const saveOptions = async (prefs: UserOptions, skipClone: boolean = true) => {
+//     const clonedPrefs = skipClone ? prefs : clone(prefs!);
+//     await browser.storage.local.set({ 'userOptions': clonedPrefs });
+// };
 
-export const useUserOptionsStore = (delayMs?: number) => defineStore('userOptions', {
+export const useUserOptionsStore = (pinia?: Pinia|null|undefined) => defineStore('userOptions', {
     state: (): UserOptions => {
         return { forceOverwriteLocal: false, overrideAppliesToLocal: false }
     },
@@ -32,27 +32,27 @@ export const useUserOptionsStore = (delayMs?: number) => defineStore('userOption
             this.forceOverwriteLocal = true;
             const currentState = toRaw(unref(this.$state));
             // dbgLog('state', currentState)
-            await saveOptions(currentState);
-            await this.load();
+            // await saveOptions(currentState);
+            // await this.load();
         },
         async enableOverridesOnLocal() {
           this.overrideAppliesToLocal = true;
           const currentState = toRaw(unref(this.$state));
             // dbgLog('state', currentState);
-          await saveOptions(currentState);
-          await this.load();
+          // await saveOptions(currentState);
+          // await this.load();
         },
         async load() {
-            const result = await browser.storage.local.get('userOptions');
-            const storedPrefs = result['userOptions'] as UserOptions;
-            console.debug('got back user options', result);
-            this.forceOverwriteLocal = storedPrefs?.forceOverwriteLocal;
-            this.overrideAppliesToLocal = storedPrefs?.overrideAppliesToLocal;
+            // const result = await browser.storage.local.get('userOptions');
+            // const storedPrefs = result['userOptions'] as UserOptions;
+            // console.debug('got back user options', result);
+            // this.forceOverwriteLocal = storedPrefs?.forceOverwriteLocal;
+            // this.overrideAppliesToLocal = storedPrefs?.overrideAppliesToLocal;
             return this;
         }
     },
     debounce: {}
-})();
+})(pinia);
 
 const loadUserOptions = async () => {
     const store = useUserOptionsStore();

@@ -151,6 +151,7 @@ import { OverridableOption } from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
 import { ImportExport,  VideoOptions, ConnectionStatus, ErrorOptions, CensoringPreferences } from "@silveredgold/beta-shared-components";
 import type { HostConfigurator } from '@silveredgold/beta-shared-components'
+import { useOverrideStore } from "@/stores/overrides";
 const { openOverrides, openStatistics, openCensoring } = webExtensionNavigation;
 
 const getHost: HostConfigurator = {
@@ -168,9 +169,14 @@ const iconSrc = browser.runtime.getURL('/images/icon.png');
 
 const store = await loadPreferencesStore(300);
 const options = useUserOptionsStore();
+const overrides = useOverrideStore(undefined, true);
+await overrides.ready;
+// overrides.$subscribe(() => {
+//   console.log('got subscription fired from overrides store');
+// });
 
 const prefs = computed(() => store.currentPreferences);
-const currentOverride = computed(() => store.currentOverride);
+const currentOverride = computed(() => overrides.currentOverride);
 
 const updatePrefs = async (preferences?: IExtensionPreferences) => {
   dbgLog('saving preferences in Options', preferences);

@@ -1,22 +1,33 @@
 import { defaultExtensionPrefs, IExtensionPreferences, IOverride, IPreferences, OperationMode } from "@/preferences";
 import { OverrideService } from "@/services/override-service";
-import { dbg, dbgLog, setModeBadge } from "@/util";
+import { dbg, dbgLog, nameof, setModeBadge } from "@/util";
 import clone from "just-clone";
-import { defineStore } from "pinia";
+import { defineStore, Pinia } from "pinia";
 import browser from 'webextension-polyfill';
+import { useOverrideStore } from "./overrides";
+import { getPinia } from "./util";
 
 export interface ExtensionState {
     basePreferences?: IExtensionPreferences;
     override?: IOverride<IExtensionPreferences>;
-    allowedModes: OperationMode[],
-    $service: PreferencesService
+    // allowedModes: OperationMode[],
+    // $service: PreferencesService
 }
 
-export const buildPreferencesStore = (delayMs?: number) => defineStore('preferences', {
+export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undefined, readOnly?: boolean|undefined) => defineStore('preferences', {
     state: (): ExtensionState => {
-        return { basePreferences: undefined!, override: undefined, allowedModes: [], $service: undefined! }
+        return { basePreferences: undefined!, }
     },
     getters: {
+        allowedModes(): OperationMode[] {
+          const prefs = this.currentPreferences;
+          let allowedModes = [OperationMode.Enabled, OperationMode.OnDemand, OperationMode.Disabled];
+          const override = this.currentOverride;
+            if (override && override.allowedModes && override.allowedModes.length > 0) {
+                    allowedModes = override.allowedModes;
+                }
+              return allowedModes;
+        },
         mode(): OperationMode {
             if (this.basePreferences?.mode && !this.allowedModes.includes(this.basePreferences.mode)) {
                 return this.allowedModes[0];
@@ -24,49 +35,75 @@ export const buildPreferencesStore = (delayMs?: number) => defineStore('preferen
             return this.basePreferences?.mode || OperationMode.Enabled;
         },
         currentPreferences(): IExtensionPreferences {
-            return this.$service?.currentPreferences!;
-        }, currentOverride(): IOverride<IExtensionPreferences> | undefined {
-            return this.override;
-        }, overridePreferences(): Partial<IExtensionPreferences> | undefined {
-            return this.currentOverride?.preferences;
+            // return this.$service?.currentPreferences!;
+            const storedPrefs = this.basePreferences;
+            const overridePrefs = this.currentOverride?.preferences;
+            const merged: IExtensionPreferences = {
+                ...storedPrefs!,
+                ...overridePrefs
+            };
+            setModeBadge(merged.mode);
+            return merged;
+        },
+        currentOverride(): IOverride<IExtensionPreferences> | undefined {
+          const overrideStore = useOverrideStore(undefined, true);
+          // console.log('pulling overrides from store in preferences getter', overrideStore.isOverrideActive, overrideStore.currentOverride);
+          const overridePrefs = overrideStore.isOverrideActive ? overrideStore.currentOverride : undefined;
+          return overridePrefs;
         }
     },
     actions: {
         async load() {
-            this.$service = await PreferencesService.create();
-            const { allowedModes, basePreferences, override } = this.$service;
-            this.allowedModes = allowedModes;
-            this.basePreferences = basePreferences;
-            if (override) {
-                this.override = override;
-            }
-            return this.currentPreferences
+            // this is only retained for legacy compatibility.
+            // rather than calling this no-side-effects action, consumers
+            // should just await store.ready in the first place.
+            await this.ready;
+            return this.currentPreferences;
         },
         async save(prefs?: IExtensionPreferences, skipClone: boolean = false) {
             dbgLog('in store save', prefs);
             prefs = prefs || this.currentPreferences;
             if (prefs) {
-                dbg(`calling service`, prefs.mode);
-                await this.$service.save(prefs, skipClone).then(async () => {
-                  await this.load();
-                });
+                dbg(`not calling service`, prefs.mode);
+                this.basePreferences = prefs;
+                // await this.$service.save(prefs, skipClone).then(async () => {
+                //   await this.load();
+                // });
             }
         },
         async merge(prefs: Partial<IPreferences>, preferSaved: boolean = true) {
-            await this.$service.merge(prefs, preferSaved);
+          const clonedPrefs = clone(prefs);
+          const storedPrefs = this.basePreferences;
+          const mergedPrefs = preferSaved
+              ? {
+                  ...defaultExtensionPrefs,
+                  ...clonedPrefs,
+                  ...storedPrefs
+              }
+              : {
+                  ...defaultExtensionPrefs,
+                  ...storedPrefs,
+                  ...clonedPrefs
+              }
+            this.$patch({basePreferences: mergedPrefs});
+            // await this.$service.merge(prefs, preferSaved);
         },
         async setMode(mode: OperationMode) {
             dbg(`saving new mode ${mode}`);
             if (this.currentPreferences && mode) {
+              if (this.allowedModes.includes(mode)) {
                 dbg(`updating current prefs from ${this.currentPreferences.mode} to ${mode}`);
                 this.currentPreferences.mode = mode;
                 await this.save({...this.currentPreferences, mode});
+              } else {
+                dbg('rejecting mode change as not allowed');
+              }
             }
             // await this.load();
             setModeBadge(this.currentPreferences!.mode);
         }
-    }, debounce: {save: delayMs || 400}
-})();
+    }, debounce: {save: delayMs || 400}, readOnly, subKey: 'basePreferences'
+})(pinia);
 
 export const usePreferencesStore = buildPreferencesStore;
 
@@ -76,7 +113,7 @@ export const usePreferencesStore = buildPreferencesStore;
 
 export const loadPreferencesStore = async (delayMs?: number) => {
     const store = usePreferencesStore(delayMs);
-    await store.load();
+    await store.ready;
     return store;
 }
 
@@ -95,8 +132,8 @@ export class PreferencesService {
     }
 
     static async create() {
-        const { basePreferences, allowedModes, override } = await PreferencesService.load();
-        return new PreferencesService(basePreferences, allowedModes, override);
+        const { basePreferences, allowedModes} = await PreferencesService.load();
+        return new PreferencesService(basePreferences, allowedModes, undefined);
     }
 
     async merge(newPrefs: Partial<IPreferences>, preferSaved: boolean = true) {
@@ -132,13 +169,14 @@ export class PreferencesService {
         const result = await browser.storage.local.get('preferences');
             const storedPrefs = result['preferences'] as IExtensionPreferences;
             const basePreferences = storedPrefs;
-            const overService = await OverrideService.create();
+            const overStore = useOverrideStore(getPinia(), true);
+            //TODO: re-enable this
             let override: IOverride<IExtensionPreferences>|undefined = undefined;
             let allowedModes = [OperationMode.Enabled, OperationMode.OnDemand, OperationMode.Disabled]
-            if (storedPrefs && storedPrefs.mode && overService.active) {
-                override = overService.current;
-                if (overService.current && overService.current.allowedModes.length > 0) {
-                    allowedModes = overService.current.allowedModes;
+            if (storedPrefs && storedPrefs.mode && overStore.isOverrideActive) {
+                override = overStore.currentOverride;
+                if (override && override.allowedModes.length > 0) {
+                    allowedModes = override.allowedModes;
                 }
             }
             return {
@@ -149,7 +187,7 @@ export class PreferencesService {
     static async save(prefs: IExtensionPreferences, skipClone: boolean = false) {
         const clonedPrefs = skipClone ? prefs : clone(prefs!);
         dbgLog('saving preferences to browser', clonedPrefs);
-        await browser.storage.local.set({ 'preferences': clonedPrefs });
+        // await browser.storage.local.set({ 'preferences': clonedPrefs });
     }
 
     static async merge(newPrefs: Partial<IPreferences>, oldPrefs: Partial<IPreferences>, preferSaved: boolean = true) {

@@ -9,7 +9,7 @@ import type { ICensorBackend } from "@silveredgold/beta-shared/transport";
 import { defaultExtensionPrefs } from "./preferences";
 import { StickerService } from "./services/sticker-service";
 import semver from 'semver';
-import { PreferencesService } from "./stores";
+import { waitForPreferencesStore } from "./stores/util";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 let backendService: BackendService| null;
@@ -47,7 +47,7 @@ browser.runtime.onConnect.addListener((port) => {
       }
     };
     const result = await processMessage(request, port.sender!, factory);
-    
+
     return result;
   };
   if (port.name && port.sender?.tab?.id) {
@@ -77,7 +77,7 @@ browser.runtime.onInstalled.addListener((details) => {
     console.warn(`upgrading from ${srcVersion}->${newVersion}`);
     if (srcVersion && semver.gte(newVersion, breaking) && semver.lt(srcVersion, breaking)) {
       console.log('breaking change boundary cross detected!');
-      PreferencesService.create().then(store => {
+      waitForPreferencesStore(false).then(store => {
         store.merge(defaultExtensionPrefs, false).then(() => {
           UpdateService.notifyForBreakingUpdate(details.previousVersion);
         })
@@ -108,7 +108,7 @@ browser.runtime.onInstalled.addListener((details) => {
           browser.runtime.sendMessage({msg: 'reloadSocket'});
         })
       });
-    PreferencesService.create().then(store => {
+    waitForPreferencesStore(false).then(store => {
       store.merge(defaultExtensionPrefs, false)
     });
   }
@@ -188,7 +188,8 @@ browser.storage.onChanged.addListener((changes, area) => {
     }
   }
   browser.runtime.sendMessage({msg: `storageChange:${area}`, keys, changes});
-  PreferencesService.create().then(ep => setModeBadge(ep.mode)).catch(() => console.debug('failed to set mode badge'));
+  //TODO: this should just be done in an onAction listener in the store.
+  waitForPreferencesStore().then(ep => setModeBadge(ep.mode)).catch(() => console.debug('failed to set mode badge'));
 });
 
 browser.alarms.onAlarm.addListener(alarm => {
@@ -235,7 +236,7 @@ function initExtension(syncPrefs: boolean = true) {
     if (syncPrefs) {
       client.getRemotePreferences().then((result) => {
         if (result) {
-          PreferencesService.create().then(store => {
+          waitForPreferencesStore(false).then(store => {
             store.merge(defaultExtensionPrefs)
           });
         }

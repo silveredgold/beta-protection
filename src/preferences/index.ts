@@ -2,7 +2,6 @@ import { defaultPrefs, IPreferences, OperationMode } from '@silveredgold/beta-sh
 
 export * from '@silveredgold/beta-shared/preferences';
 export type {IPreferences, BodyCensorModes} from '@silveredgold/beta-shared/preferences';
-export * from './preferences';
 export * from './util';
 
 export type SubliminalOptions = {

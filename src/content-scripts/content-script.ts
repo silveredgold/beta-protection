@@ -6,15 +6,24 @@ import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
 import { MSG_INJECT_SUBLIMINAL } from "@/messaging";
 import browser from 'webextension-polyfill';
 import { CMENU_RECHECK_PAGE, CMENU_REDO_CENSOR } from "@/events";
-import { PreferencesService } from "@/stores";
+import { getPreferencesStore } from "@/stores/util";
 
 let lastClickElement: HTMLElement|undefined|null;
 const safeList: number[] = [];
 let currentContext: CensoringContext|undefined;
-const service = PreferencesService.create();
+// const service = PreferencesService.create();
+// const store = getPreferencesPlugin();;
+// const app = createApp(Container);
+//   const pinia = getPinia();
+//   setActivePinia(pinia);
+//   app.use(pinia);
+  // const store = usePreferencesStore(undefined, getPinia());
+  const store = getPreferencesStore();
+  const service = store.ready;
 
 const getCensoringState = async (): Promise<CensoringState> => {
-	const store = await service;
+  await service;
+  // const store = await service;
 	const currentSite = window.location.href.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
 	const censorEnabled = shouldCensor(store.currentPreferences, currentSite);
 	dbg('censoring state', censorEnabled);
@@ -43,10 +52,9 @@ const buildContext = async (state: CensoringState): Promise<CensoringContext> =>
 	// 	currentContext?.observer?.stop();
 	// 	} catch {}
 	// }
-	const store = await service;
+  // const store = await service;
+	await service;
 	const preferences = store.currentPreferences;
-	// const confPrefs = await browser.storage.local.get('preferences');
-	// const preferences = confPrefs['preferences'] as IPreferences;
 	const placeholders: any = await browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event});
 	// const newProm = new Promise(resolve => {
 	// 	browser.runtime.sendMessage({msg: MSG_PLACEHOLDERS_ENABLED.event}, resp => resolve(resp));
@@ -86,7 +94,7 @@ const injectStyles = async (context: CensoringContext): Promise<CensoringContext
 		browser.runtime.sendMessage(msg);
 	} else {
 		console.log("Beta Protection - Not censoring current page.");
-	}    
+	}
 	return context;
 }
 
@@ -158,7 +166,7 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => 
 			// 	console.log('ai result', res);
 			// });
 		}
-		
+
 	}
 	// Results for censor requests here. Set the image in the appropriate element.
 	// if(request.msg === "setSrc" && request.type === "normal") {
@@ -229,9 +237,6 @@ const configureListeners = () => {
 	browser.runtime.onMessage.addListener(function(request, sender) {
 		handleMessage(request, sender);
 	});
-
-	
-		
 }
 
 const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
@@ -251,6 +256,7 @@ const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 			// just inject it from there on page load, but that needs a refactor first.
 			// that actually requires a lot of info on the background side.
 			// this method ties it to the page censoring process, for better *and* worse
+      dbg('sending message for subliminals');
 			browser.runtime.sendMessage({msg: MSG_INJECT_SUBLIMINAL.event});
 		}
 		if (!currentContext) {
@@ -261,7 +267,7 @@ const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 			// 	currentContext = ctx;
 			// });
 		}
-		
+
 	} else if (req.msg === 'pageChanged:loading') {
 		dbg('evt: notified of page loading!');
 		// if (currentContext) {
@@ -283,11 +289,11 @@ const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 				// 	currentContext = ctx;
 				// });
 			}
-			
+
 		} else {
 			// this is a new load!
 		}
-		
+
 	} else if (req.msg === 'socketClosed') {
 		console.warn('got socket close event!');
 	}
