@@ -14,7 +14,7 @@ export interface ExtensionState {
     // $service: PreferencesService
 }
 
-export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undefined, readOnly?: boolean|undefined) => defineStore('preferencesStore', {
+export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undefined, readOnly?: boolean|undefined) => defineStore('preferences', {
     state: (): ExtensionState => {
         return { basePreferences: undefined!, }
     },
