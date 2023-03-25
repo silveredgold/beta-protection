@@ -27,8 +27,8 @@ export const getPinia = (): Pinia => {
     if (piniaInstance !== null) return piniaInstance
 
     piniaInstance = createPinia();
+    piniaInstance.use(DebouncePlugin);
     piniaInstance.use(PersistencePlugin);
-    piniaInstance.use(InitializePlugin);
 
     return piniaInstance
 }

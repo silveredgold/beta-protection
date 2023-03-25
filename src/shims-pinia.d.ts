@@ -5,7 +5,8 @@ declare module 'pinia' {
     // allow defining a number of ms for any of the actions
     debounce?: Partial<Record<keyof StoreActions<Store>, number>>,
     readOnly?: boolean,
-    subKey?: string
+    subKey?: string,
+    watch?: Partial<Record<keyof StoreActions<Store>,()=> void>>
   }
   export interface PiniaCustomProperties {
     ready: Promise<void>

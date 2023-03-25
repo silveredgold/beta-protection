@@ -7,9 +7,10 @@ import { UpdateService } from "./services/update-service";
 import { BackendService } from "./transport";
 import type { ICensorBackend } from "@silveredgold/beta-shared/transport";
 import { defaultExtensionPrefs } from "./preferences";
-import { StickerService } from "./services/sticker-service";
+// import { StickerService } from "./services/sticker-service";
 import semver from 'semver';
 import { waitForPreferencesStore } from "./stores/util";
+import { buildStickerStore, useStickerStore } from "./stores/stickers";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 let backendService: BackendService| null;
@@ -243,7 +244,8 @@ function initExtension(syncPrefs: boolean = true) {
         trySendEvent({msg: 'reloadPreferences'});
       });
     }
-    StickerService.tryRefreshAvailable(client);
+    const store = buildStickerStore();
+    store.tryRefreshAvailable(client);
   });
 }
 

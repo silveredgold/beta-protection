@@ -105,7 +105,20 @@ export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undef
     }, debounce: {save: delayMs || 400}, readOnly, subKey: 'basePreferences'
 })(pinia);
 
-export const usePreferencesStore = buildPreferencesStore;
+export const usePreferencesStore = (delayMs?: number, pinia?: Pinia|null|undefined, readOnly?: boolean|undefined) => {
+    const store = buildPreferencesStore();
+    store.$subscribe((mutation, state) => {
+        // dbgLog('in mutation subscription');
+        const getMode = () => {
+            if (state.basePreferences?.mode && !store.allowedModes.includes(state.basePreferences.mode)) {
+                return store.allowedModes[0];
+            }
+            return state.basePreferences?.mode || OperationMode.Enabled;
+        }
+        setModeBadge(getMode());
+    });
+    return store;
+};
 
 // export const usePreferencesStore = (delayMs?: number) => {
 //     return buildPreferencesStore(delayMs);

@@ -19,7 +19,6 @@ export function createBetaApp(rootComponent: Component, options: {unwrapInjected
     }
     if (!options.disableStore) {
         const pinia = createPinia();
-        pinia.use(InitializePlugin);
         pinia.use(DebouncePlugin);
         pinia.use(PersistencePlugin)
         app.use(pinia);

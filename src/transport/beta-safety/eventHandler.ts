@@ -1,8 +1,6 @@
-import { StickerService } from "@/services/sticker-service";
 import { RuntimePortManager } from "@/transport/runtimePort";
 import { ICensorBackend } from "@/transport";
 import browser from 'webextension-polyfill';
-import { PreferencesService } from "@/stores";
 import { waitForPreferencesStore } from "@/stores/util";
 
 

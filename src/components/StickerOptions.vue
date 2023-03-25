@@ -49,6 +49,8 @@ import { Refresh, Images } from "@vicons/ionicons5";
 import { IPreferences } from '@/preferences';
 import { censorBackend, updateUserPrefs, useBackendTransport } from '@silveredgold/beta-shared-components';
 import { StickerService } from '@/services/sticker-service';
+import { loadStickerStore } from '@/stores/stickers';
+import { dbg } from '@/util';
 
 const props = defineProps<{
     preferences: IPreferences
@@ -58,14 +60,15 @@ const notif = useNotification();
 const { preferences } = toRefs(props);
 const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
-const availableStickers: Ref<string[]> = ref([]);
 const asyncBackend = inject(censorBackend, undefined);
+const store = await loadStickerStore();
 
-const stickers = computed(() => availableStickers?.value?.length ? availableStickers?.value : []);
+const stickers = computed(() => store?.available?.length ? store.available : []);
 
 const enabled = computed({
     get: () => prefs?.value?.enabledStickers ?? [],
     set: val => {
+        dbg('enabled stickers setter', prefs?.value);
         if (prefs?.value?.enabledStickers) {
             prefs.value.enabledStickers = val;
         }
@@ -84,22 +87,10 @@ watch(prefs, async (newMode, prevMode) => {
     }
 }, {deep: true});
 
-onBeforeMount(() => {
-    loadStickers().then(ph => {
-        availableStickers.value = ph;
-    })
-})
-
-const loadStickers = async () => {
-    const holders = await StickerService.getAvailable();
-    return holders;
-}
-
 const refreshStickers = async () => {
     if (asyncBackend !== undefined) {
         const backend = await asyncBackend();
-        const stickers = await StickerService.tryRefreshAvailable(backend);
-        availableStickers.value = stickers;
+        const stickers = await store.tryRefreshAvailable(backend);
     }
 }
 
