@@ -2,16 +2,16 @@
 <n-card title="Sticker Preferences" size="small">
         <!-- <template #header-extra>Backend Host</template> -->
         <div>
-            <n-thing 
-                content-indented 
-                title="No stickers loaded" 
+            <n-thing
+                content-indented
+                title="No stickers loaded"
                 description="Ensure your current censoring backend has stickers available and loaded for use!" v-if="!stickers || stickers.length == 0" >
                 <template #avatar >
                     <n-button strong secondary circle @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template></n-button>
                 </template>
                 </n-thing>
              <n-list bordered v-if="stickers">
-                 <n-checkbox-group v-model:value="enabled">
+                 <n-checkbox-group v-model:value="enabled" @update:value="handleCategoryEnable">
                     <n-list-item v-for="category in stickers" v-bind:key="category">
                     <template #prefix>
                         <n-checkbox :value="category" />
@@ -21,11 +21,11 @@
                 </n-checkbox-group>
                 <!-- <template #footer >
                     <n-button strong secondary circle @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template></n-button>
-                    
+
                 </template> -->
             </n-list>
-            <n-thing 
-                content-indented 
+            <n-thing
+                content-indented
                 description="Note that stickers will only be used if the censoring method is set to Sticker!"
                 title="Sticker Loading" v-if="stickers" >
                 <template #header-extra>
@@ -38,7 +38,7 @@
                 </n-thing>
         </div>
         <!-- <template #footer>
-            
+
         </template> -->
     </n-card>
 </template>
@@ -92,6 +92,13 @@ const refreshStickers = async () => {
         const backend = await asyncBackend();
         const stickers = await store.tryRefreshAvailable(backend);
     }
+}
+
+const handleCategoryEnable = (value: (string|number)[]) => {
+  if (preferences.value) {
+    dbg('updating stored enabledStickers', preferences.value.enabledStickers, value);
+    prefs.value.enabledStickers = value as string[];
+  }
 }
 
 
