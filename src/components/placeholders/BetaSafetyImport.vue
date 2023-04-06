@@ -114,6 +114,6 @@ const cancelImport = () => {
     newFiles.value = [];
 }
 
-watch(prefs, watchForChanges(updatePrefs), {deep: true})
+watch(prefs, watchForChanges(true, updatePrefs), {deep: true})
 
 </script>

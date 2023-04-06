@@ -2,7 +2,7 @@ import { MSG_CENSOR_REQUEST, MSG_GET_STATISTICS, MSG_INJECT_CSS, MSG_RESET_STATI
 import { dbg, dbgLog, getDomain, getExtensionVersion } from "@/util";
 import browser from 'webextension-polyfill';
 import { ICensorBackend } from "@/transport";
-import { PreferencesService } from "./stores";
+import { PreferencesService, waitForStickerStore } from "./stores";
 import { waitForPreferencesStore } from "./stores/util";
 
 export const CMENU_REDO_CENSOR = "BSNG_REDO_CENSOR";
@@ -20,13 +20,17 @@ export function processContextClick(info: browser.Menus.OnClickData, tab: browse
         browser.tabs.sendMessage(tab.id!, {msg: CMENU_REDO_CENSOR}).then(value => {
             if (value !== undefined && value?.id) {
                 waitForPreferencesStore().then(store => {
+                  waitForStickerStore().then(stickers => {
                     const prefs = store.currentPreferences;
                     backendClient.censorImage({
                         url: value.origSrc,
                         srcId: tab.id,
                         id: value.id,
                         force: true,
-                        preferences: prefs,
+                        preferences:
+                        {
+                          ...prefs
+                        },
                         requestData: {
                             type: 'normal'
                         },
@@ -34,6 +38,7 @@ export function processContextClick(info: browser.Menus.OnClickData, tab: browse
                             domain: getDomain(value.domain, prefs)
                         }
                     });
+                  });
                 })
                 // PreferencesService.create().then(store => {
 

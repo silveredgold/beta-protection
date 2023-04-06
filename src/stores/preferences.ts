@@ -6,6 +6,7 @@ import { defineStore, Pinia } from "pinia";
 import browser from 'webextension-polyfill';
 import { useOverrideStore } from "./overrides";
 import { getPinia } from "./util";
+import { isEqual } from "lodash";
 
 export interface ExtensionState {
     basePreferences?: IExtensionPreferences;
@@ -63,7 +64,7 @@ export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undef
         async save(prefs?: IExtensionPreferences, skipClone: boolean = false) {
             dbgLog('in store save', prefs);
             prefs = prefs || this.currentPreferences;
-            if (prefs) {
+            if (prefs && !isEqual(prefs, this.basePreferences)) {
                 dbg(`not calling service`, prefs.mode);
                 this.basePreferences = prefs;
                 // await this.$service.save(prefs, skipClone).then(async () => {
@@ -101,6 +102,18 @@ export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undef
             }
             // await this.load();
             setModeBadge(this.currentPreferences!.mode);
+        },
+        setStickerCategoryState(category: string, present: boolean) {
+          let curr = this.currentPreferences.enabledStickers;
+          if (!present) {
+            dbg('disabling from enabledStickers', curr, category);
+            curr = curr.splice(curr.indexOf(category), 1);
+          } else {
+            dbg('enabling from enabledStickers', curr, category);
+            curr = curr.concat([category]);
+          }
+          dbg('patching stickers', curr, this.currentPreferences.enabledStickers);
+          this.$patch({basePreferences: {enabledStickers: curr}});
         }
     }, debounce: {save: delayMs || 400}, readOnly, subKey: 'basePreferences'
 })(pinia);

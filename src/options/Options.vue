@@ -79,7 +79,9 @@
                 images in any enabled categories. Here is where you choose which categories you want to see images from.
               </n-alert>
               <placeholder-options :preferences="prefs" v-if="prefs" class="control-group" />
-              <sticker-options :preferences="prefs" v-if="prefs" class="control-group" />
+              <Suspense>
+                <sticker-options :preferences="prefs" v-if="prefs" class="control-group" />
+              </Suspense>
               <template #header-extra>Choose your placeholders and stickers</template>
             </n-collapse-item>
             <n-collapse-item title="Placeholder Management" name="placeholder-store" v-if="prefs">
@@ -130,7 +132,7 @@
 import { darkTheme, NConfigProvider, NMessageProvider, NDialogProvider, NGlobalStyle, NNotificationProvider, NButton, NIcon, NAvatar, NPageHeader, NCollapse, NCollapseItem, NSpace, useOsTheme, NPopover, NAlert } from "naive-ui";
 import { InformationCircleOutline, InformationCircle, StatsChart, LockOpen, Images } from "@vicons/ionicons5";
 import BackendHost from '@/components/BackendHost.vue';
-import { provide, reactive, Ref, ref, onBeforeMount, computed, watch } from 'vue';
+import { provide, reactive, Ref, ref, onBeforeMount, computed, watch, Suspense } from 'vue';
 import { IExtensionPreferences, IPreferences } from '@/preferences';
 import { updateUserPrefs, userPrefs } from "@silveredgold/beta-shared-components";
 import { themeOverrides, dbgLog } from "@/util";

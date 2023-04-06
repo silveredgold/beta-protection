@@ -85,7 +85,7 @@ const messageCount = computed(() => messages.value.length);
 
 const svc = new SubliminalService();
 
-watch(prefs!, watchForChanges(updatePrefs), {deep: true});
+watch(prefs!, watchForChanges(true, updatePrefs), {deep: true});
 
 onBeforeMount(() => {
     loadMessages().then(msgs => {

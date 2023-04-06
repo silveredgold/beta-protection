@@ -10,7 +10,7 @@
                     <n-button strong secondary circle @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template></n-button>
                 </template>
                 </n-thing>
-             <n-list bordered v-if="stickers">
+             <!-- <n-list bordered v-if="stickers">
                  <n-checkbox-group v-model:value="enabled" @update:value="handleCategoryEnable">
                     <n-list-item v-for="category in stickers" v-bind:key="category">
                     <template #prefix>
@@ -19,11 +19,22 @@
                     <n-thing :title="category" />
                     </n-list-item>
                 </n-checkbox-group>
+            </n-list> -->
+            <n-list bordered v-if="stickers">
+
+                    <n-list-item v-for="category in stickers" v-bind:key="category">
+                    <template #suffix>
+                        <n-button v-if="!enabled!.includes(category)" secondary @click="() => enableCategory(category)">Enable</n-button>
+                        <n-button v-if="enabled!.includes(category)" secondary @click="() => disableCategory(category)">Disable</n-button>
+                    </template>
+                    <n-thing :title="category" />
+                    </n-list-item>
                 <!-- <template #footer >
                     <n-button strong secondary circle @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template></n-button>
 
                 </template> -->
             </n-list>
+            <n-thing>{{ enabled?.join(',') }}</n-thing>
             <n-thing
                 content-indented
                 description="Note that stickers will only be used if the censoring method is set to Sticker!"
@@ -51,6 +62,7 @@ import { censorBackend, updateUserPrefs, useBackendTransport } from '@silveredgo
 import { StickerService } from '@/services/sticker-service';
 import { loadStickerStore } from '@/stores/stickers';
 import { dbg } from '@/util';
+import { loadPreferencesStore, usePreferencesStore } from '@/stores';
 
 const props = defineProps<{
     preferences: IPreferences
@@ -62,6 +74,7 @@ const prefs = preferences;
 const updatePrefs = inject(updateUserPrefs);
 const asyncBackend = inject(censorBackend, undefined);
 const store = await loadStickerStore();
+const prefsStore = await loadPreferencesStore();
 
 const stickers = computed(() => store?.available?.length ? store.available : []);
 
@@ -94,10 +107,19 @@ const refreshStickers = async () => {
     }
 }
 
-const handleCategoryEnable = (value: (string|number)[]) => {
+const disableCategory = (value: string) => {
   if (preferences.value) {
-    dbg('updating stored enabledStickers', preferences.value.enabledStickers, value);
-    prefs.value.enabledStickers = value as string[];
+    // dbg('disabling from enabledStickers', preferences.value.enabledStickers, value);
+    // prefs.value.enabledStickers = prefs.value.enabledStickers.splice(prefs.value.enabledStickers.indexOf(value), 1);
+    // store.setCategory(value, false);
+    prefsStore.setStickerCategoryState(value, false);
+  }
+}
+
+const enableCategory = (value: string) => {
+  if (preferences.value) {
+    // store.setCategory(value, true);
+    prefsStore.setStickerCategoryState(value, true);
   }
 }
 

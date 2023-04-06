@@ -4,6 +4,7 @@ import { createApp } from "vue";
 import { DebouncePlugin } from "./debounce";
 import { InitializePlugin, PersistencePlugin } from "./persistent";
 import { usePreferencesStore } from "./preferences";
+import { useStickerStore } from "./stickers";
 
 export const getPreferencesStore = (readOnly: boolean = true) => {
   const app = createApp(null!);
@@ -17,6 +18,12 @@ export const getPreferencesStore = (readOnly: boolean = true) => {
 
 export const waitForPreferencesStore = async (readOnly: boolean = true) => {
   const store = getPreferencesStore(readOnly);
+  await store.ready;
+  return store;
+}
+
+export const waitForStickerStore = async (readOnly: boolean = true) => {
+  const store = useStickerStore();
   await store.ready;
   return store;
 }

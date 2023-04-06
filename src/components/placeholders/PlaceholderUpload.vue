@@ -43,7 +43,7 @@
                 </n-gi>
                 <n-gi>
                     <!-- CSS is hard so the list can wait -->
-                    <!-- <n-list bordered> 
+                    <!-- <n-list bordered>
                 <n-list-item v-for="file in newFiles" v-bind:key="file.handle.name">
                     <n-thing :title="file.handle.name" :description="humanFileSize(file.file.size)" />
                 </n-list-item>
@@ -143,7 +143,7 @@ const cancelImport = () => {
     newFiles.value = [];
 }
 
-watch(prefs, watchForChanges(updatePrefs), {deep: true})
+watch(prefs, watchForChanges(true, updatePrefs), {deep: true})
 
 onBeforeMount(() => {
     loadPlaceholders().then(ph => {

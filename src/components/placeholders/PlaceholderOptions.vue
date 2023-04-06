@@ -1,9 +1,9 @@
 <template>
     <n-card title="Placeholder Preferences" size="small">
         <div>
-            <n-thing 
-                content-indented 
-                title="No placeholders loaded" 
+            <n-thing
+                content-indented
+                title="No placeholders loaded"
                 description="Load placeholders into the store to choose what categories to use here." v-if="!placeholders || placeholders.length == 0" >
                 <template #avatar >
                     <n-button strong secondary circle @click="refreshPlaceholders"><template #icon><n-icon :component="Refresh" /></template></n-button>
@@ -80,7 +80,7 @@ const getCount = (category: string): number => {
     return currentCount;
 }
 
-watch(prefs, watchForChanges(updatePrefs), {deep: true})
+watch(prefs, watchForChanges(true, updatePrefs), {deep: true})
 
 onBeforeMount(() => {
     refreshPlaceholders();
