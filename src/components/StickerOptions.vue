@@ -1,6 +1,5 @@
 <template>
 <n-card title="Sticker Preferences" size="small">
-        <!-- <template #header-extra>Backend Host</template> -->
         <div>
             <n-thing
                 content-indented
@@ -10,16 +9,6 @@
                     <n-button strong secondary circle @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template></n-button>
                 </template>
                 </n-thing>
-             <!-- <n-list bordered v-if="stickers">
-                 <n-checkbox-group v-model:value="enabled" @update:value="handleCategoryEnable">
-                    <n-list-item v-for="category in stickers" v-bind:key="category">
-                    <template #prefix>
-                        <n-checkbox :value="category" />
-                    </template>
-                    <n-thing :title="category" />
-                    </n-list-item>
-                </n-checkbox-group>
-            </n-list> -->
             <n-list bordered v-if="stickers">
 
                     <n-list-item v-for="category in stickers" v-bind:key="category">
@@ -29,12 +18,7 @@
                     </template>
                     <n-thing :title="category" />
                     </n-list-item>
-                <!-- <template #footer >
-                    <n-button strong secondary circle @click="refreshStickers"><template #icon><n-icon :component="Refresh" /></template></n-button>
-
-                </template> -->
             </n-list>
-            <n-thing>{{ enabled?.join(',') }}</n-thing>
             <n-thing
                 content-indented
                 description="Note that stickers will only be used if the censoring method is set to Sticker!"
