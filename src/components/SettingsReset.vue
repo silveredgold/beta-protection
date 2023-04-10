@@ -15,8 +15,11 @@
 <script setup lang="ts">
 import { inject } from 'vue';
 import { NCard, NButton, NSpace } from "naive-ui";
-import { defaultExtensionPrefs, mergeNewPreferences } from '@/preferences';
+import { defaultExtensionPrefs } from '@/preferences';
 import { updateUserPrefs, useLazyBackendTransport } from '@silveredgold/beta-shared-components';
+import { usePreferencesStore } from '@/stores';
+
+const store = usePreferencesStore();
 
 const updatePrefs = inject(updateUserPrefs);
 const backend = useLazyBackendTransport();
@@ -31,7 +34,8 @@ const resetToBackend = async () => {
     const client = await backend();
     var prefs = await client.getRemotePreferences();
     if (prefs !== undefined) {
-        await mergeNewPreferences(prefs, false);
+        await store.ready;
+        await store.merge(prefs, false);
     } else {
         resetToDefault();
     }

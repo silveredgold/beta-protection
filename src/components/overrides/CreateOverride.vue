@@ -26,8 +26,8 @@
             <n-step title="Other Preferences">
                 <n-text v-if="currentStep != 3">Set any other options to include in the override. Any options not included will still be configurable when the override is active.</n-text>
                 <n-text v-if="currentStep == 3">You don't have to include every preference in an override! Choose which ones you want to include below.</n-text>
-                
-                    
+
+
                     <n-checkbox-group v-model:value="includedOptions" style="margin-bottom: 12px;" @update:value="onUpdateIncludedOptions" v-if="currentStep == 3">
                         <n-checkbox value="video">Video Options</n-checkbox>
                         <n-checkbox value="domainLists">Domain Lists</n-checkbox>
@@ -65,8 +65,8 @@
                         <n-button @click="handleButtonClick" :disabled="!unlockKey">Next</n-button>
                     </n-space>
                 </n-space>
-                
-                
+
+
             </n-step>
             <n-step
                 title="Build your override"
@@ -97,7 +97,7 @@
                         <n-thing title="Override ID" v-if="!!currentOverride">
                             <template #description>
                                 <n-text code>{{currentOverride.id}}</n-text>
-                            </template> 
+                            </template>
                         </n-thing>
                         <n-button type="success" size="large"  @click="exportOverride">
                             <template #icon>
@@ -135,14 +135,24 @@
 import { defaultPrefs, IExtensionPreferences, IOverride, OperationMode } from '@/preferences';
 import type { IPreferences } from '@/preferences';
 import { OverrideService } from '@/services/override-service';
-import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NCheckbox, NCheckboxGroup, NSteps, NStep, NInputNumber, NThing, NInput, NInputGroup, NInputGroupLabel, NIcon, NAlert } from "naive-ui"; 
+import { useNotification, NCard, NGrid, NGridItem, NSpace, NButton, NText, NCheckbox, NCheckboxGroup, NSteps, NStep, NInputNumber, NThing, NInput, NInputGroup, NInputGroupLabel, NIcon, NAlert } from "naive-ui";
 import { LockClosedSharp, SaveOutline, Time, InformationCircleOutline } from "@vicons/ionicons5";
-import { computed, inject, Ref, ref, toRefs } from 'vue';
+import { computed, inject, onBeforeMount, Ref, ref, toRefs } from 'vue';
 import { CensoringPreferences, VideoOptions, ErrorOptions } from "@silveredgold/beta-shared-components";
 import DomainListOptions from '@/components/DomainListOptions.vue';
 import { Duration } from "luxon";
 
-const currentStep = ref(1);
+const props = withDefaults(defineProps<{
+    override: IOverride<IExtensionPreferences> | undefined,
+      skipIntro: boolean
+}>(), {
+  override: undefined,
+  skipIntro: false
+});
+
+const {override: incomingOverride, skipIntro} = toRefs(props);
+
+const currentStep = ref(skipIntro.value ? 2 : 1);
 const currentStepStatus: Ref<"wait" | "error" | "finish" | "process"> = ref('process');
 const allowedModes: Ref<string[]> = ref([]);
 const includedOptions: Ref<string[]> = ref([]);
@@ -175,7 +185,7 @@ const buildOverride = async () => {
         overridePreferences.value.allowList = allowList?.value;
         overridePreferences.value.forceList = forceList?.value;
     }
-    
+
     overridePreferences.value.autoAnimate = false;
     const override = OverrideService.createOverride(unlockKey.value, allowedModes.value as OperationMode[], overridePreferences.value);
     if (enableMinTime.value) {
@@ -196,6 +206,19 @@ const overridePreferences: Ref<Partial<IExtensionPreferences>> = ref({
     exposed: defaultPrefs.exposed,
     otherCensoring: defaultPrefs.otherCensoring,
     obfuscateImages: false
+});
+
+onBeforeMount(() => {
+    if (incomingOverride.value) {
+      overridePreferences.value.covered = incomingOverride.value.preferences.covered;
+      overridePreferences.value.exposed = incomingOverride.value.preferences.exposed;
+      overridePreferences.value.otherCensoring = incomingOverride.value.preferences.otherCensoring;
+      allowList.value = incomingOverride.value.preferences.allowList ?? [];
+      forceList.value = incomingOverride.value.preferences.forceList ?? [];
+      overridePreferences.value.obfuscateImages = incomingOverride.value.preferences.obfuscateImages;
+      allowedModes.value = incomingOverride.value.allowedModes;
+
+    }
 });
 
 </script>

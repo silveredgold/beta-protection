@@ -10,3 +10,5 @@ export {OverridableOption}
 
 import LockedOption from "./LockedOption.vue";
 export {LockedOption};
+
+export { default as ImportOverride } from "./ImportOverride.vue";

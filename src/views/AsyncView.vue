@@ -8,7 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import { Component, toRefs } from 'vue';
+import { toRefs } from 'vue';
+import type { Component } from 'vue';
 
 const props = defineProps<{
   component: Component

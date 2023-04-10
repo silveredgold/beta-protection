@@ -65,6 +65,17 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: bo
     }
   },
   actions: {
+    validateOverride(override: IOverride<IExtensionPreferences>): boolean {
+      if (override?.id && override.allowedModes && override.allowedModes.length > 0) {
+        const importHash = hashCode(JSON.stringify(override.preferences));
+        if (override.hash && override.hash != importHash) {
+          dbgLog({ success: false, code: 422, message: 'Override has been modified!' })
+          return false;
+        }
+        return true;
+      }
+      return false;
+    },
     async importOverride(): Promise<OverrideResult> {
       if (this.$state.id) {
         return { success: false, code: 409, message: 'There is already an override active!' };
@@ -129,4 +140,4 @@ const loadOverrides = async () => {
   return store;
 }
 
-const overrideFileType = [{ accept: { 'text/json': '.betaoverride' }, description: 'Beta Protection Overrides' }];
+export const overrideFileType = [{ accept: { 'text/json': '.betaoverride' }, description: 'Beta Protection Overrides' }];

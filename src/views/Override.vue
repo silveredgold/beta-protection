@@ -19,6 +19,14 @@
                         <create-override />
                 </Suspense>
             </n-tab-pane>
+            <n-tab-pane name="import" tab="Create From Existing">
+                <Suspense>
+                    <template #fallback>
+                        Loading...
+                    </template>
+                        <import-override />
+                </Suspense>
+            </n-tab-pane>
         </n-tabs>
     </n-notification-provider>
     <n-global-style />
@@ -30,7 +38,7 @@ import { darkTheme, NConfigProvider, NGlobalStyle, NNotificationProvider, Global
 import { InjectionKey, onMounted, provide, reactive, Ref, ref, onBeforeMount, computed, watch, Suspense } from 'vue';
 import { dbg, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
-import {OverrideDetails, CreateOverride} from "@/components/overrides"
+import { OverrideDetails, CreateOverride, ImportOverride } from "@/components/overrides"
 import { OverrideService } from "@/services/override-service";
 import { IExtensionPreferences, IOverride } from "@/preferences";
 import { overrideService } from "./override";
