@@ -74,15 +74,24 @@
         <n-grid-item :span="savedQueue.size > 0 ? 1 : 2" v-if="resultsQueue.size > 0">
             <FileList :files="listFiles" title="Censored Files">
             <template #action>
-            <n-dropdown
-                trigger="click"
-                :options="saveOptions"
-                @select="onSelectSave"
-                placement="bottom-end"
-                :disabled="jobQueue.size != 0"
-                :show-arrow="true">
-                <n-button :disabled="jobQueue.size != 0" type="success" size="large" >Save...</n-button>
-            </n-dropdown>
+              <n-space placement="bottom-end">
+                <n-button
+                  size="large"
+                  placement="bottom-end"
+                  :disabled="jobQueue.size != 0"
+                  @click="reset">
+                  Reset
+                </n-button>
+                <n-dropdown
+                    trigger="click"
+                    :options="saveOptions"
+                    @select="onSelectSave"
+                    placement="bottom-end"
+                    :disabled="jobQueue.size != 0"
+                    :show-arrow="true">
+                    <n-button :disabled="jobQueue.size != 0" type="success" size="large" >Save...</n-button>
+                </n-dropdown>
+              </n-space>
             </template>
             </FileList>
         </n-grid-item>
@@ -248,13 +257,14 @@ const onSelectSave = (key: string) => {
 };
 
 const reset = () => {
-    workingFiles.value = [];
+    // workingFiles.value = [];
+    workingFiles.value.splice(0, workingFiles.value.length);
     inputHandle.value = undefined;
     inputClean.value = true;
     currentStep.value = 1;
-    jobQueue.value = new Map();
-    resultsQueue.value = new Map();
-    savedQueue.value = new Map();
+    jobQueue.value.clear();
+    resultsQueue.value.clear();
+    savedQueue.value.clear();
 }
 
 onBeforeMount(async () => {
