@@ -1,4 +1,4 @@
-body:not([censor-disabled]) img:not([img-behaviour="video"]):not([censor-state="censored"]) {
+body:not([censor-disabled]) img:not([img-behaviour="video"]):not([censor-state="censored"]):not([censor-state="excluded"]) {
     -webkit-filter: blur(20px);
     -moz-filter: blur(20px);
     -o-filter: blur(20px);
@@ -6,7 +6,7 @@ body:not([censor-disabled]) img:not([img-behaviour="video"]):not([censor-state="
     filter: blur(20px);
 }
 
-img:not([img-behaviour="video"])[censor-state="censored"], img:not([gif-behaviour="video"])[censor-state="excluded"] {
+img:is(:not([img-behaviour="video"])[censor-state="censored"], :not([img-behaviour="video"])[censor-state="excluded"]) {
     visibility: visible !important;
 }
 

@@ -3,7 +3,7 @@ img:not([img-behaviour="video"]):not([censor-state="censored"]) {
     visibility: hidden !important;
 }
 
-img:not([img-behaviour="video"])[censor-state="censored"], img:not([gif-behaviour="video"])[censor-state="excluded"] {
+img:is(:not([img-behaviour="video"])[censor-state="censored"], :not([img-behaviour="video"])[censor-state="excluded"]) {
     visibility: visible !important;
 }
 
