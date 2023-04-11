@@ -7,6 +7,7 @@ import { IExtensionPreferences, IOverride, IPreferences, OperationMode } from "@
 import { services } from "@silveredgold/beta-shared-components";
 import { DateTime, Duration } from "luxon";
 import { AES, enc } from "crypto-js";
+import { usePreferencesStore } from "./preferences";
 const { FileSystemClient } = services;
 
 export type OverrideResult = {
@@ -92,6 +93,10 @@ export const useOverrideStore = (pinia?: Pinia | null | undefined, readOnly?: bo
           }
           override.activatedTime = new Date().getTime();
           this.$patch({...override});
+          const store = usePreferencesStore();
+          store.ready.then(() => {
+            store.setMode(override.allowedModes[0]);
+          });
           // browser.storage.local.set({ 'override': override });
           return { success: true, code: 200, message: 'Override loaded and saved!' };
         }
