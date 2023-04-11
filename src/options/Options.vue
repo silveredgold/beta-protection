@@ -146,12 +146,13 @@ import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
 import OpenStore from "@/components/placeholders/OpenStore.vue";
 import ExtensionInfo from "@/components/ExtensionInfo.vue";
+import VideoOptions from "@/components/VideoOptions.vue";
 // import CensoringPreferences from "@/components/CensoringPreferences.vue";
 import { webExtensionNavigation } from "@/components/util";
 import browser from 'webextension-polyfill';
 import { OverridableOption } from "@/components/overrides";
 import { OverrideService } from "@/services/override-service";
-import { ImportExport,  VideoOptions, ConnectionStatus, ErrorOptions, CensoringPreferences } from "@silveredgold/beta-shared-components";
+import { ImportExport, ConnectionStatus, ErrorOptions, CensoringPreferences } from "@silveredgold/beta-shared-components";
 import type { HostConfigurator } from '@silveredgold/beta-shared-components'
 import { useOverrideStore } from "@/stores/overrides";
 const { openOverrides, openStatistics, openCensoring } = webExtensionNavigation;

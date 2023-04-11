@@ -56,11 +56,12 @@
 import { NButton, NButtonGroup, darkTheme, NGlobalStyle, NConfigProvider, NNotificationProvider, NPageHeader, NAvatar, NSpace, NIcon, NPopover, NCard } from "naive-ui";
 import { Settings, StatsChart, LockClosed, Images } from "@vicons/ionicons5";
 import ModeSwitch from "@/components/ModeSwitch.vue";
+import VideoOptions from "@/components/VideoOptions.vue";
 import { webExtensionNavigation } from "@/components/util";
 import { IExtensionPreferences, IOverride } from "@/preferences";
 import { computed, onBeforeMount, provide, reactive, ref, Ref, watch } from "vue";
 import { updateUserPrefs } from "@silveredgold/beta-shared-components";
-import { ConnectionStatus, VideoOptions } from "@silveredgold/beta-shared-components";
+import { ConnectionStatus } from "@silveredgold/beta-shared-components";
 import { dbg, dbgLog, themeOverrides } from "@/util";
 import browser from 'webextension-polyfill';
 import { OverridableOption } from "@/components/overrides";
