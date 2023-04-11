@@ -16,7 +16,7 @@ export class CSSManager {
         };
     }
 
-    
+
 
     addVideo = async () => {
         if (this._prefs.videoCensorMode == "Blur") {
@@ -39,11 +39,16 @@ export class CSSManager {
 
     addCSS = async () => {
         await browser.scripting.insertCSS(this.active);
-
     }
 
     removeCSS = async () => {
         await browser.scripting.removeCSS(this.active);
+    }
+
+    addReset = async () => {
+      // await browser.scripting.insertCSS(this.reset);
+      //this almost certainly no-ops since it's not inserted with insertCSS
+      await browser.scripting.removeCSS({target: this._target, files: ["css/base.css"]});
     }
 
     addSubliminal = async () => {
@@ -60,7 +65,7 @@ export class CSSManager {
             files: ["css/subliminal.css"]
         };
     }
-    
+
     public get active() : browser.Scripting.CSSInjection {
         return {
             target: this._target,

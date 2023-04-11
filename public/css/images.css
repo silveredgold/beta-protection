@@ -1,6 +1,3 @@
-/* img:not(.purified) {
-    visibility: hidden !important;
-} */
 
 img:not([img-behaviour="video"]):not([censor-state="censored"]) {
     visibility: hidden !important;
@@ -18,15 +15,3 @@ img[censor-state="censoring"] {
 div:not([censor-style="censored"])[style*="background-image: url("] div:not([censor-style="excluded"])[style*="background-image: url("] {
     visibility: hidden !important;
 }
-
-/* img.purified {
-    visibility: visible !important;
-
-} */
-
-/* img.purifying {
-    max-width: 100%;
-    object-fit: contain !important;
-} */
-
-/* :not(.purifiedBG) { background-size: 0 !important; } */

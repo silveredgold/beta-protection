@@ -54,6 +54,20 @@ export const MSG_INJECT_CSS: RuntimeEvent<void> = {
     }
 }
 
+export const MSG_INJECT_CSS_DISABLE: RuntimeEvent<void> = {
+  event: 'injectCSS:disable',
+  handler: async (request, sender, ctx) => {
+      console.debug('CSS injection request', sender)
+      const tabId = sender.tab?.id;
+      if (tabId) {
+        const prefs = (request.preferences as IPreferences) ?? (await waitForPreferencesStore()).currentPreferences;
+        const css = new CSSManager(tabId, prefs);
+        console.debug(`injecting CSS reset to ${tabId}`, prefs);
+        await css.addReset();
+      }
+  }
+}
+
 export const MSG_INJECT_SUBLIMINAL : RuntimeEvent<void> = {
     event: 'runSubliminal',
     handler: async (request, sender, ctx) => {
