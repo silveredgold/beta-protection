@@ -93,10 +93,19 @@ const injectStyles = async (context: CensoringContext): Promise<CensoringContext
 		browser.runtime.sendMessage(msg);
 	} else {
 		console.log("Beta Protection - Not censoring current page.");
-    document.addEventListener("DOMContentLoaded", (ev) => {
-      dbg('DOM loaded, disabling universal blur');
+    if (document.readyState != 'complete') {
+      document.addEventListener("DOMContentLoaded", (ev) => {
+        dbg('DOM loaded, disabling universal blur');
+        document.body.toggleAttribute('censor-disabled', true);
+      });
+      document.addEventListener("load", (ev) => {
+        dbg('page loaded, disabling universal blur');
+        document.body.toggleAttribute('censor-disabled', true);
+      });
+    } else {
       document.body.toggleAttribute('censor-disabled', true);
-    });
+    }
+
     // const msg = {msg: 'injectCSS:disable', preferences: context.preferences};
 		// browser.runtime.sendMessage(msg);
 	}
