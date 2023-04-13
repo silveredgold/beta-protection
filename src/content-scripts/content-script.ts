@@ -92,24 +92,34 @@ const injectStyles = async (context: CensoringContext): Promise<CensoringContext
 		const msg = {msg: 'injectCSS', preferences: context.preferences};
 		browser.runtime.sendMessage(msg);
 	} else {
-		console.log("Beta Protection - Not censoring current page.");
-    if (document.readyState != 'complete') {
-      document.addEventListener("DOMContentLoaded", (ev) => {
-        dbg('DOM loaded, disabling universal blur');
-        document.body.toggleAttribute('censor-disabled', true);
-      });
-      document.addEventListener("load", (ev) => {
-        dbg('page loaded, disabling universal blur');
-        document.body.toggleAttribute('censor-disabled', true);
-      });
-    } else {
-      document.body.toggleAttribute('censor-disabled', true);
-    }
+		console.log("Beta Protection - Not censoring current page.", document.readyState);
+    disableUniversalFilter();
 
     // const msg = {msg: 'injectCSS:disable', preferences: context.preferences};
 		// browser.runtime.sendMessage(msg);
 	}
 	return context;
+}
+
+const disableUniversalFilter = async (): Promise<void> => {
+  const applyGlobalDisable = (event?: string) => {
+    event ??= 'Body changed';
+    dbg(`${event}, disabling universal blur`);
+      document.body.toggleAttribute('censor-disabled', true);
+  }
+  const config = { attributes: true, childList: true, subtree: false };
+  if (document.readyState != 'complete') {
+    document.addEventListener("DOMContentLoaded", (ev) => applyGlobalDisable('DOM Loaded'));
+    document.addEventListener("load", (ev) => applyGlobalDisable('Page loaded'));
+  } else {
+    applyGlobalDisable('Page already loaded')
+  }
+  const callback = (mutationList: MutationRecord[]) => {
+    dbg('Body observer fired!', mutationList);
+    document.body.toggleAttribute('censor-disabled', true);
+  }
+  const observer = new MutationObserver(callback);
+  observer.observe(document.body, config);
 }
 
 const prepareEvents = async (context: CensoringContext, runImmediately: boolean = false): Promise<void> => {
