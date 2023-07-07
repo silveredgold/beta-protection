@@ -99,10 +99,25 @@ export const PersistencePlugin: PiniaPlugin = (context: PiniaPluginContext): Par
       if (context.options.subKey) {
         const targetProperty = context.store.$state[ context.options.subKey]
         const clonedPrefs = clone(targetProperty);
-        browser.storage.local.set({[stateStorageId]: clonedPrefs});
+        browser.storage.local.get(stateStorageId).then(resp => {
+          const existing = resp[stateStorageId];
+          if (!isEqual(existing, clonedPrefs)) {
+            dbg(`stored object for ${stateStorageId} is different from existing`, {existing, new: clonedPrefs});
+            browser.storage.local.set({[stateStorageId]: clonedPrefs});
+          }
+        })
+
       } else {
         const clonedPrefs = clone({ ...context.store.$state });
-        browser.storage.local.set({ [stateStorageId]: clonedPrefs });
+        browser.storage.local.get(stateStorageId).then(resp => {
+          const existing = resp[stateStorageId];
+          if (!isEqual(existing, clonedPrefs)) {
+            dbg(`stored object for ${stateStorageId} is different from existing`, {existing, new: clonedPrefs});
+            browser.storage.local.set({[stateStorageId]: clonedPrefs});
+          }
+        });
+
+        // browser.storage.local.set({ [stateStorageId]: clonedPrefs });
       }
     }
   });
