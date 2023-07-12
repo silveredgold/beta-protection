@@ -2,7 +2,7 @@ import { createBetaView } from "@/plugins";
 import { createPinia, Pinia, setActivePinia } from "pinia";
 import { createApp } from "vue";
 import { DebouncePlugin } from "./debounce";
-import { InitializePlugin, PersistencePlugin } from "./persistent";
+import { PersistencePlugin } from "./persistent";
 import { usePreferencesStore } from "./preferences";
 import { useStickerStore } from "./stickers";
 

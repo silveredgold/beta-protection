@@ -119,7 +119,7 @@ export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undef
 })(pinia);
 
 export const usePreferencesStore = (delayMs?: number, pinia?: Pinia|null|undefined, readOnly?: boolean|undefined) => {
-    const store = buildPreferencesStore();
+    const store = buildPreferencesStore(delayMs, pinia, readOnly);
     store.$subscribe((mutation, state) => {
         // dbgLog('in mutation subscription');
         const getMode = () => {

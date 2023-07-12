@@ -201,7 +201,7 @@ onBeforeMount(async () => {
 browser.runtime.onMessage.addListener((request, sender) => {
   if (request['msg'] === 'reloadPreferences') {
     setTimeout(() => {
-      dbgLog('reloading preferences for options view. SKIPPING!');
+      dbgLog('reloading preferences for options view. SKIPPING!', store.currentPreferences);
       // browser.tabs.getCurrent().then(tab => {
       //   if (!!tab) {
       //     browser.tabs.reload(tab.id);

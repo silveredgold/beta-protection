@@ -68,7 +68,7 @@ export const PersistencePlugin: PiniaPlugin = (context: PiniaPluginContext): Par
   browser.storage.onChanged.addListener((changes, area) => {
     const keys = Object.keys(changes);
     if (area === 'local' && keys.includes(stateStorageId)) {
-      dbgLog('local change: storage ' + context.store.$id, area, changes);
+      dbgLog('local change: storage ' + context.store.$id, area, stateStorageId, changes);
       if (changes[stateStorageId].newValue) {
         const newData = changes[stateStorageId].newValue;
         dbgLog('local change includes relevant key', stateStorageId, newData);
@@ -77,6 +77,7 @@ export const PersistencePlugin: PiniaPlugin = (context: PiniaPluginContext): Par
           if (!isEqual(newData, oldData)) {
             dbg('local change new subkey value is different from old', newData, oldData);
             context.store.$patch({[context.options.subKey]: newData});
+            dbg('new state after patching', context.store.$state);
           }
         } else {
           const oldData = toRaw(context.store.$state);
@@ -96,46 +97,35 @@ export const PersistencePlugin: PiniaPlugin = (context: PiniaPluginContext): Par
   context.store.$subscribe(() => {
     if (context.options.readOnly !== true) {
       dbgLog(`updating persistent ${stateStorageId} store`, context.options.subKey);
-      if (context.options.subKey) {
-        const targetProperty = context.store.$state[ context.options.subKey]
-        const clonedPrefs = clone(targetProperty);
-        browser.storage.local.get(stateStorageId).then(resp => {
-          const existing = resp[stateStorageId];
-          if (!isEqual(existing, clonedPrefs)) {
-            dbg(`stored object for ${stateStorageId} is different from existing`, {existing, new: clonedPrefs});
-            browser.storage.local.set({[stateStorageId]: clonedPrefs});
-          }
-        })
-
-      } else {
-        const clonedPrefs = clone({ ...context.store.$state });
-        browser.storage.local.get(stateStorageId).then(resp => {
-          const existing = resp[stateStorageId];
-          if (!isEqual(existing, clonedPrefs)) {
-            dbg(`stored object for ${stateStorageId} is different from existing`, {existing, new: clonedPrefs});
-            browser.storage.local.set({[stateStorageId]: clonedPrefs});
-          }
-        });
-
-        // browser.storage.local.set({ [stateStorageId]: clonedPrefs });
-      }
+      saveStoreState(context, stateStorageId);
     }
   });
+  context.store.saveToBrowser = () => {
+    saveStoreState(context, stateStorageId);
+  }
 };
 
-export const InitializePlugin: PiniaPlugin = (context: PiniaPluginContext): Partial<PiniaCustomProperties & PiniaCustomStateProperties> | void => {
-  // const ready = new Deferred();
-  // // const readyPromise = new Promise<void>(readyResolve);
-  // context.store.ready = reactive(ready.promise);
-  // context.store.$subscribe(() => {
-  //   dbgLog('ready plugin subscription fired');
-  //   if (context.store.$state !== undefined && !isEqual(context.store.$state,{})) {
-  //     dbgLog('ready plugin resolving');
-  //     ready.resolve();
-  //   }
-  // });
-  // if (!context.store.ready) {
-  //   dbgLog('ready plugin waiting');
-  //   await ready.promise;
-  // }
+function saveStoreState(context: PiniaPluginContext, stateStorageId: string) {
+  if (context.options.subKey) {
+    const targetProperty = context.store.$state[context.options.subKey];
+    const clonedPrefs = clone(targetProperty);
+    browser.storage.local.get(stateStorageId).then(resp => {
+      const existing = resp[stateStorageId];
+      if (!isEqual(existing, clonedPrefs)) {
+        dbg(`stored object for ${stateStorageId} is different from existing`, { existing, new: clonedPrefs });
+        browser.storage.local.set({ [stateStorageId]: clonedPrefs });
+      }
+    });
+
+  } else {
+    const clonedPrefs = clone({ ...context.store.$state });
+    browser.storage.local.get(stateStorageId).then(resp => {
+      const existing = resp[stateStorageId];
+      if (!isEqual(existing, clonedPrefs)) {
+        dbg(`stored object for ${stateStorageId} is different from existing`, { existing, new: clonedPrefs });
+        browser.storage.local.set({ [stateStorageId]: clonedPrefs });
+      }
+    });
+  }
 }
+
