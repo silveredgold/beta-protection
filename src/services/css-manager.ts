@@ -59,6 +59,21 @@ export class CSSManager {
         await browser.scripting.removeCSS(this.subliminal)
     }
 
+    setLoadingState = async (enabled: boolean) => {
+        if (enabled) {
+            await browser.scripting.insertCSS(this.loading);
+        } else {
+            await browser.scripting.removeCSS(this.loading);
+        }
+    }
+    
+    public get loading() : browser.Scripting.CSSInjection {
+        return {
+            target: this._target,
+            files: ["css/loading.css"]
+        };
+    }
+
     public get subliminal() : browser.Scripting.CSSInjection {
         return {
             target: this._target,

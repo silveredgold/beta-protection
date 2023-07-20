@@ -11,6 +11,7 @@ import { defaultExtensionPrefs } from "./preferences";
 import semver from 'semver';
 import { waitForPreferencesStore } from "./stores/util";
 import { buildStickerStore, useStickerStore } from "./stores/stickers";
+import { CSSManager } from "./services/css-manager";
 
 export const portManager: RuntimePortManager = new RuntimePortManager();
 let backendService: BackendService| null;
@@ -167,6 +168,20 @@ browser.tabs.onUpdated.addListener(async (id, change, tab) => {
     dbg('sending loading message');
     await trySendEvent({msg: 'pageChanged:loading', url: change.url}, tab.id);
     // await sendMsg(tab.id, {msg: 'pageChanged:loading', url: change.url});
+  }
+});
+
+browser.tabs.onUpdated.addListener(async (id, change, tab) => {
+  if (tab.id) {
+    const css = new CSSManager(tab.id, null!);
+    if (change.status === 'complete' && tab.id) {
+      //caught a page load!
+      dbg('disabling loading filter');
+      await css.setLoadingState(false);
+    } else if (change.status === 'loading' && tab.id) {
+      dbg('enabling loading filter');
+      await css.setLoadingState(true);
+    }
   }
 });
 

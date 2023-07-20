@@ -1,0 +1,21 @@
+body img:not([img-behaviour="video"]):not([censor-state="censored"]):not([censor-state="excluded"]) {
+    -webkit-filter: blur(20px);
+    -moz-filter: blur(20px);
+    -o-filter: blur(20px);
+    -ms-filter: blur(20px);
+    filter: blur(20px);
+    /* visibility: hidden !important; */
+}
+
+img:is(:not([img-behaviour="video"])[censor-state="censored"], :not([img-behaviour="video"])[censor-state="excluded"]) {
+    visibility: visible !important;
+}
+
+body div:not([censor-style="censored"])[style*="background-image: url("] div:not([censor-style="excluded"])[style*="background-image: url("] {
+    -webkit-filter: blur(20px);
+    -moz-filter: blur(20px);
+    -o-filter: blur(20px);
+    -ms-filter: blur(20px);
+    filter: blur(20px);
+    /* visibility: hidden !important; */
+}
