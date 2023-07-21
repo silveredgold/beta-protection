@@ -178,7 +178,7 @@ browser.tabs.onUpdated.addListener(async (id, change, tab) => {
       //caught a page load!
       dbg('disabling loading filter');
       await css.setLoadingState(false);
-    } else if (change.status === 'loading' && tab.id) {
+    } else if (change.status === 'loading' && change.url) {
       dbg('enabling loading filter');
       await css.setLoadingState(true);
     }

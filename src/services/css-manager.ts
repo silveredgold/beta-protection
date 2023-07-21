@@ -70,7 +70,25 @@ export class CSSManager {
     public get loading() : browser.Scripting.CSSInjection {
         return {
             target: this._target,
-            files: ["css/loading.css"]
+            css: `
+body img:not([img-behaviour="video"]):not([censor-state="censored"]):not([censor-state="excluded"]) {
+    -webkit-filter: blur(20px);
+    -moz-filter: blur(20px);
+    -o-filter: blur(20px);
+    -ms-filter: blur(20px);
+    filter: blur(20px);
+    /* visibility: hidden !important; */
+}
+
+body div:not([censor-style="censored"])[style*="background-image: url("] div:not([censor-style="excluded"])[style*="background-image: url("] {
+    -webkit-filter: blur(20px);
+    -moz-filter: blur(20px);
+    -o-filter: blur(20px);
+    -ms-filter: blur(20px);
+    filter: blur(20px);
+    /* visibility: hidden !important; */
+}
+`
         };
     }
 
