@@ -20,7 +20,7 @@
         <div>
             <n-space item-style="display: flex;" justify="space-between" align="center" :wrap="false">
                 <n-thing>
-                    <template #header>Overwrites apply to local censoring</template>
+                    <template #header>Overrides apply to local censoring</template>
                     <template #description><n-text>If you enable this option, any overrides you have active will <em>also apply to local censoring</em>. You won't be able to edit or customize censoring types for local images when you have an override active.</n-text></template>
                 </n-thing>
                 <n-button @click="() => confirmHardcoreOption(options.enableOverridesOnLocal)" :disabled="!options.allowCustomLocalPreferences">{{ options.allowCustomLocalPreferences ? 'Enable' : 'Activated' }}</n-button>
