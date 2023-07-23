@@ -61,6 +61,9 @@ export class CSSManager {
 
     setLoadingState = async (enabled: boolean) => {
         if (enabled) {
+            // this is very janky, but prevents it being injected multiple times
+            // which would cause the remove to not work (it only removes once) 
+            await browser.scripting.removeCSS(this.loading);
             await browser.scripting.insertCSS(this.loading);
         } else {
             await browser.scripting.removeCSS(this.loading);

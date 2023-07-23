@@ -4,6 +4,8 @@ import { SubliminalService } from "@/services/subliminal-service";
 import { dbgLog, getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
 import { waitForPreferencesStore } from "@/stores/util";
+import { MessageContext } from "@/events";
+import { Runtime } from "webextension-polyfill";
 
 export const MSG_CENSOR_REQUEST: RuntimeEvent<any> = {
     event: 'censorRequest',
@@ -90,6 +92,22 @@ export const MSG_INJECT_SUBLIMINAL_CSS: RuntimeEvent<void> = {
           console.debug(`injecting CSS to ${tabId}`, prefs);
           await css.removeSubliminal();
           await css.addSubliminal();
+        }
+    }
+}
+
+export const MSG_DISABLE_CENSORING: RuntimeEvent<void> = {
+    event: "censoringLoadedInactive",
+    handler: async (message: any, sender: Runtime.MessageSender, ctx: MessageContext): Promise<void> => {
+        const id = sender.tab?.id || message.tabId;
+        if (id) {
+            if (message.reason) {
+                dbgLog(`Disabling CSS loading filter for tab ${id}: ${message.reason}`);
+            } else {
+                dbgLog(`Disabling CSS loading filter for tab ${id}`);
+            }
+            const css = new CSSManager(id, (message.preferences as IPreferences));
+            await css.setLoadingState(false);
         }
     }
 }

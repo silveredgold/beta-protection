@@ -176,7 +176,11 @@ export class Purifier {
                         if (domState.visible) {
                             dbg('dom: identified element as visible', el);
                             targetEls.push(el);
-                        } else {
+                        } else if (el.width > 100 && el.height > 100) {
+                            //we put this awkward 100x100 condition since otherwise lots of
+                            // things like tracking pixels or analytics tags constantly fire the purifier
+                            // to run. Even debounced, it's obnoxious.
+                            dbg('dom: identified other element', el);
                             otherEls.push({el, center: domState.center});
                         }
                         // this.purifyImage(el);
@@ -219,6 +223,7 @@ export class Purifier {
             const url = this.normalizeSrcUrl(img);
             this.censorLoadedImage(url, img, runOnce ? true : (this._currentState && this._currentState.activeCensoring));
         } else if (!runOnce) {
+            // dbg('sent censor request, marking purifier for run', img);
             this.backlog = true;
         } else {
             // dbgLog('unmatched');

@@ -3,7 +3,7 @@ import { CensoringState, CensoringContext } from "./types";
 import { getDomain, hashCode, shouldCensor, dbg, dbgLog } from "@/util";
 import { PageObserver } from "./observer";
 import { MSG_PLACEHOLDERS_ENABLED } from "@/messaging/placeholders";
-import { MSG_INJECT_SUBLIMINAL } from "@/messaging";
+import { MSG_INJECT_SUBLIMINAL, MSG_DISABLE_CENSORING } from "@/messaging";
 import browser from 'webextension-polyfill';
 import { CMENU_RECHECK_PAGE, CMENU_REDO_CENSOR } from "@/events";
 import { getPreferencesStore } from "@/stores/util";
@@ -93,9 +93,11 @@ const injectStyles = async (context: CensoringContext): Promise<CensoringContext
 		browser.runtime.sendMessage(msg);
 	} else {
 		console.log("Beta Protection - Not censoring current page.", document.readyState);
-    disableUniversalFilter();
-
-    // const msg = {msg: 'injectCSS:disable', preferences: context.preferences};
+    	disableUniversalFilter();
+		// we're not censoring this page, so tell the background script to kill the blur filter
+		// const msg = {msg: MSG_DISABLE_CENSORING.event, docState: document.readyState, preferences: currentContext?.preferences, reason: 'Censoring disabled on page'};
+		// browser.runtime.sendMessage(msg);
+    	// const msg = {msg: 'injectCSS:disable', preferences: context.preferences};
 		// browser.runtime.sendMessage(msg);
 	}
 	return context;
@@ -172,7 +174,7 @@ const buildObserver = (purifier: Purifier) => {
 // 	return result!;
 // }
 
-const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => {
+const handleMessage = (request: any, sender?: browser.Runtime.MessageSender): void|Promise<any> => {
 	if(request.msg === CMENU_REDO_CENSOR && lastClickElement) {
 		lastClickElement.classList.add("redoRequest");
 		const id = lastClickElement.getAttribute('censor-id');
@@ -181,7 +183,7 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender) => 
 			const domain = getDomain(window.location.hostname, currentContext?.preferences).toLowerCase()
 			const respValue = {src: lastClickElement.getAttribute("src"), id, origSrc, domain};
 			dbg('sending getClickedEl response', respValue)
-			return respValue;
+			return Promise.resolve(respValue);
 		} else {
 			console.debug('running purifier on single element');
 			currentContext?.purifier?.censorImage(lastClickElement as HTMLImageElement, true);
@@ -258,8 +260,8 @@ const configureListeners = () => {
 	}, true);
 
 	// Receive message from the background script here.
-	browser.runtime.onMessage.addListener(function(request, sender) {
-		handleMessage(request, sender);
+	browser.runtime.onMessage.addListener(function(request, sender,) {
+		return handleMessage(request, sender);
 	});
 }
 
@@ -267,6 +269,10 @@ const handlePageEvent = (req: any, sender?: browser.Runtime.MessageSender) => {
 	// console.log('notified of page event', req);
 	if (req.msg === 'pageChanged:complete') {
 		dbgLog('evt: notified of page change, re-running!');
+		if (currentContext?.state.activeCensoring == false) {
+			const msg = {msg: MSG_DISABLE_CENSORING.event, docState: document.readyState, preferences: currentContext?.preferences, reason: 'Censoring disabled on page'};
+			browser.runtime.sendMessage(msg);
+		}
 		if (currentContext?.purifier?.ready === true && currentContext?.state.activeCensoring) {
 				dbg('censoring enabled, queuing purifier run from handlePageEvent');
 				currentContext.purifier.run();

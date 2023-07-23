@@ -1,5 +1,5 @@
 import { processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
-import { getExtensionVersion, setModeBadge } from "./util";
+import { getExtensionVersion, setModeBadge, shouldCensor } from "./util";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
@@ -162,10 +162,10 @@ browser.tabs.onUpdated.addListener((id, change, tab) => {
 browser.tabs.onUpdated.addListener(async (id, change, tab) => {
   if (change.status === 'complete' && tab.id) {
     //caught a page load!
-    dbg('sending loaded message');
+    // dbg('sending loaded message');
     await trySendEvent({msg: 'pageChanged:complete'}, tab.id);
   } else if (change.status === 'loading' && tab.id) {
-    dbg('sending loading message');
+    // dbg('sending loading message');
     await trySendEvent({msg: 'pageChanged:loading', url: change.url}, tab.id);
     // await sendMsg(tab.id, {msg: 'pageChanged:loading', url: change.url});
   }
@@ -175,12 +175,28 @@ browser.tabs.onUpdated.addListener(async (id, change, tab) => {
   if (tab.id) {
     const css = new CSSManager(tab.id, null!);
     if (change.status === 'complete' && tab.id) {
-      //caught a page load!
-      dbg('disabling loading filter');
-      await css.setLoadingState(false);
-    } else if (change.status === 'loading' && change.url) {
-      dbg('enabling loading filter');
-      await css.setLoadingState(true);
+      // the reason we don't disable the filter here is deceptive:
+      // - sites that don't have censoring enabled will notify us with MSG_DISABLE_CENSORING which will disable the filter
+      // - sites that are censored don't need it disabled as placeholders and censored images are excluded from the filter
+      // await css.setLoadingState(false);
+    // } else if (change.status === 'loading' && change.url) {
+    } else if (change.status === 'loading') {
+      // checking for URL ensures the event only fires once per page, meaning we don't inject more than once
+      // instead we inject every time but uninject-then-inject every time (more consistent, more janky, less performant)
+      // I don't even know why, but Chrome seems to fire the loading event multiple times per page load (usually 2x)
+      // notably, page refreshes do not include change.url
+      dbg('enabling loading state', tab);
+      if (tab.url) { //tab.url and change.url are very different!
+          // this is not a *great* idea: it will fire every time a page loading event is triggered, which is often
+          // but it does make the loading filter much more consistent by never even involving it for whitelisted sites
+          const store = await waitForPreferencesStore(true)
+          const currentSite = tab.url!.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
+          const censorEnabled = shouldCensor(store.currentPreferences, currentSite);
+          if (censorEnabled) {
+            await css.setLoadingState(true);
+          }
+      }
+      // await css.setLoadingState(true);
     }
   }
 });

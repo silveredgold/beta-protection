@@ -41,6 +41,7 @@ export class PageObserver {
     }
 
     private _defaultAction = (mutations: MutationRecord[]) => {
+        mutations = mutations.filter(m => m.target.nodeName !== "TIME"); //dirty hack for Reddit doing weird shit
         dbg('running default observer action', mutations);
         if (this.runOnMutate && mutations.some(m => this.notCensorUpdate(m))) {
             dbg('evt: running purifier from observer');
@@ -78,7 +79,8 @@ export class PageObserver {
                 if (skipped && !forceRecheck) { //TODO: should add the safe check back here later
                     // Do nothing since it's safe.
                 } else {
-                    target.setAttribute('censor-state', 'unsafe')
+                    target.setAttribute('censor-state', 'unsafe');
+                    dbg('set mutation target as unsafe');
                     this._purifier.backlog = true;
                 }
             }
