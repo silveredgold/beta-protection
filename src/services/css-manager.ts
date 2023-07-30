@@ -5,6 +5,7 @@ import browser from 'webextension-polyfill';
 export class CSSManager {
     private _prefs: IPreferences;
     private _target: browser.Scripting.InjectionTarget;
+    private _lastFilterStrength?: number;
     /**
      *
      */
@@ -59,40 +60,39 @@ export class CSSManager {
         await browser.scripting.removeCSS(this.subliminal)
     }
 
-    setLoadingState = async (enabled: boolean) => {
-        if (enabled) {
-            // this is very janky, but prevents it being injected multiple times
-            // which would cause the remove to not work (it only removes once) 
-            await browser.scripting.removeCSS(this.loading);
-            await browser.scripting.insertCSS(this.loading);
-        } else {
-            await browser.scripting.removeCSS(this.loading);
-        }
+    enableLoadingFilter = async (blurLevel:number = 10) => {
+      const blurPx = (blurLevel ?? 10)*2.5;
+      this._lastFilterStrength = blurPx;
+      await browser.scripting.removeCSS(this.buildLoadingFilter(blurPx));
+      await browser.scripting.insertCSS(this.buildLoadingFilter(blurPx));
     }
-    
-    public get loading() : browser.Scripting.CSSInjection {
-        return {
-            target: this._target,
-            css: `
+
+    disableLoadingFilter = async (blurLevel?:number) => {
+      const blurPx = (!!blurLevel ? ((blurLevel??10)*2.5) : this._lastFilterStrength) ?? 25;
+      await browser.scripting.removeCSS(this.buildLoadingFilter(blurPx));
+    }
+
+    private buildLoadingFilter = (blurPx: number) : browser.Scripting.CSSInjection => {
+      return {
+          target: this._target,
+          css: `
 body img:not([img-behaviour="video"]):not([censor-state="censored"]):not([censor-state="excluded"]) {
-    -webkit-filter: blur(20px);
-    -moz-filter: blur(20px);
-    -o-filter: blur(20px);
-    -ms-filter: blur(20px);
-    filter: blur(20px);
-    /* visibility: hidden !important; */
+  -webkit-filter: blur(${blurPx}px);
+  -moz-filter: blur(${blurPx}px);
+  -o-filter: blur(${blurPx}px);
+  -ms-filter: blur(${blurPx}px);
+  filter: blur(${blurPx}px);
 }
 
 body div:not([censor-style="censored"])[style*="background-image: url("] div:not([censor-style="excluded"])[style*="background-image: url("] {
-    -webkit-filter: blur(20px);
-    -moz-filter: blur(20px);
-    -o-filter: blur(20px);
-    -ms-filter: blur(20px);
-    filter: blur(20px);
-    /* visibility: hidden !important; */
+  -webkit-filter: blur(${blurPx}px);
+  -moz-filter: blur(${blurPx}px);
+  -o-filter: blur(${blurPx}px);
+  -ms-filter: blur(${blurPx}px);
+  filter: blur(${blurPx}px);
 }
 `
-        };
+      };
     }
 
     public get subliminal() : browser.Scripting.CSSInjection {

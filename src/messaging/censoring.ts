@@ -1,5 +1,5 @@
 import { CSSManager } from "@/services/css-manager";
-import { IPreferences } from "@/preferences";
+import { IExtensionPreferences, IPreferences } from "@/preferences";
 import { SubliminalService } from "@/services/subliminal-service";
 import { dbgLog, getDomain } from "@/util";
 import { RuntimeEvent } from "./util";
@@ -107,7 +107,7 @@ export const MSG_DISABLE_CENSORING: RuntimeEvent<void> = {
                 dbgLog(`Disabling CSS loading filter for tab ${id}`);
             }
             const css = new CSSManager(id, (message.preferences as IPreferences));
-            await css.setLoadingState(false);
+            await css.disableLoadingFilter((message.preferences as IExtensionPreferences)?.loadingFilter?.blurLevel);
         }
     }
 }

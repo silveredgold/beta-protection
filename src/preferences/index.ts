@@ -11,6 +11,12 @@ export type SubliminalOptions = {
     ignoreCensorState: boolean;
 }
 
+export type LoadingFilterOptions = {
+  enabled: boolean;
+  blurLevel: number;
+  useAsPlaceholder: boolean;
+}
+
 export type IExtensionPreferences = IPreferences & {
     // mode: OperationMode;
     gifsAsVideos: boolean;
@@ -18,6 +24,7 @@ export type IExtensionPreferences = IPreferences & {
     subliminal: SubliminalOptions;
     allowList: string[];
     forceList: string[];
+    loadingFilter: LoadingFilterOptions;
 }
 
 export const defaultExtensionPrefs: IExtensionPreferences = {
@@ -32,5 +39,10 @@ export const defaultExtensionPrefs: IExtensionPreferences = {
         ignoreCensorState: false
     },
     enabledPlaceholders: [],
-    gifsAsVideos: true
+    gifsAsVideos: true,
+    loadingFilter: {
+      blurLevel: 10,
+      enabled: true,
+      useAsPlaceholder: false
+    }
 }

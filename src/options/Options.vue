@@ -62,6 +62,9 @@
               <overridable-option title="Error Display Preferences" :option="currentOverride?.preferences?.errorMode">
                 <error-options :preferences="prefs" class="control-group" />
               </overridable-option>
+              <overridable-option title="Loading Filter Preferences" :option="currentOverride?.preferences?.loadingFilter">
+                <loading-filter-options :preferences="prefs" class="control-group" />
+              </overridable-option>
               <template #header-extra>Fine tune the censoring</template>
             </n-collapse-item>
             <n-collapse-item title="Video Options" name="video-options" v-if="prefs">
@@ -144,6 +147,7 @@ import DomainListOptions from "@/components/DomainListOptions.vue";
 import HardcoreOptions from "@/components/HardcoreOptions.vue";
 import SubliminalOptions from "@/components/SubliminalOptions.vue";
 import PrivacyOptions from "@/components/PrivacyOptions.vue";
+import LoadingFilterOptions from "@/components/LoadingFilterOptions.vue";
 import OpenStore from "@/components/placeholders/OpenStore.vue";
 import ExtensionInfo from "@/components/ExtensionInfo.vue";
 import VideoOptions from "@/components/VideoOptions.vue";

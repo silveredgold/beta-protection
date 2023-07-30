@@ -1,5 +1,5 @@
 import { processContextClick, processMessage, CMENU_REDO_CENSOR, CMENU_ENABLE_ONCE, CMENU_RECHECK_PAGE } from "./events";
-import { getExtensionVersion, setModeBadge, shouldCensor } from "./util";
+import { dbgLog, getExtensionVersion, setModeBadge, shouldCensor } from "./util";
 import { RuntimePortManager } from "./transport/runtimePort";
 import { generateUUID, dbg } from "@/util";
 import browser from "webextension-polyfill";
@@ -69,7 +69,7 @@ browser.runtime.onConnect.addListener((port) => {
   }
 });
 
-browser.runtime.onInstalled.addListener((details) => {
+browser.runtime.onInstalled.addListener(async (details) => {
   console.log('Configuring BP settings!');
   const breaking = 'v0.1.0'
 
@@ -77,13 +77,20 @@ browser.runtime.onInstalled.addListener((details) => {
     const newVersion = getExtensionVersion();
     const srcVersion = semver.valid(details.previousVersion);
     console.warn(`upgrading from ${srcVersion}->${newVersion}`);
+    const store = await waitForPreferencesStore(false);
     if (srcVersion && semver.gte(newVersion, breaking) && semver.lt(srcVersion, breaking)) {
       console.log('breaking change boundary cross detected!');
-      waitForPreferencesStore(false).then(store => {
-        store.merge(defaultExtensionPrefs, false).then(() => {
-          UpdateService.notifyForBreakingUpdate(details.previousVersion);
-        })
-      });
+      await store.merge(defaultExtensionPrefs, false);
+      UpdateService.notifyForBreakingUpdate(details.previousVersion);
+    } else {
+      if (store && store.currentPreferences.loadingFilter === undefined) {
+        console.warn('loading filter options not persisted. Adding defaults!');
+        store.merge({loadingFilter: {
+          blurLevel: 10,
+          enabled: true,
+          useAsPlaceholder: false
+        }})
+      }
     }
   }
 
@@ -192,8 +199,10 @@ browser.tabs.onUpdated.addListener(async (id, change, tab) => {
           const store = await waitForPreferencesStore(true)
           const currentSite = tab.url!.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
           const censorEnabled = shouldCensor(store.currentPreferences, currentSite);
-          if (censorEnabled) {
-            await css.setLoadingState(true);
+          dbgLog(`checking page for loading filter initialization`, currentSite, censorEnabled, store.currentPreferences.loadingFilter);
+          if (censorEnabled && (store.currentPreferences.loadingFilter?.enabled === true)) {
+            await css.enableLoadingFilter(store.currentPreferences.loadingFilter?.blurLevel)
+            // await css.setLoadingState(true);
           }
       }
       // await css.setLoadingState(true);

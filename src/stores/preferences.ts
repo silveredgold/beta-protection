@@ -72,7 +72,7 @@ export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undef
                 // });
             }
         },
-        async merge(prefs: Partial<IPreferences>, preferSaved: boolean = true) {
+        async merge(prefs: Partial<IExtensionPreferences>, preferSaved: boolean = true) {
           const clonedPrefs = clone(prefs);
           const storedPrefs = this.basePreferences;
           const mergedPrefs = preferSaved
