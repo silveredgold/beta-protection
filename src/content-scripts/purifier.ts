@@ -7,6 +7,9 @@ import { PlaceholderService } from "@/services/placeholder-service";
 import browser from 'webextension-polyfill';
 import { ImageTracker } from "./image-tracker";
 
+//we should really preference using [censor-state]="censoring" over this.
+const _imagePlaceholderClass: string = 'placeholder-frame'
+
 export class Purifier {
     private _currentState: CensoringState;
 
@@ -247,6 +250,7 @@ export class Purifier {
     }
 
     private censorLoadedImage = (imageURL: string, img: HTMLImageElement, active: boolean, priority?: number) => {
+      const _enablePlaceholders: boolean = this._currentState.enablePlaceholders;
         if (this.isUnsafe(img) && this._ready) {
             if (img.width * img.height > 15000 && img.width > 100 && img.height > 100 && !imageURL.includes(".svg")) {
                 const uniqueID = img.getAttribute('censor-id') ?? generateUUID();
@@ -269,16 +273,22 @@ export class Purifier {
                         // const priority = img.getBoundingClientRect().top | 0;
                         priority ??= 0;
                         // const priority = Math.abs(this.getVisibility(img).center.y);
-                        const placeHolderImage = new Image();
-                        placeHolderImage.onload = () => {
-                            img.addEventListener('load', () => {
-                                img.setAttribute('censor-state', 'censored');
-                            }, { once: true });
-                            img.src = placeHolderImage.src;
-                            img.toggleAttribute('censor-placeholder', true);
-                            this.sendCensorRequest(imageURL, uniqueID, priority);
-                        };
-                        placeHolderImage.setAttribute('src', placeholder);
+                        if (_enablePlaceholders) {
+                          const placeHolderImage = new Image();
+                          placeHolderImage.onload = () => {
+                              img.addEventListener('load', () => {
+                                  img.setAttribute('censor-state', 'censored');
+                              }, { once: true });
+                              img.src = placeHolderImage.src;
+                              img.toggleAttribute('censor-placeholder', true);
+                              this.sendCensorRequest(imageURL, uniqueID, priority);
+                          };
+                          placeHolderImage.setAttribute('src', placeholder);
+                        } else {
+                          img.classList.add(_imagePlaceholderClass);
+                          this.sendCensorRequest(imageURL, uniqueID, priority);
+                        }
+
                     }
                 } else {
                     this.setImgExcluded(img, 'disabled');
@@ -436,6 +446,7 @@ const handleCensorResult = (request: any, port: browser.Runtime.Port, cache: Ima
                 requestElement.removeAttribute('srcset');
                 requestElement.setAttribute('censor-state', 'censored');
                 requestElement.toggleAttribute('censor-placeholder', false);
+                requestElement.classList.remove(_imagePlaceholderClass);
             } else {
                 (requestElement as HTMLElement).style.backgroundImage = "url('" + request.censorURL + "')";
                 requestElement.setAttribute('censor-style', 'censored');

@@ -5,7 +5,8 @@ import { Purifier } from "./purifier"
 import browser from 'webextension-polyfill';
 
 export type CensoringState = {
-    activeCensoring: boolean
+    activeCensoring: boolean,
+    enablePlaceholders: boolean
 }
 
 export type CensoringContext = {

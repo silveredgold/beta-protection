@@ -17,7 +17,16 @@
       <n-grid x-gap="12" :cols="6" style="padding: 0.25rem;">
         <n-grid-item span="2">
           <n-thing title="Status" v-if="loaded">
-            <n-checkbox size="large" v-model:checked="filterEnabled">Enable loading filter</n-checkbox>
+            <n-space vertical>
+              <n-checkbox size="large" v-model:checked="filterEnabled">Enable loading filter</n-checkbox>
+              <n-tooltip trigger="hover" v-if="filterEnabled">
+                  <template #trigger>
+                    <n-checkbox size="large" v-model:checked="skipPlaceholders">Skip placeholders</n-checkbox>
+                  </template>
+                  If this is enabled, placeholders will not be loaded and the filter will hide images until censoring is complete.
+              </n-tooltip>
+
+            </n-space>
           </n-thing>
         </n-grid-item>
         <n-grid-item span="4">
@@ -32,7 +41,7 @@
 </template>
 <script setup lang="ts">
 import { watch, computed, toRefs, inject, ref, Ref } from 'vue';
-import { NCard, NIcon, NThing, NSpace, NCheckbox, NSlider, NGrid, NGridItem, NGi } from "naive-ui";
+import { NCard, NIcon, NThing, NSpace, NCheckbox, NSlider, NGrid, NGridItem, NTooltip } from "naive-ui";
 import { AlertCircleOutline } from "@vicons/ionicons5";
 import { updateUserPrefs, watchForChanges } from '@silveredgold/beta-shared-components';
 import { IExtensionPreferences } from '@/preferences';
@@ -51,6 +60,15 @@ const filterEnabled = computed({
   set: val => {
     if (prefs.value.loadingFilter) {
       prefs.value.loadingFilter.enabled = val;
+    }
+  }
+});
+
+const skipPlaceholders = computed({
+  get: () => prefs?.value?.loadingFilter?.useAsPlaceholder ?? true,
+  set: val => {
+    if (prefs.value.loadingFilter) {
+      prefs.value.loadingFilter.useAsPlaceholder = val;
     }
   }
 });

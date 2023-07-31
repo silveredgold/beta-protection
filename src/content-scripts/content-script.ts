@@ -27,7 +27,7 @@ const getCensoringState = async (): Promise<CensoringState> => {
 	const currentSite = window.location.href.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").toLowerCase();
 	const censorEnabled = shouldCensor(store.currentPreferences, currentSite);
 	dbg('censoring state', censorEnabled);
-	return {activeCensoring: censorEnabled};
+	return {activeCensoring: censorEnabled, enablePlaceholders: store.currentPreferences.loadingFilter?.useAsPlaceholder !== true};
 }
 
 const buildPort = () => {
