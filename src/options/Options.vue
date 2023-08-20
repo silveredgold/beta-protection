@@ -81,7 +81,9 @@
                 While censoring takes place, images will be replaced by a placeholder image randomly selected from the
                 images in any enabled categories. Here is where you choose which categories you want to see images from.
               </n-alert>
-              <placeholder-options :preferences="prefs" v-if="prefs" class="control-group" />
+              <Suspense>
+                <placeholder-options :preferences="prefs" v-if="prefs" class="control-group" />
+              </Suspense>
               <Suspense>
                 <sticker-options :preferences="prefs" v-if="prefs" class="control-group" />
               </Suspense>

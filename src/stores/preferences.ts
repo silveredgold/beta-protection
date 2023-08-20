@@ -114,6 +114,18 @@ export const buildPreferencesStore = (delayMs?: number, pinia?: Pinia|null|undef
           }
           dbg('patching stickers', curr, this.currentPreferences.enabledStickers);
           this.$patch({basePreferences: {enabledStickers: curr}});
+        },
+        setPlaceholderCategoryState(category: string, present: boolean) {
+          let curr = this.currentPreferences.enabledPlaceholders;
+          if (!present) {
+            dbg('disabling from enabledPlaceholders', curr, category);
+            curr = curr.splice(curr.indexOf(category), 1);
+          } else {
+            dbg('enabling from enabledPlaceholders', curr, category);
+            curr = curr.concat([category]);
+          }
+          dbg('patching placeholders', curr, this.currentPreferences.enabledPlaceholders);
+          this.$patch({basePreferences: {enabledPlaceholders: curr}});
         }
     }, debounce: {save: delayMs || 400}, readOnly, subKey: 'basePreferences'
 })(pinia);
