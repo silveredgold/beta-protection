@@ -36,7 +36,7 @@ export class PageObserver {
     }
 
     private notCensorUpdate(mutation: MutationRecord): boolean {
-        return mutation.type !== "attributes" && mutation.attributeName !== "src" 
+        return mutation.type !== "attributes" && mutation.attributeName !== "src"
             //&& !!((mutation.target as HTMLElement).getAttribute('censor-id'));
     }
 
@@ -54,6 +54,10 @@ export class PageObserver {
             }
         } catch {}
 
+        const srcIsInherentlySafe = (src: string) => {
+          return src.startsWith('data:') ||src.startsWith('chrome-extension://');
+        }
+
         // Loop that checks for images being replaced after they've been purified, to ensure they are
         // processed again if needed.
         mutations.forEach(mutation => {
@@ -67,8 +71,12 @@ export class PageObserver {
             }
             if (mutation.type === "attributes" && mutation.attributeName === "src") {
                 const target = mutation.target as Element;
+                const targetSrc = target.getAttribute('src');
+                if (!srcIsInherentlySafe(targetSrc!)) {
+                  target.setAttribute('censor-src', targetSrc!);
+                }
                 let forceRecheck = false;
-                if (target.getAttribute('censor-state') === 'censored' && 
+                if (target.getAttribute('censor-state') === 'censored' &&
                     (!target.getAttribute('src')?.startsWith('data:') &&
                     !target.getAttribute('src')?.startsWith('chrome-extension'))) {
                     forceRecheck = true;
@@ -118,7 +126,6 @@ export class PageObserver {
         this._isRunning = false;
     }
 
-    
     private _changeAction : (records: MutationRecord[]) => void = (() => {});
     public get changeAction() : (records: MutationRecord[]) => void {
         return this._changeAction;
@@ -126,12 +133,9 @@ export class PageObserver {
     public set changeAction(v : (records: MutationRecord[]) => void) {
         this._changeAction = v;
     }
-    
 
-    
     private _isRunning : boolean = false;
     public get isRunning() : boolean {
         return this._isRunning;
     }
-    
 }
