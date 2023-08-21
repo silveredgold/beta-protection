@@ -306,6 +306,7 @@ export class Purifier {
         let imageUrl: string = imageSrc;
         try {
             imageUrl = await toDataURL(imageSrc, "image/jpeg");
+            // imageUrl = await toDataURL(imageSrc);
         } catch (e) {
             console.log('failed to get image data', e);
             imageUrl = imageSrc;
@@ -478,7 +479,8 @@ function toDataURL(src: string, outputFormat?: string) {
                 canvas.height = img.naturalHeight;
                 canvas.width = img.naturalWidth;
                 ctx?.drawImage(img, 0, 0);
-                const dataURL = canvas.toDataURL(outputFormat);
+                const transparencyFound = checkForTransparency(ctx, canvas);
+                const dataURL = canvas.toDataURL(transparencyFound ? "image/png" : outputFormat);
                 // clearTimeout(timeout);
                 resolve(dataURL);
             } catch (e) {
@@ -492,4 +494,19 @@ function toDataURL(src: string, outputFormat?: string) {
         //   img.src = src;
         // }
     });
+}
+
+function checkForTransparency(ctx: CanvasRenderingContext2D|undefined|null, canvas: HTMLCanvasElement) {
+  let transparencyFound = false;
+  if (ctx) {
+    const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    let i = data.length/4 - 1;
+    do {
+        if(data[(i*4) + 3] < 255) {
+            transparencyFound = true;
+        }
+    } while (i-- && !transparencyFound);
+  }
+  return transparencyFound;
 }
