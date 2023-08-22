@@ -2,6 +2,7 @@ import { GlobalThemeOverrides } from "naive-ui";
 import { IExtensionPreferences, IPreferences, OperationMode } from "./preferences";
 import browser from 'webextension-polyfill';
 import { hashCode, base64ArrayBuffer, humanFileSize } from "@silveredgold/beta-shared";
+import { MD5, enc } from "crypto-js";
 export { hashCode, base64ArrayBuffer, humanFileSize };
 
 
@@ -75,6 +76,7 @@ export function isNodeSafe(node: Node) {
   const plSrc = node["placeholder-name"] as string;
   const url = node["src"] as string;
   const origSrc = node["censor-src"] as string;
+  const hash = node["censor-hash"] as string;
   const state = node["censor-state"] ?? node["censor-style"];
   if (plSrc) {
     const filename = (url.split('/').pop() ?? '').split('#')[0].split('?')[0];
@@ -83,6 +85,7 @@ export function isNodeSafe(node: Node) {
   if (state === 'censored' && origSrc) {
     conditions.push(url !== origSrc);
     conditions.push(url.startsWith('data:'))
+    conditions.push(MD5(url).toString(enc.Base64) == hash);
   }
   return conditions.every(c => c);
 }

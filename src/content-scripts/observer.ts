@@ -1,6 +1,7 @@
 import { generateUUID, isNodeSafe, dbg, isNodeExcluded } from "@/util";
 import { Purifier } from "./purifier";
 import browser from 'webextension-polyfill';
+import { MD5, enc } from "crypto-js";
 
 export class PageObserver {
 
@@ -54,8 +55,9 @@ export class PageObserver {
             }
         } catch {}
 
-        const srcIsInherentlySafe = (src: string) => {
-          return src.startsWith('data:') ||src.startsWith('chrome-extension://');
+        const elementIsInherentlySafe = (src: string, element: Element) => {
+          return src.includes('extension://') ||
+            (src.startsWith('data:') && (element.hasAttribute('censor-placeholder') || (element.getAttribute('censor-hash') === MD5(src).toString(enc.Base64))))
         }
 
         // Loop that checks for images being replaced after they've been purified, to ensure they are
@@ -72,13 +74,17 @@ export class PageObserver {
             if (mutation.type === "attributes" && mutation.attributeName === "src") {
                 const target = mutation.target as Element;
                 const targetSrc = target.getAttribute('src');
-                if (!srcIsInherentlySafe(targetSrc!)) {
+                if (!elementIsInherentlySafe(targetSrc!, target)) {
                   target.setAttribute('censor-src', targetSrc!);
                 }
                 let forceRecheck = false;
                 if (target.getAttribute('censor-state') === 'censored' &&
                     (!target.getAttribute('src')?.startsWith('data:') &&
-                    !target.getAttribute('src')?.startsWith('chrome-extension'))) {
+                    !target.getAttribute('src')?.startsWith('chrome-extension')) ||
+                    (target.getAttribute('src')?.startsWith('data:') &&
+                    (target.hasAttribute('src') &&
+                      target.hasAttribute('censor-hash') &&
+                      MD5(target.getAttribute('src')!).toString(enc.Base64) != target.getAttribute('censor-hash')))) {
                     forceRecheck = true;
                 }
                 const skipped = isNodeExcluded(mutation.target);

@@ -200,6 +200,7 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender): vo
 		const censored = document.querySelectorAll(`img[censor-placeholder]`);
 		for (const placeholder of censored) {
 			placeholder.removeAttribute('censor-state');
+      placeholder.removeAttribute('censor-hash')
 			placeholder.removeAttribute('censor-style');
 			placeholder.removeAttribute('censor-exclusion');
 			currentContext?.purifier.censorImage(placeholder as HTMLImageElement, true);
@@ -212,11 +213,13 @@ const handleMessage = (request: any, sender?: browser.Runtime.MessageSender): vo
 			const censored = document.querySelectorAll(`[censor-state]`)
 			for (const element of [...censored]) {
 				element.removeAttribute('censor-state');
+        element.removeAttribute('censor-hash')
 				element.removeAttribute('censor-exclusion');
 			}
 			const styles = document.querySelectorAll(`[censor-style]`)
 			for (const element of [...styles]) {
 				element.removeAttribute('censor-style');
+        element.removeAttribute('censor-hash')
 				element.removeAttribute('censor-exclusion');
 			}
 		} catch {}
